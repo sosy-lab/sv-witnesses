@@ -152,6 +152,37 @@ More details about the verification run can be found in the directory "./output"
 
 The verification result *"FALSE"* means that the violation witness was successfully validated, i.e., one of the paths that is described by the witness automaton leads to a violation of the specification. The result *"TRUE"* would mean that none of the paths described by the witness automaton lead to a violation of the specification, or in other words, that the witness was rejected. A witness is also rejected if the witness validation does not terminate normally.
 
+### Validating a Violation Witness with Ultimate Automizer
+
+The following command will start Ultimate Automizer to validate an violation witness for ``test.c``. We assume that the violation witnesses is stored in the file ``witness-to-validate.graphml``.
+
+<pre>cd UltimateAutomizer
+python3 UltimateWitnessChecker.py \
+    PropertyERROR.prp \
+    test.c \
+    32bit precise \
+    witness-to-validate.graphml
+</pre>
+
+For tasks where a 64 bit linux machine model is assumed, you also need to use the parameter ``64bit`` instead of ``32bit``. For tasks where the simple memory model is assumed, you also need to replace the option ``precise`` by ``simple``.
+
+The output of the command should look similar to the following:
+
+<pre>Calling Ultimate Automizer with: ./Ultimate ./Automizer.xml
+   test.c
+   witness-to-validate.graphml
+   --settings ./svComp-32bit-precise-Automizer.epf
+[...]
+Execution finished normally
+Writing output log to file Ultimate.log
+Writing human readable error path to file UltimateCounterExample.errorpath
+Result:
+FALSE
+LineCoverage:404.58015267175574
+</pre>
+
+The verification result *"FALSE"* means that the violation witness was successfully validated, i.e., one of the paths that is described by the witness automaton leads to a violation of the specification. The result *"TRUE"* would mean that none of the paths described by the witness automaton lead to a violation of the specification, in other words, the witness was rejected. A witness is also rejected if the witness validation does not terminate normally.
+
 ### Writing a Violation Witness with CPAchecker
 
 In the following example, we assume that the current directory is the CPAchecker directory, ``PropertyERROR.prp`` is the specification that was used to produce the witness, ``witness.graphml`` is the witness file and ``test.c`` is the verification task. The following command shows how to use CPAchecker to verify the task and produce a witness:
@@ -202,37 +233,6 @@ More details about the verification run can be found in the directory "./output"
 </pre>
 
 The violation-witness automaton is written to ``output/witness.graphml``. If the verification is applied to the task ``ssh-simplified/s3_clnt_1_false-unreach-call.cil.c`` from the SV-COMP benchmark set, the witness should look similar to [this witness](s3_cln1_false.witness.cpachecker.graphml). Note that this task assumes the simple memory model.
-
-### Validating a Violation Witness with Ultimate Automizer
-
-The following command will start Ultimate Automizer to validate an violation witness for ``test.c``. We assume that the violation witnesses is stored in the file ``witness-to-validate.graphml``.
-
-<pre>cd UltimateAutomizer
-python3 UltimateWitnessChecker.py \
-    PropertyERROR.prp \
-    test.c \
-    32bit precise \
-    witness-to-validate.graphml
-</pre>
-
-For tasks where a 64 bit linux machine model is assumed, you also need to use the parameter ``64bit`` instead of ``32bit``. For tasks where the simple memory model is assumed, you also need to replace the option ``precise`` by ``simple``.
-
-The output of the command should look similar to the following:
-
-<pre>Calling Ultimate Automizer with: ./Ultimate ./Automizer.xml
-   test.c
-   witness-to-validate.graphml
-   --settings ./svComp-32bit-precise-Automizer.epf
-[...]
-Execution finished normally
-Writing output log to file Ultimate.log
-Writing human readable error path to file UltimateCounterExample.errorpath
-Result:
-FALSE
-LineCoverage:404.58015267175574
-</pre>
-
-The verification result *"FALSE"* means that the violation witness was successfully validated, i.e., one of the paths that is described by the witness automaton leads to a violation of the specification. The result *"TRUE"* would mean that none of the paths described by the witness automaton lead to a violation of the specification, in other words, the witness was rejected. A witness is also rejected if the witness validation does not terminate normally.
 
 ### Writing a Violation Witness with UltimateAutomizer
 
