@@ -14,7 +14,7 @@ For each input into the system along the path to be tested, the witness must pro
 
 ### Examples
 
-The following examples conform to the format used in the [International Competition on Software Verification (SV-COMP)](https://sv-comp.sosy-lab.org/), where the function ``extern int __VERIFIER_nondet_int(void)`` is used to obtain nondeterministic input values and the specification ``CHECK( init(main()), LTL(G ! call(__VERIFIER_error())) )`` from the specification file [PropertyUnreachCall.prp](PropertyUnreachCall.prp) states that a correct program must never call the function ``extern int __VERIFIER_error(void)``.
+The following examples conform to the format used in the [International Competition on Software Verification (SV-COMP)](https://sv-comp.sosy-lab.org/), where the function ``extern int __VERIFIER_nondet_int(void)`` is used to obtain nondeterministic input values and the specification ``CHECK( init(main()), LTL(G ! call(__VERIFIER_error())) )`` from the [specification file](PropertyUnreachCall.prp) (``PropertyUnreachCall.prp``) states that a correct program must never call the function ``extern int __VERIFIER_error(void)``.
 
 ## Example 1
 
