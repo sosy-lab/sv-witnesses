@@ -67,7 +67,7 @@ This witness specification is a work in progress and will be subject to modifica
 
 ## Validating Violation Witnesses
 
-Witnesses can be validated by CPAchecker or UltimateAutomizer. To validate a witness, you need to provide the specification the witness was produced with and the witness itself as an additional specification to the tool, as well as any other parameter required by the tool to check the specific type of program, if any.
+Witnesses can be validated by CPAchecker or Ultimate Automizer. To validate a witness, you need to provide the specification the witness was produced with and the witness itself as an additional specification to the tool, as well as any other parameter required by the tool to check the specific type of program, if any.
 
 In the following, we present the violation-witness validation service followed by listing examples of available witness checkers (in alphabetic order).
 
@@ -153,35 +153,41 @@ More details about the verification run can be found in the directory "./output"
 The verification result *"FALSE"* means that the violation witness was successfully validated, i.e., one of the paths that is described by the witness automaton leads to a violation of the specification. The result *"TRUE"* would mean that none of the paths described by the witness automaton lead to a violation of the specification, or in other words, that the witness was rejected. A witness is also rejected if the witness validation does not terminate normally.
 
 ### Validating a Violation Witness with Ultimate Automizer
+Download a current version of Ultimate Automizer from [Ultimate Automizer's website](https://ultimate.informatik.uni-freiburg.de/automizer). 
 
 The following command will start Ultimate Automizer to validate an violation witness for ``test.c``. We assume that the violation witnesses is stored in the file ``witness-to-validate.graphml``.
 
-<pre>cd UltimateAutomizer
-python3 UltimateWitnessChecker.py \
-    PropertyERROR.prp \
-    test.c \
-    32bit precise \
-    witness-to-validate.graphml
+<pre>
+cd UAutomizer-linux
+./Ultimate.py \
+	--validate \
+	PropertyERROR.prp \
+	32bit precise \
+	test.c \
+	witness-to-validate.graphml
 </pre>
 
 For tasks where a 64 bit linux machine model is assumed, you also need to use the parameter ``64bit`` instead of ``32bit``. For tasks where the simple memory model is assumed, you also need to replace the option ``precise`` by ``simple``.
 
 The output of the command should look similar to the following:
 
-<pre>Calling Ultimate Automizer with: ./Ultimate ./Automizer.xml
-   test.c
-   witness-to-validate.graphml
-   --settings ./svComp-32bit-precise-Automizer.epf
-[...]
+<pre>
+# ./Ultimate.py --validate PropertyERROR.prp 32bit precise test.c witness-to-validate.graphml
+Checking for ERROR reachability
+Using default analysis
+Version cda1b3ec
+Calling Ultimate with: java -Xmx12G -Xms1G -jar [...] -data @user.home/.ultimate -tc [...] -i test.c witness-to-validate.graphml -s [...]
+........
 Execution finished normally
 Writing output log to file Ultimate.log
 Writing human readable error path to file UltimateCounterExample.errorpath
 Result:
 FALSE
-LineCoverage:404.58015267175574
 </pre>
 
 The verification result *"FALSE"* means that the violation witness was successfully validated, i.e., one of the paths that is described by the witness automaton leads to a violation of the specification. The result *"TRUE"* would mean that none of the paths described by the witness automaton lead to a violation of the specification, in other words, the witness was rejected. A witness is also rejected if the witness validation does not terminate normally.
+
+If you are having trouble using the witness validation, contact the Ultimate team by [creating an issue on GitHub](https://github.com/ultimate-pa/ultimate). 
 
 ### Writing a Violation Witness with CPAchecker
 
@@ -234,26 +240,27 @@ More details about the verification run can be found in the directory "./output"
 
 The violation-witness automaton is written to ``output/witness.graphml``. If the verification is applied to the task ``ssh-simplified/s3_clnt_1_false-unreach-call.cil.c`` from the SV-COMP benchmark set, the witness should look similar to [this witness](s3_cln1_false.witness.cpachecker.graphml). Note that this task assumes the simple memory model.
 
-### Writing a Violation Witness with UltimateAutomizer
+### Writing a Violation Witness with Ultimate Automizer
+From the Ultimate Automizer directory, the following command will start Ultimate Automizer to verify a task for which it will come up with a feasible counterexample:
 
-From the UltimateAutomizer directory, the following command will start UltimateAutomizer to verify a task for which it will come up with a feasible counterexample:
-
-<pre>python3 Ultimate.py \
-    PropertyERROR.prp \
-    test.c \
-    32bit precise
+<pre>
+./Ultimate.py \
+	PropertyERROR.prp \
+	32bit precise \
+	test.c 
 </pre>
 
 For tasks where a 64 bit linux machine model is assumed, you also need to use the parameter ``64bit`` instead of ``32bit``. For tasks where the simple memory model is assumed, you also need to replace the option ``precise`` by ``simple``.
 
 The output of the command should look similar to the following:
 
-<pre>Checking for ERROR reachability
-Rev 14553
-Calling Ultimate with: ./Ultimate ./Automizer.xml
-  test.c
-  --settings ./svComp-32bit-precise-Automizer.epf
-[...]
+<pre>
+# ./Ultimate.py PropertyERROR.prp 32bit precise test.c 
+Checking for ERROR reachability
+Using default analysis
+Version cda1b3ec
+Calling Ultimate with: java -Xmx12G -Xms1G -jar [...] -data @user.home/.ultimate -tc [...] -i test.c -s [...]
+........
 Execution finished normally
 Writing output log to file Ultimate.log
 Writing human readable error path to file UltimateCounterExample.errorpath
@@ -267,7 +274,7 @@ The violation-witness automaton is written to ``witness.graphml``. If the verifi
 
 As a running example, we use the verification task [multivar_true-unreach-call1.i](multivar_true-unreach-call1.i) from the SV-COMP'17 benchmark set.
 
-We assume that the two tool directories of CPAchecker and UltimateAutomizer are placed alongside each other in the same parent directory.
+We assume that the two tool directories of CPAchecker and Ultimate Automizer are placed alongside each other in the same parent directory.
 
 ### Producing Correctness Witnesses with CPAchecker
 
@@ -314,36 +321,34 @@ Run scripts/report-generator.py to show graphical report.
 You will find the correctness witness produced by CPAchecker for the example task  
 at ``CPAchecker/output/correctness-witness.graphml``.
 
-### Producing Correctness Witnesses with UltimateAutomizer
+### Producing Correctness Witnesses with Ultimate Automizer
+The procedure for producing a correctness witness with Ultimate Automizer does not differ from producing a violation witness. 
+To produce a witness for the example task, simply execute the following commands:
 
-To produce a witness for the example task with UltimateAutomizer, simply execute the following commands:
-
-<pre>  cd UAutomizer-linux/
-  ./Ultimate.py \
-    ../svcomp16/c/loop-acceleration/ALL.prp \
-    32bit precise \
-    ../svcomp16/c/loop-acceleration/multivar_true-unreach-call1.i
-  cd ..
+<pre> 
+cd UAutomizer-linux
+./Ultimate.py \
+	../svcomp16/c/loop-acceleration/ALL.prp \
+	32bit precise \
+	../svcomp16/c/loop-acceleration/multivar_true-unreach-call1.i
 </pre>
 
-The output of UltimateAutomizer should look similar to the following listing:
+The output of Ultimate Automizer should look similar to the following listing:
 
-<pre>Checking for ERROR reachability
+<pre>
+# ./Ultimate.py ../svcomp16/c/loop-acceleration/ALL.prp 32bit precise ../svcomp16/c/loop-acceleration/multivar_true-unreach-call1.i
+Checking for ERROR reachability
 Using default analysis
-Version c3312191
-Calling Ultimate with: ./Ultimate --console "./Automizer.xml"
-  "../svcomp16/c/loop-acceleration/multivar_true-unreach-call1.i"
-  "--settings" "/hard-disk/dangl/tmp/UAutomizer-linux/svcomp-Reach-32bit-Automizer_Default.epf"
-...............................................................................................
-...............................................................................................
-.....................................................................
+Version cda1b3ec
+Calling Ultimate with: java -Xmx12G -Xms1G -jar [...] -data @user.home/.ultimate -tc [...] -i ../svcomp16/c/loop-acceleration/multivar_true-unreach-call1.i -s [...]
+........
 Execution finished normally
 Writing output log to file Ultimate.log
 Result:
 TRUE
 </pre>
 
-You will find the correctness witness produced by UltimateAutomizer for the example task  
+You will find the correctness witness produced by Ultimate Automizer for the example task  
 at ``UAutomizer-linux/witness.graphml``.
 
 ### Validating Correctness Witnesses with CPAchecker
@@ -370,34 +375,28 @@ More details about the verification run can be found in the directory "./output"
 Because the CPAchecker-based validator is actually even a correctness-witness testifier, the validation will produce another (usually more abstract) correctness witness  
 in ``CPAchecker/output/correctness-witness.graphml``.
 
-### Validating Correctness Witnesses with UltimateAutomizer
+### Validating Correctness Witnesses with Ultimate Automizer
+Again, the procedure for validating a correctness witness with Ultimate Automizer does not differ from validating a violation witness. 
+For the validation example, we assume that one of the previously obtained witnesses for the example task has been named ``correctness-witness.graphml`` and moved to the parent directory of the two tool directories. To validate the correctness witness with Ultimate Automizer, simply execute the following commands:
 
-For the validation, we assume that one of the previously obtained witnesses for the example task has been named ``correctness-witness.graphml`` and moved to the parent directory of the two tool directories. To validate the correctness witness with UltimateAutomizer, simply execute the following commands:
-
-<pre>  cd UAutomizer-linux/
-  ./Ultimate.py \
-    ../svcomp16/c/loop-acceleration/ALL.prp \
-    32bit precise \
-    ../svcomp16/c/loop-acceleration/multivar_true-unreach-call1.i \
-    ../correctness-witness.graphml
-  cd ..
+<pre>  
+cd UAutomizer-linux/
+./Ultimate.py \
+	../svcomp16/c/loop-acceleration/ALL.prp \
+	32bit precise \
+	../svcomp16/c/loop-acceleration/multivar_true-unreach-call1.i \
+	../correctness-witness.graphml
 </pre>
 
 A successful validation will result in an output similar to the following:
 
-<pre>Checking for ERROR reachability
+<pre>
+# ./Ultimate.py ../svcomp16/c/loop-acceleration/ALL.prp 32bit precise ../svcomp16/c/loop-acceleration/multivar_true-unreach-call1.i ../correctness-witness.graphml
+Checking for ERROR reachability
 Using default analysis
 Version c3312191
-Calling Ultimate with: ./Ultimate --console
-  "/hard-disk/dangl/tmp/UAutomizer-linux/AutomizerWitnessValidation.xml"
-  "../svcomp16/c/loop-acceleration/multivar_true-unreach-call1.i"
-  "../correctness-witness.graphml"
-  "--settings" "/hard-disk/dangl/tmp/UAutomizer-linux/svcomp-Reach-32bit-Automizer_Default.epf"
-...............................................................................................
-...............................................................................................
-...............................................................................................
-...............................................................................................
-.............................................................................................
+Calling Ultimate with: java -Xmx12G -Xms1G -jar [...] -data @user.home/.ultimate -tc [...] -i ../svcomp16/c/loop-acceleration/multivar_true-unreach-call1.i ../correctness-witness.graphml -s [...]
+........
 Execution finished normally
 Writing output log to file Ultimate.log
 Result:
