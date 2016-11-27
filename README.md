@@ -27,7 +27,6 @@ All of the annotations are required.
 | specification | *Valid values:* The specification text <br /> The specification text used to verify the program, e.g. ``CHECK( init(main()), LTL(G ! call(__VERIFIER_error())) )`` |
 | programfile | *Valid values:* The program file path as passed to the verifier <br /> The path to the program file, e.g. ``/scratch/dangl/sv-benchmarks/c/ldv-linux-3.4-simple/32_1_cilled_true-unreach-call_ok_nondet_linux-3.4-32_1-drivers--acpi--ec_sys.ko-ldv_main0_sequence_infinite_withcheck_stateful.cil.out.c`` |
 | programhash | *Valid values:* SHA-1-Hashsum <br /> The SHA-1-Hashsum of the verified program, e.g. ``bec44c8c30d753a31070dd280c7a98510270704c``. |
-| memorymodel | *Valid values:* ``simple`` or ``precise`` <br /> The memory model assumed for the verification task. |
 | architecture | *Valid values:* ``32bit`` or ``64bit`` <br /> The architecture assumed for the verification task. |
 
 #### Node Data for Automata States
