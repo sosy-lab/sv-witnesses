@@ -73,7 +73,7 @@ In the following, we present the violation-witness validation service followed b
 
 ### Validating a Violation Witness using a Violation-Witness Validation Service
 
-The violation-witness validation service is designed to be as simple to use as possible. Therefore you will not not need to manually select the specification, machine model, and architecture the witness was produced for, but may instead include it within the witness file itself. See the XML ``data`` tags with the keys ``specification``, ``memorymodel``, and ``architecture`` in the [linked witness](service-example.graphml) as an example. Accpeted values for the memory model are ``simple`` and ``precise`` (default). Accepted values for the architecture are ``32bit`` (default) and ``64bit``. If you would rather keep the original specification separate, you can still use the witness validators manually, as described further down.
+The violation-witness validation service is designed to be as simple to use as possible. Therefore you will not not need to manually select the specification, machine model, and architecture the witness was produced for, but may instead include it within the witness file itself. See the XML ``data`` tags with the keys ``specification``, and ``architecture`` in the [linked witness](service-example.graphml) as an example. Accepted values for the architecture are ``32bit`` (default) and ``64bit``. If you would rather keep the original specification separate, you can still use the witness validators manually, as described further down.
 
 Submit the witness validation job here: [http://vcloud.sosy-lab.org/webclient/runs/witness_validation](http://vcloud.sosy-lab.org/webclient/runs/witness_validation)
 
