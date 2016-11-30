@@ -160,9 +160,7 @@ Download a current version of Ultimate Automizer from [Ultimate Automizer's webs
 
 The following command will start Ultimate Automizer to validate an violation witness for ``test.c``. We assume that the violation witnesses is stored in the file ``witness-to-validate.graphml``.
 
-<pre>
-cd UAutomizer-linux
-./Ultimate.py \
+<pre>./Ultimate.py \
 --validate \
 PropertyUnreachCall.prp \
 32bit precise \
@@ -323,7 +321,7 @@ Run scripts/report-generator.py to show graphical report.
 </pre>
 
 You will find the correctness witness produced by CPAchecker for the example task  
-at ``CPAchecker/output/correctness-witness.graphml``.
+at ``output/correctness-witness.graphml``.
 
 ### Producing Correctness Witnesses with Ultimate Automizer
 The procedure for producing a correctness witness with Ultimate Automizer does not differ from producing a violation witness. 
@@ -351,7 +349,7 @@ TRUE
 </pre>
 
 You will find the correctness witness produced by Ultimate Automizer for the example task  
-at ``UAutomizer-linux/witness.graphml``.
+at ``witness.graphml``.
 
 ### Validating Correctness Witnesses with CPAchecker
 
@@ -373,7 +371,7 @@ More details about the verification run can be found in the directory "./output"
 </pre>
 
 Because the CPAchecker-based validator is actually even a correctness-witness testifier, the validation will produce another (usually more abstract) correctness witness  
-in ``CPAchecker/output/correctness-witness.graphml``.
+in ``output/correctness-witness.graphml``.
 
 ### Validating Correctness Witnesses with Ultimate Automizer
 Again, the procedure for validating a correctness witness with Ultimate Automizer does not differ from validating a violation witness. 
