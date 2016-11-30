@@ -24,12 +24,17 @@ xsi:schemaLocation="http://graphml.graphdrawing.org/xmlns/graphml">
 <key id="tokens" attr.name="tokens" for="edge"/>
 <key id="control" attr.name="control" for="edge"/>
 <key id="originfile" attr.name="originfile" for="edge">
-<default>/storage/svcomp/c/product-lines/minepump_spec1_product33_false-unreach-call_false-termination.cil.c</default>
+<default>minepump_spec1_product33_false-unreach-call_false-termination.cil.c</default>
 </key>
 <key id="sourcecode" attr.name="sourcecode" for="edge"/>
 <graph edgedefault="directed">
 <data key="sourcecodelang">C</data>
 <data key="witness-type">violation_witness</data>
+<data key="producer">UltimateAutomizer</data>
+<data key="specification">CHECK( init(main()), LTL(G ! call(__VERIFIER_error())) )</data>
+<data key="programfile">minepump_spec1_product33_false-unreach-call_false-termination.cil.c</data>
+<data key="programhash">4988ed1a51716095b984ef9f31c0416bd8aad186</data>
+<data key="architecture">32bit</data>
 <node id="N0">
 <data key="entry">true</data>
 </node>

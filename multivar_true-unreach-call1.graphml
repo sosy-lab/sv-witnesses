@@ -50,7 +50,7 @@
   <data key="sourcecodelang">C</data>
   <data key="producer">CPAchecker 1.6.1-svn</data>
   <data key="specification">CHECK( init(main()), LTL(G ! call(__VERIFIER_error())) )</data>
-  <data key="programfile">/home/dangl/sv-witnesses/multivar_true-unreach-call1.i</data>
+  <data key="programfile">multivar_true-unreach-call1.i</data>
   <data key="programhash">a2577bafced442fc9d7239226a9a4234883426ad</data>
   <data key="architecture">32bit</data>
   <node id="N9">
