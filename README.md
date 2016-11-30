@@ -71,19 +71,20 @@ Witnesses can be validated by CPAchecker or Ultimate Automizer. To validate a wi
 
 In the following, we present the violation-witness validation service followed by listing examples of available witness checkers (in alphabetic order).
 
-### Validating a Violation Witness using a Violation-Witness Validation Service
+## Validating Witnesses using a Violation-Witness Validation Service
 
-The violation-witness validation service is designed to be as simple to use as possible. Therefore you will not not need to manually select the specification, machine model, and architecture the witness was produced for, but may instead include it within the witness file itself. See the XML ``data`` tags with the keys ``specification``, and ``architecture`` in the [linked witness](service-example.graphml) as an example. Accepted values for the architecture are ``32bit`` (default) and ``64bit``. If you would rather keep the original specification separate, you can still use the witness validators manually, as described further down.
+The witness-validation service is designed to be as simple to use as possible. Therefore you will not not need to manually select the specification and architecture the witness was produced for, but may instead include this information within the witness file itself. See the XML ``data`` tags with the keys ``specification`` and ``architecture`` in the [example violation witness](minepump_spec1_product33_false-unreach-call_false-termination.cil.graphml) the assumed [specification](PropertyUnreachCall.prp) and [buggy program](minepump_spec1_product33_false-unreach-call_false-termination.cil.c). Accepted values for the architecture are ``32bit`` (default) and ``64bit``. If you would rather keep the original specification separate, you can still use the witness validators manually, as described further down.
+In addition to the [example violation witness](minepump_spec1_product33_false-unreach-call_false-termination.cil.graphml) above, we also provide an [example correctness witness](multivar_true-unreach-call1.graphml) corresponding to a [correct program](multivar_true-unreach-call1.i) for the same [specification](PropertyUnreachCall.prp).
 
 Submit the witness validation job here: [http://vcloud.sosy-lab.org/webclient/runs/witness_validation](http://vcloud.sosy-lab.org/webclient/runs/witness_validation)
 
 Once the job finishes, a result page will appear.
 
-This page provides data like the CPU time, also the log file, a zip file with all output files, and a link to an error-path report that makes it easy to inspect and understand error paths.
+This page provides data like the CPU time, also the log file, a zip file with all output files, and, in case you successfully validated a violation-witness, a link to an error-path report that makes it easy to inspect and understand the confirmed error paths.
 
 This service can also be used via the command line:
 
-<pre>scripts/witness_validation_web_cloud.py --program source.i --witness witness.graphml</pre>
+<pre>./witness_validation_web_cloud.py --program source.i --witness witness.graphml</pre>
 
 using the [provided python script](witness-validation.zip).
 
@@ -91,62 +92,64 @@ using the [provided python script](witness-validation.zip).
 
 The following command will start CPAchecker to validate an violation witness for ``test.c``. We assume that the violation witnesses is stored in the file ``witness-to-validate.graphml``.
 
-An easy way to validate witnesses with CPAchecker that should be able to handle most scenarios is provided by a predifined configuration:
+An easy way to validate violation witnesses with CPAchecker that should be able to handle most scenarios is provided by a predifined configuration:
 
-<pre>./scripts/cpa.sh -witness-validation \
-    -spec witness-to-validate.graphml \
-    -spec PropertyERROR.prp \
-    test.c
+<pre>./scripts/cpa.sh -violation-witness-validation \
+-spec witness-to-validate.graphml \
+-spec PropertyUnreachCall.prp \
+test.c
 </pre>
 
-There may be cases where you want to use different analyses. It is therefore possible to derive a custom configuration. The following example shows how to configure CPAchecker to use linear arithmetic predicate analysis to consume a witness:
+There may be cases where you want to use different analyses. It is therefore possible to derive a custom configuration. The following example shows how to configure CPAchecker to use linear-arithmetic predicate analysis to consume a witness:
 
 <pre>./scripts/cpa.sh -noout -heap 10000M -predicateAnalysis \
-    -setprop cfa.useMultiEdges=false \
-    -setprop cfa.simplifyCfa=false \
-    -setprop cfa.allowBranchSwapping=false \
-    -setprop cpa.predicate.ignoreIrrelevantVariables=false \
-    -setprop counterexample.export.assumptions.assumeLinearArithmetics=true \
-    -setprop analysis.traversal.byAutomatonVariable=__DISTANCE_TO_VIOLATION \
-    -setprop cpa.automaton.treatErrorsAsTargets=false \
-    -setprop WitnessAutomaton.cpa.automaton.treatErrorsAsTargets=true \
-    -setprop parser.transformTokensToLines=false \
-    -skipRecursion \
-    -spec witness-to-validate.graphml \
-    -spec PropertyERROR.prp \
-    test.c
+-setprop cpa.composite.aggregateBasicBlocks=false \
+-setprop cfa.simplifyCfa=false \
+-setprop cfa.allowBranchSwapping=false \
+-setprop cpa.predicate.ignoreIrrelevantVariables=false \
+-setprop counterexample.export.assumptions.assumeLinearArithmetics=true \
+-setprop analysis.traversal.byAutomatonVariable=__DISTANCE_TO_VIOLATION \
+-setprop cpa.automaton.treatErrorsAsTargets=false \
+-setprop WitnessAutomaton.cpa.automaton.treatErrorsAsTargets=true \
+-setprop parser.transformTokensToLines=false \
+-skipRecursion \
+-spec witness-to-validate.graphml \
+-spec PropertyUnreachCall.prp \
+test.c
 </pre>
 
-For tasks where a 64 bit linux machine model is assumed, you also need to add the parameter ``-64`` to the command line. For tasks where the simple memory model is assumed, you also need to add the option ``-setprop cpa.predicate.handlePointerAliasing=false``.
+For tasks where a 64 bit linux machine model is assumed, you also need to add the parameter ``-64`` to the command line.
 
 The output of the command should look similar to the following:
 
-<pre>Using the following resource limits: CPU-time limit of 900s (ResourceLimitChecker.fromConfiguration, INFO)
+<pre>Running CPAchecker with Java heap of size 10000M.
+Running CPAchecker with default stack size (1024k). Specify a larger value with -stack if needed.
+Using the following resource limits: CPU-time limit of 900s (ResourceLimitChecker.fromConfiguration, INFO)
 
-CPAchecker 1.4-svn (OpenJDK 64-Bit Server VM 1.7.0_79) started (CPAchecker.run, INFO)
+CPAchecker 1.6.1-svn (OpenJDK 64-Bit Server VM 1.8.0_111) started (CPAchecker.run, INFO)
 
-Using predicate analysis with MathSAT5 version 5.3.7 (073c3b224db1)
-  (Jul  7 2015 15:45:01, gmp 5.0.2, gcc 4.6.3, 64-bit) and JFactory 1.21.
-  (PredicateCPA:PredicateCPA.init, INFO)
+[...]
+
+line 193: Function pointer *__cil_tmp10 with type int (*)(int, int) is called,
+ but no possible target functions were found. (CFunctionPointerResolver.replaceFunctionPointerCall, WARNING)
+
+Using predicate analysis with SMTInterpol 2.1-327-g92cafef and JFactory 1.21. (PredicateCPA:PredicateCPA.<init>, INFO)
 
 Using refinement for predicate analysis with PredicateAbstractionRefinementStrategy strategy.
-  (PredicateCPA:PredicateCPARefiner.init, INFO)
-
-[..]
+ (PredicateCPA:PredicateCPARefiner.<init>, INFO)
 
 Starting analysis ... (CPAchecker.runAlgorithm, INFO)
 
 [..]
 
 Automaton going to ErrorState on edge "__VERIFIER_error();"
-  (WitnessAutomaton:AutomatonTransferRelation.getFollowStates, INFO)
+(WitnessAutomaton:AutomatonTransferRelation.getFollowStates, INFO)
 
 [..]
 
 Stopping analysis ... (CPAchecker.runAlgorithm, INFO)
 
-Verification result: FALSE. Property violation (__VERIFIER_error();
-  called in line 751,__VERIFIER_error(); called in line 751) found by chosen configuration.
+Verification result: FALSE. Property violation (WitnessAutomaton) found by chosen configuration.
 More details about the verification run can be found in the directory "./output".
 </pre>
 
@@ -160,19 +163,19 @@ The following command will start Ultimate Automizer to validate an violation wit
 <pre>
 cd UAutomizer-linux
 ./Ultimate.py \
-	--validate \
-	PropertyERROR.prp \
-	32bit precise \
-	test.c \
-	witness-to-validate.graphml
+--validate \
+PropertyUnreachCall.prp \
+32bit precise \
+test.c \
+witness-to-validate.graphml
 </pre>
 
-For tasks where a 64 bit linux machine model is assumed, you also need to use the parameter ``64bit`` instead of ``32bit``. For tasks where the simple memory model is assumed, you also need to replace the option ``precise`` by ``simple``.
+For tasks where a 64 bit linux machine model is assumed, you also need to use the parameter ``64bit`` instead of ``32bit``.
 
 The output of the command should look similar to the following:
 
 <pre>
-# ./Ultimate.py --validate PropertyERROR.prp 32bit precise test.c witness-to-validate.graphml
+# ./Ultimate.py --validate PropertyUnreachCall.prp 32bit precise test.c witness-to-validate.graphml
 Checking for ERROR reachability
 Using default analysis
 Version cda1b3ec
@@ -191,41 +194,56 @@ If you are having trouble using the witness validation, contact the Ultimate tea
 
 ### Writing a Violation Witness with CPAchecker
 
-In the following example, we assume that the current directory is the CPAchecker directory, ``PropertyERROR.prp`` is the specification that was used to produce the witness, ``witness.graphml`` is the witness file and ``test.c`` is the verification task. The following command shows how to use CPAchecker to verify the task and produce a witness:
+In the following example, we assume that the current directory is the CPAchecker directory, ``PropertyUnreachCall.prp`` is the specification that was used to produce the witness, ``witness.graphml`` is the witness file and ``test.c`` is the verification task. The following command shows how to use CPAchecker to verify the task and produce a witness:
 
 <pre>scripts/cpa.sh -noout -heap 10000M -predicateAnalysis \
-    -setprop cfa.useMultiEdges=false \
-    -setprop cpa.predicate.solver=MATHSAT5 \
-    -setprop cfa.simplifyCfa=false \
-    -setprop cfa.allowBranchSwapping=false \
-    -setprop cpa.predicate.ignoreIrrelevantVariables=false \
-    -setprop counterexample.export.assumptions.assumeLinearArithmetics=true \
-    -setprop coverage.enabled=false \
-    -setprop coverage.mode=TRANSFER \
-    -setprop coverage.export=true \
-    -setprop coverage.file=coverage.info \
-    -setprop parser.transformTokensToLines=false \
-    -setprop counterexample.export.assumptions.includeConstantsForPointers=false \
-    -setprop cpa.arg.errorPath.graphml=witness.graphml \
-    -spec PropertyERROR.prp \
-    test.c
+-setprop cpa.composite.aggregateBasicBlocks=false \
+-setprop cfa.simplifyCfa=false \
+-setprop cfa.allowBranchSwapping=false \
+-setprop cpa.predicate.ignoreIrrelevantVariables=false \
+-setprop counterexample.export.assumptions.assumeLinearArithmetics=true \
+-setprop counterexample.export.assumptions.includeConstantsForPointers=false \
+-setprop counterexample.export.graphml=violation-witness.graphml \
+-setprop counterexample.export.compressErrorWitness=false \
+-spec PropertyUnreachCall.prp \
+test.c
 </pre>
 
-For tasks where a 64 bit linux machine model is assumed, you also need to add the parameter ``-64`` to the command line. For tasks where the simple memory model is assumed, you also need to add the option ``-setprop cpa.predicate.handlePointerAliasing=false``.
+For tasks where a 64 bit linux machine model is assumed, you also need to add the parameter ``-64`` to the command line.
 
 The output of the command should look similar to the following:
 
 <pre>Running CPAchecker with Java heap of size 10000M.
+Running CPAchecker with default stack size (1024k). Specify a larger value with -stack if needed.
 Using the following resource limits: CPU-time limit of 900s (ResourceLimitChecker.fromConfiguration, INFO)
 
-CPAchecker 1.4-svn (OpenJDK 64-Bit Server VM 1.7.0_79) started (CPAchecker.run, INFO)
+CPAchecker 1.6.1-svn (OpenJDK 64-Bit Server VM 1.8.0_111) started (CPAchecker.run, INFO)
 
-Using predicate analysis with MathSAT5 version 5.3.7 (073c3b224db1)
-  (Jul  7 2015 15:45:01, gmp 5.0.2, gcc 4.6.3, 64-bit) and JFactory 1.21.
-  (PredicateCPA:PredicateCPA.init, INFO)
+[...]
+
+line 193: Function pointer *__cil_tmp10 with type int (*)(int, int) is called, but no possible target functions were found. (CFunctionPointerResolver.replaceFunctionPointerCall, WARNING)
+
+Using predicate analysis with SMTInterpol 2.1-327-g92cafef and JFactory 1.21. (PredicateCPA:PredicateCPA.<init>, INFO)
+
+Using refinement for predicate analysis with PredicateAbstractionRefinementStrategy strategy. (PredicateCPA:PredicateCPARefiner.<init>, INFO)
+
+Starting analysis ... (CPAchecker.runAlgorithm, INFO)
+
+Error path found, starting counterexample check with CPACHECKER. (CounterexampleCheckAlgorithm.checkCounterexample, INFO)
+
+Using the following resource limits: CPU-time limit of 900s (CounterexampleCheck:ResourceLimitChecker.fromConfiguration, INFO)
+
+Repeated loading of Eclipse source parser (CounterexampleCheck:EclipseParsers.getClassLoader, INFO)
+
+Error path found and confirmed by counterexample check with CPACHECKER. (CounterexampleCheckAlgorithm.checkCounterexample, INFO)
+
+Stopping analysis ... (CPAchecker.runAlgorithm, INFO)
+
+Verification result: FALSE. Property violation (__VERIFIER_error(); called in line 410) found by chosen configuration.
+More details about the verification run can be found in the directory "./output".
 
 Using refinement for predicate analysis with PredicateAbstractionRefinementStrategy strategy.
-  (PredicateCPA:PredicateCPARefiner.init, INFO)
+(PredicateCPA:PredicateCPARefiner.init, INFO)
 
 [...]
 
@@ -234,28 +252,28 @@ Starting analysis ... (CPAchecker.runAlgorithm, INFO)
 Stopping analysis ... (CPAchecker.runAlgorithm, INFO)
 
 Verification result: FALSE. Property violation (__VERIFIER_error(); called in line 751)
-  found by chosen configuration.
+found by chosen configuration.
 More details about the verification run can be found in the directory "./output".
 </pre>
 
-The violation-witness automaton is written to ``output/witness.graphml``. If the verification is applied to the task ``ssh-simplified/s3_clnt_1_false-unreach-call.cil.c`` from the SV-COMP benchmark set, the witness should look similar to [this witness](s3_cln1_false.witness.cpachecker.graphml). Note that this task assumes the simple memory model.
+The violation-witness automaton is written to ``output/witness.graphml``. If the verification is applied to the task ``ssh-simplified/s3_clnt_1_false-unreach-call.cil.c`` from the SV-COMP benchmark set, the witness should look similar to [this witness](s3_cln1_false.witness.cpachecker.graphml).
 
 ### Writing a Violation Witness with Ultimate Automizer
 From the Ultimate Automizer directory, the following command will start Ultimate Automizer to verify a task for which it will come up with a feasible counterexample:
 
 <pre>
 ./Ultimate.py \
-	PropertyERROR.prp \
-	32bit precise \
-	test.c 
+PropertyUnreachCall.prp \
+32bit precise \
+test.c 
 </pre>
 
-For tasks where a 64 bit linux machine model is assumed, you also need to use the parameter ``64bit`` instead of ``32bit``. For tasks where the simple memory model is assumed, you also need to replace the option ``precise`` by ``simple``.
+For tasks where a 64 bit linux machine model is assumed, you also need to use the parameter ``64bit`` instead of ``32bit``.
 
 The output of the command should look similar to the following:
 
 <pre>
-# ./Ultimate.py PropertyERROR.prp 32bit precise test.c 
+# ./Ultimate.py PropertyUnreachCall.prp 32bit precise test.c 
 Checking for ERROR reachability
 Using default analysis
 Version cda1b3ec
@@ -268,7 +286,7 @@ Result:
 FALSE
 </pre>
 
-The violation-witness automaton is written to ``witness.graphml``. If the verification is applied to the task ``ssh-simplified/s3_clnt_1_false-unreach-call.cil.c`` from the SV-COMP benchmark set, the witness should look similar to [this witness](s3_cln1_false.witness.ultimateautomizer.graphml). Again, note that this task assumes the simple memory model.
+The violation-witness automaton is written to ``witness.graphml``. If the verification is applied to the task ``ssh-simplified/s3_clnt_1_false-unreach-call.cil.c`` from the SV-COMP benchmark set, the witness should look similar to [this witness](s3_cln1_false.witness.ultimateautomizer.graphml).
 
 ## Validating Correctness Witnesses
 
@@ -281,11 +299,11 @@ We assume that the two tool directories of CPAchecker and Ultimate Automizer are
 To produce a witness for the example task with CPAchecker, simply execute the following commands:
 
 <pre>  cd CPAchecker/
-  scripts/cpa.sh \
-    -correctness-witnesses-k-induction \
-    -spec ../svcomp16/c/loop-acceleration/ALL.prp \
-    ../svcomp16/c/loop-acceleration/multivar_true-unreach-call1.i
-  cd ..
+scripts/cpa.sh \
+-correctness-witnesses-k-induction \
+-spec ../svcomp/c/Loops.prp \
+../svcomp/c/loop-acceleration/multivar_true-unreach-call1.i
+cd ..
 </pre>
 
 The output of CPAchecker should be similar to the following listing:
@@ -295,19 +313,19 @@ Running CPAchecker with default stack size (1024k). Specify a larger value with 
 CPAchecker 1.6.1-svn 22870M (Java HotSpot(TM) 64-Bit Server VM 1.8.0_101) started (CPAchecker.run, INFO)
 
 The following configuration options were specified but are not used:
- properties 
- (CPAchecker.printConfigurationWarnings, WARNING)
+properties 
+(CPAchecker.printConfigurationWarnings, WARNING)
 
 Starting analysis ... (CPAchecker.runAlgorithm, INFO)
 
 Using predicate analysis with MathSAT5 version 5.3.12 (fd820dac73f2) (Aug  8 2016 11:12:19, gmp 5.1.3, gcc 5.3.0, 64-bit).
-  (Parallel analysis 1:PredicateCPA:PredicateCPA.init, INFO)
+(Parallel analysis 1:PredicateCPA:PredicateCPA.init, INFO)
 
 Using predicate analysis with MathSAT5 version 5.3.12 (fd820dac73f2) (Aug  8 2016 11:12:19, gmp 5.1.3, gcc 5.3.0, 64-bit).
-  (Parallel analysis 1:InductionStepCase:PredicateCPA:PredicateCPA.init, INFO)
+(Parallel analysis 1:InductionStepCase:PredicateCPA:PredicateCPA.init, INFO)
 
 config/invariantGeneration-no-out-no-typeinfo.properties finished successfully.
-  (ParallelAlgorithm.handleFutureResults, INFO)
+(ParallelAlgorithm.handleFutureResults, INFO)
 
 Analysis was terminated (Parallel analysis 1:ParallelAlgorithm.runParallelAnalysis, INFO)
 
@@ -328,19 +346,19 @@ To produce a witness for the example task, simply execute the following commands
 <pre> 
 cd UAutomizer-linux
 ./Ultimate.py \
-	../svcomp16/c/loop-acceleration/ALL.prp \
-	32bit precise \
-	../svcomp16/c/loop-acceleration/multivar_true-unreach-call1.i
+../svcomp/c/Loops.prp \
+32bit precise \
+../svcomp/c/loop-acceleration/multivar_true-unreach-call1.i
 </pre>
 
 The output of Ultimate Automizer should look similar to the following listing:
 
 <pre>
-# ./Ultimate.py ../svcomp16/c/loop-acceleration/ALL.prp 32bit precise ../svcomp16/c/loop-acceleration/multivar_true-unreach-call1.i
+# ./Ultimate.py ../svcomp/c/Loops.prp 32bit precise ../svcomp/c/loop-acceleration/multivar_true-unreach-call1.i
 Checking for ERROR reachability
 Using default analysis
 Version cda1b3ec
-Calling Ultimate with: java -Xmx12G -Xms1G -jar [...] -data @user.home/.ultimate -tc [...] -i ../svcomp16/c/loop-acceleration/multivar_true-unreach-call1.i -s [...]
+Calling Ultimate with: java -Xmx12G -Xms1G -jar [...] -data @user.home/.ultimate -tc [...] -i ../svcomp/c/loop-acceleration/multivar_true-unreach-call1.i -s [...]
 ........
 Execution finished normally
 Writing output log to file Ultimate.log
@@ -356,11 +374,11 @@ at ``UAutomizer-linux/witness.graphml``.
 For the validation, we assume that one of the previously obtained witnesses for the example task has been named ``correctness-witness.graphml`` and moved to the parent directory of the two tool directories. To validate the correctness witness with CPAchecker, simply execute the following commands:
 
 <pre>  cd CPAchecker/
-  scripts/cpa.sh \
-    -correctness-witness-validation \
+scripts/cpa.sh \
+-correctness-witness-validation \
     -setprop invariantGeneration.kInduction.invariantsAutomatonFile=../correctness-witness.graphml \
-    -spec ../svcomp16/c/loop-acceleration/ALL.prp \
-    ../svcomp16/c/loop-acceleration/multivar_true-unreach-call1.i
+    -spec ../svcomp/c/Loops.prp \
+    ../svcomp/c/loop-acceleration/multivar_true-unreach-call1.i
   cd ..
 </pre>
 
@@ -382,20 +400,20 @@ For the validation example, we assume that one of the previously obtained witnes
 <pre>  
 cd UAutomizer-linux/
 ./Ultimate.py \
-	../svcomp16/c/loop-acceleration/ALL.prp \
+	../svcomp/c/Loops.prp \
 	32bit precise \
-	../svcomp16/c/loop-acceleration/multivar_true-unreach-call1.i \
+	../svcomp/c/loop-acceleration/multivar_true-unreach-call1.i \
 	../correctness-witness.graphml
 </pre>
 
 A successful validation will result in an output similar to the following:
 
 <pre>
-# ./Ultimate.py ../svcomp16/c/loop-acceleration/ALL.prp 32bit precise ../svcomp16/c/loop-acceleration/multivar_true-unreach-call1.i ../correctness-witness.graphml
+# ./Ultimate.py ../svcomp/c/Loops.prp 32bit precise ../svcomp/c/loop-acceleration/multivar_true-unreach-call1.i ../correctness-witness.graphml
 Checking for ERROR reachability
 Using default analysis
 Version c3312191
-Calling Ultimate with: java -Xmx12G -Xms1G -jar [...] -data @user.home/.ultimate -tc [...] -i ../svcomp16/c/loop-acceleration/multivar_true-unreach-call1.i ../correctness-witness.graphml -s [...]
+Calling Ultimate with: java -Xmx12G -Xms1G -jar [...] -data @user.home/.ultimate -tc [...] -i ../svcomp/c/loop-acceleration/multivar_true-unreach-call1.i ../correctness-witness.graphml -s [...]
 ........
 Execution finished normally
 Writing output log to file Ultimate.log
@@ -405,7 +423,7 @@ TRUE
 
 ### Further Reading
 
-1. Dirk Beyer, Matthias Dangl, Daniel Dietsch, and Matthias Heizmann. **Correctness Witnesses: Exchanging Verification Results between Verifiers**. In J. Cleland-Huang and Z. Su, editors, *Proceedings of the 24th ACM SIGSOFT International Symposium on the Foundations of Software Engineering (FSE 2016, Seattle, WA, USA, November 13-18)*, 2016. ACM, New York.
+1. Dirk Beyer, Matthias Dangl, Daniel Dietsch, and Matthias Heizmann. **Correctness Witnesses: Exchanging Verification Results between Verifiers**. In J. Cleland-Huang and Z. Su, editors, *Proceedings of the 24th ACM SIGSOFT International Symposium on the Foundations of Software Engineering (FSE 2016, Seattle, WA, USA, November 13-18)*, pages 326-337, 2016. ACM, New York.
 2. Dirk Beyer and Matthias Dangl. **Verification-Aided Debugging: An Interactive Web-Service for Exploring Error Witnesses**. In S. Chaudhuri and A. Farzan, editors, *Proceedings of the 28th International Conference on Computer Aided Verification (CAV 2016, Toronto, ON, Canada, July 17-23), Part II*, LNCS 9780, pages 502-509, 2016. Springer-Verlag, Heidelberg.
 3. Dirk Beyer. **Reliable and Reproducible Competition Results with BenchExec and Witnesses (Report on SV-COMP 2016)**. In M. Chechik and J.-F. Raskin, editors, *Proceedings of the 22nd International Conference on Tools and Algorithms for the Construction and of Analysis Systems (TACAS 2016, Eindhoven, The Netherlands, April 2-8)*, pages 887-904, 2016. Springer-Verlag, Heidelberg.
 4. Dirk Beyer, Matthias Dangl, Daniel Dietsch, Matthias Heizmann, and Andreas Stahlbauer. **Witness Validation and Stepwise Testification across Software Verifiers**. In E. Di Nitto, M. Harman, and P. Heymans, editors, *Proceedings of the 2015 10th Joint Meeting of the European Software Engineering Conference and the ACM SIGSOFT Symposium on Foundations of Software Engineering (ESEC/FSE 2015, Bergamo, Italy, August 31 - September 4)*, pages 721-733, 2015. ACM, New York.

@@ -1,0 +1,494 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<graphml xmlns="http://graphml.graphdrawing.org/xmlns" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+ <key attr.name="originFileName" attr.type="string" for="edge" id="originfile">
+  <default>test/programs/benchmarks/product-lines/minepump_spec1_product33_false-unreach-call_false-termination.cil.c</default>
+ </key>
+ <key attr.name="invariant" attr.type="string" for="node" id="invariant"/>
+ <key attr.name="invariant.scope" attr.type="string" for="node" id="invariant.scope"/>
+ <key attr.name="namedValue" attr.type="string" for="node" id="named"/>
+ <key attr.name="nodeType" attr.type="string" for="node" id="nodetype">
+  <default>path</default>
+ </key>
+ <key attr.name="isFrontierNode" attr.type="boolean" for="node" id="frontier">
+  <default>false</default>
+ </key>
+ <key attr.name="isViolationNode" attr.type="boolean" for="node" id="violation">
+  <default>false</default>
+ </key>
+ <key attr.name="isEntryNode" attr.type="boolean" for="node" id="entry">
+  <default>false</default>
+ </key>
+ <key attr.name="isSinkNode" attr.type="boolean" for="node" id="sink">
+  <default>false</default>
+ </key>
+ <key attr.name="enterLoopHead" attr.type="boolean" for="edge" id="enterLoopHead">
+  <default>false</default>
+ </key>
+ <key attr.name="violatedProperty" attr.type="string" for="node" id="violatedProperty"/>
+ <key attr.name="threadId" attr.type="string" for="edge" id="threadId"/>
+ <key attr.name="sourcecodeLanguage" attr.type="string" for="graph" id="sourcecodelang"/>
+ <key attr.name="programFile" attr.type="string" for="graph" id="programfile"/>
+ <key attr.name="programHash" attr.type="string" for="graph" id="programhash"/>
+ <key attr.name="specification" attr.type="string" for="graph" id="specification"/>
+ <key attr.name="architecture" attr.type="string" for="graph" id="architecture"/>
+ <key attr.name="producer" attr.type="string" for="graph" id="producer"/>
+ <key attr.name="sourcecode" attr.type="string" for="edge" id="sourcecode"/>
+ <key attr.name="startline" attr.type="int" for="edge" id="startline"/>
+ <key attr.name="startoffset" attr.type="int" for="edge" id="startoffset"/>
+ <key attr.name="lineColSet" attr.type="string" for="edge" id="lineCols"/>
+ <key attr.name="control" attr.type="string" for="edge" id="control"/>
+ <key attr.name="assumption" attr.type="string" for="edge" id="assumption"/>
+ <key attr.name="assumption.resultfunction" attr.type="string" for="edge" id="assumption.resultfunction"/>
+ <key attr.name="assumption.scope" attr.type="string" for="edge" id="assumption.scope"/>
+ <key attr.name="enterFunction" attr.type="string" for="edge" id="enterFunction"/>
+ <key attr.name="returnFromFunction" attr.type="string" for="edge" id="returnFrom"/>
+ <key attr.name="predecessor" attr.type="string" for="edge" id="predecessor"/>
+ <key attr.name="successor" attr.type="string" for="edge" id="successor"/>
+ <key attr.name="witness-type" attr.type="string" for="graph" id="witness-type"/>
+ <graph edgedefault="directed">
+  <data key="witness-type">violation_witness</data>
+  <data key="sourcecodelang">C</data>
+  <data key="producer">CPAchecker 1.6.1-svn</data>
+  <data key="specification">CHECK( init(main()), LTL(G ! call(__VERIFIER_error())) )</data>
+  <data key="programfile">minepump_spec1_product33_false-unreach-call_false-termination.cil.c</data>
+  <data key="programhash">4988ed1a51716095b984ef9f31c0416bd8aad186</data>
+  <data key="architecture">32bit</data>
+  <node id="A0">
+   <data key="entry">true</data>
+  </node>
+  <node id="A2"/>
+  <edge source="A0" target="A2">
+   <data key="sourcecode">int tmp ;</data>
+   <data key="startline">757</data>
+   <data key="startoffset">15252</data>
+   <data key="assumption">waterLevel == (1); methaneLevelCritical == (0); systemActive == (1); cleanupTimeShifts == (4); pumpRunning == (0);</data>
+   <data key="assumption.scope">main</data>
+  </edge>
+  <node id="A3"/>
+  <edge source="A2" target="A3">
+   <data key="sourcecode">select_helpers();</data>
+   <data key="startline">761</data>
+   <data key="startoffset">15273</data>
+   <data key="enterFunction">select_helpers</data>
+  </edge>
+  <node id="A5"/>
+  <edge source="A3" target="A5">
+   <data key="sourcecode">return;</data>
+   <data key="startline">670</data>
+   <data key="startoffset">14257</data>
+   <data key="returnFrom">select_helpers</data>
+  </edge>
+  <node id="A7"/>
+  <edge source="A5" target="A7">
+   <data key="sourcecode">select_features();</data>
+   <data key="startline">762</data>
+   <data key="startoffset">15293</data>
+   <data key="enterFunction">select_features</data>
+  </edge>
+  <node id="A9"/>
+  <edge source="A7" target="A9">
+   <data key="sourcecode">return;</data>
+   <data key="startline">663</data>
+   <data key="startoffset">14208</data>
+   <data key="returnFrom">select_features</data>
+  </edge>
+  <node id="A11"/>
+  <edge source="A9" target="A11">
+   <data key="sourcecode">tmp = valid_product();</data>
+   <data key="startline">763</data>
+   <data key="startoffset">15314</data>
+   <data key="enterFunction">valid_product</data>
+  </edge>
+  <node id="A12"/>
+  <edge source="A11" target="A12">
+   <data key="sourcecode">retValue_acc = 1;</data>
+   <data key="startline">677</data>
+   <data key="startoffset">14322</data>
+   <data key="assumption">retValue_acc == (1);</data>
+   <data key="assumption.scope">valid_product</data>
+  </edge>
+  <node id="A13"/>
+  <edge source="A12" target="A13">
+   <data key="sourcecode">return (retValue_acc);</data>
+   <data key="startline">678</data>
+   <data key="startoffset">14342</data>
+   <data key="returnFrom">valid_product</data>
+  </edge>
+  <node id="A15"/>
+  <edge source="A13" target="A15">
+   <data key="sourcecode">[(tmp == 0) == 0]</data>
+   <data key="startline">765</data>
+   <data key="startoffset">15347</data>
+   <data key="control">condition-true</data>
+  </edge>
+  <node id="A16"/>
+  <edge source="A15" target="A16">
+   <data key="sourcecode">setup();</data>
+   <data key="startline">767</data>
+   <data key="startoffset">15364</data>
+   <data key="enterFunction">setup</data>
+  </edge>
+  <node id="A18"/>
+  <edge source="A16" target="A18">
+   <data key="sourcecode">return;</data>
+   <data key="startline">742</data>
+   <data key="startoffset">15141</data>
+   <data key="returnFrom">setup</data>
+  </edge>
+  <node id="A20"/>
+  <edge source="A18" target="A20">
+   <data key="sourcecode">runTest();</data>
+   <data key="startline">768</data>
+   <data key="startoffset">15377</data>
+   <data key="enterFunction">runTest</data>
+  </edge>
+  <node id="A22"/>
+  <edge source="A20" target="A22">
+   <data key="sourcecode">test();</data>
+   <data key="startline">750</data>
+   <data key="startoffset">15187</data>
+   <data key="enterFunction">test</data>
+  </edge>
+  <node id="A23"/>
+  <edge source="A22" target="A23">
+   <data key="enterLoopHead">true</data>
+   <data key="sourcecode">splverifierCounter = 0;</data>
+   <data key="startline">588</data>
+   <data key="startoffset">13145</data>
+   <data key="assumption">splverifierCounter == (0);</data>
+   <data key="assumption.scope">test</data>
+  </edge>
+  <node id="A27"/>
+  <edge source="A23" target="A27">
+   <data key="sourcecode">[splverifierCounter &lt; 4]</data>
+   <data key="startline">592</data>
+   <data key="startoffset">13235</data>
+   <data key="control">condition-true</data>
+  </edge>
+  <node id="A29"/>
+  <edge source="A27" target="A29">
+   <data key="sourcecode">[(tmp == 0) == 0]</data>
+   <data key="startline">600</data>
+   <data key="startoffset">13362</data>
+   <data key="control">condition-true</data>
+  </edge>
+  <node id="sink">
+   <data key="sink">true</data>
+  </node>
+  <edge source="A27" target="sink">
+   <data key="sourcecode">[!((tmp == 0) == 0)]</data>
+   <data key="startline">600</data>
+   <data key="startoffset">13362</data>
+   <data key="control">condition-false</data>
+  </edge>
+  <node id="A32"/>
+  <edge source="A29" target="A32">
+   <data key="sourcecode">waterRise();</data>
+   <data key="startline">602</data>
+   <data key="startoffset">13383</data>
+   <data key="enterFunction">waterRise</data>
+  </edge>
+  <node id="A34"/>
+  <edge source="A32" target="A34">
+   <data key="sourcecode">[waterLevel &lt; 2]</data>
+   <data key="startline">824</data>
+   <data key="startoffset">16098</data>
+   <data key="control">condition-true</data>
+  </edge>
+  <node id="A35"/>
+  <edge source="A34" target="A35">
+   <data key="sourcecode">waterLevel = waterLevel + 1;</data>
+   <data key="startline">825</data>
+   <data key="startoffset">16120</data>
+   <data key="assumption">waterLevel == (2);</data>
+   <data key="assumption.scope">waterRise</data>
+  </edge>
+  <node id="A37"/>
+  <edge source="A35" target="A37">
+   <data key="sourcecode">return;</data>
+   <data key="startline">829</data>
+   <data key="startoffset">16167</data>
+   <data key="returnFrom">waterRise</data>
+  </edge>
+  <node id="A44"/>
+  <edge source="A37" target="A44">
+   <data key="sourcecode">[(tmp___0 == 0) == 0]</data>
+   <data key="startline">610</data>
+   <data key="startoffset">13483</data>
+   <data key="control">condition-true</data>
+  </edge>
+  <edge source="A37" target="sink">
+   <data key="sourcecode">[!((tmp___0 == 0) == 0)]</data>
+   <data key="startline">610</data>
+   <data key="startoffset">13483</data>
+   <data key="control">condition-false</data>
+  </edge>
+  <node id="A55"/>
+  <edge source="A44" target="A55">
+   <data key="sourcecode">changeMethaneLevel();</data>
+   <data key="startline">612</data>
+   <data key="startoffset">13508</data>
+   <data key="enterFunction">changeMethaneLevel</data>
+  </edge>
+  <node id="A57"/>
+  <edge source="A55" target="A57">
+   <data key="sourcecode">[!((methaneLevelCritical == 0) == 0)]</data>
+   <data key="startline">836</data>
+   <data key="startoffset">16224</data>
+   <data key="control">condition-false</data>
+  </edge>
+  <node id="A58"/>
+  <edge source="A57" target="A58">
+   <data key="sourcecode">methaneLevelCritical = 1;</data>
+   <data key="startline">839</data>
+   <data key="startoffset">16293</data>
+   <data key="assumption">methaneLevelCritical == (1);</data>
+   <data key="assumption.scope">changeMethaneLevel</data>
+  </edge>
+  <node id="A60"/>
+  <edge source="A58" target="A60">
+   <data key="sourcecode">return;</data>
+   <data key="startline">841</data>
+   <data key="startoffset">16325</data>
+   <data key="returnFrom">changeMethaneLevel</data>
+  </edge>
+  <edge source="A60" target="sink">
+   <data key="sourcecode">[(tmp___2 == 0) == 0]</data>
+   <data key="startline">620</data>
+   <data key="startoffset">13617</data>
+   <data key="control">condition-true</data>
+  </edge>
+  <node id="A75"/>
+  <edge source="A60" target="A75">
+   <data key="sourcecode">[!((tmp___2 == 0) == 0)]</data>
+   <data key="startline">620</data>
+   <data key="startoffset">13617</data>
+   <data key="control">condition-false</data>
+  </edge>
+  <edge source="A75" target="sink">
+   <data key="sourcecode">[(tmp___1 == 0) == 0]</data>
+   <data key="startline">626</data>
+   <data key="startoffset">13709</data>
+   <data key="control">condition-true</data>
+  </edge>
+  <node id="A87"/>
+  <edge source="A75" target="A87">
+   <data key="sourcecode">[!((tmp___1 == 0) == 0)]</data>
+   <data key="startline">626</data>
+   <data key="startoffset">13709</data>
+   <data key="control">condition-false</data>
+  </edge>
+  <node id="A238"/>
+  <edge source="A87" target="A238">
+   <data key="sourcecode">timeShift();</data>
+   <data key="startline">633</data>
+   <data key="startoffset">13761</data>
+   <data key="enterFunction">timeShift</data>
+  </edge>
+  <node id="A240"/>
+  <edge source="A238" target="A240">
+   <data key="sourcecode">[!((pumpRunning == 0) == 0)]</data>
+   <data key="startline">432</data>
+   <data key="startoffset">11244</data>
+   <data key="control">condition-false</data>
+  </edge>
+  <node id="A242"/>
+  <edge source="A240" target="A242">
+   <data key="sourcecode">[(systemActive == 0) == 0]</data>
+   <data key="startline">439</data>
+   <data key="startoffset">11316</data>
+   <data key="control">condition-true</data>
+  </edge>
+  <node id="A243"/>
+  <edge source="A242" target="A243">
+   <data key="sourcecode">processEnvironment();</data>
+   <data key="startline">441</data>
+   <data key="startoffset">11342</data>
+   <data key="enterFunction">processEnvironment</data>
+  </edge>
+  <node id="A245"/>
+  <edge source="A243" target="A245">
+   <data key="sourcecode">[pumpRunning == 0]</data>
+   <data key="startline">464</data>
+   <data key="startoffset">11601</data>
+   <data key="control">condition-true</data>
+  </edge>
+  <node id="A246"/>
+  <edge source="A245" target="A246">
+   <data key="sourcecode">tmp = isHighWaterLevel();</data>
+   <data key="startline">466</data>
+   <data key="startoffset">11626</data>
+   <data key="enterFunction">isHighWaterLevel</data>
+  </edge>
+  <node id="A248"/>
+  <edge source="A246" target="A248">
+   <data key="sourcecode">tmp = isHighWaterSensorDry();</data>
+   <data key="startline">564</data>
+   <data key="startoffset">12748</data>
+   <data key="enterFunction">isHighWaterSensorDry</data>
+  </edge>
+  <node id="A250"/>
+  <edge source="A248" target="A250">
+   <data key="sourcecode">[!(waterLevel &lt; 2)]</data>
+   <data key="startline">889</data>
+   <data key="startoffset">16935</data>
+   <data key="control">condition-false</data>
+  </edge>
+  <node id="A251"/>
+  <edge source="A250" target="A251">
+   <data key="sourcecode">retValue_acc = 0;</data>
+   <data key="startline">893</data>
+   <data key="startoffset">17017</data>
+   <data key="assumption">retValue_acc == (0);</data>
+   <data key="assumption.scope">isHighWaterSensorDry</data>
+  </edge>
+  <node id="A252"/>
+  <edge source="A251" target="A252">
+   <data key="sourcecode">return (retValue_acc);</data>
+   <data key="startline">894</data>
+   <data key="startoffset">17039</data>
+   <data key="returnFrom">isHighWaterSensorDry</data>
+  </edge>
+  <node id="A254"/>
+  <edge source="A252" target="A254">
+   <data key="sourcecode">[!((tmp == 0) == 0)]</data>
+   <data key="startline">566</data>
+   <data key="startoffset">12788</data>
+   <data key="control">condition-false</data>
+  </edge>
+  <node id="A255"/>
+  <edge source="A254" target="A255">
+   <data key="sourcecode">tmp___0 = 1;</data>
+   <data key="startline">569</data>
+   <data key="startoffset">12827</data>
+   <data key="assumption">tmp___0 == (1);</data>
+   <data key="assumption.scope">isHighWaterLevel</data>
+  </edge>
+  <node id="A257"/>
+  <edge source="A255" target="A257">
+   <data key="sourcecode">retValue_acc = tmp___0;</data>
+   <data key="startline">571</data>
+   <data key="startoffset">12846</data>
+   <data key="assumption">retValue_acc == (1);</data>
+   <data key="assumption.scope">isHighWaterLevel</data>
+  </edge>
+  <node id="A258"/>
+  <edge source="A257" target="A258">
+   <data key="sourcecode">return (retValue_acc);</data>
+   <data key="startline">572</data>
+   <data key="startoffset">12872</data>
+   <data key="returnFrom">isHighWaterLevel</data>
+  </edge>
+  <node id="A260"/>
+  <edge source="A258" target="A260">
+   <data key="sourcecode">[(tmp == 0) == 0]</data>
+   <data key="startline">468</data>
+   <data key="startoffset">11666</data>
+   <data key="control">condition-true</data>
+  </edge>
+  <node id="A261"/>
+  <edge source="A260" target="A261">
+   <data key="sourcecode">activatePump();</data>
+   <data key="startline">470</data>
+   <data key="startoffset">11687</data>
+   <data key="enterFunction">activatePump</data>
+  </edge>
+  <node id="A262"/>
+  <edge source="A261" target="A262">
+   <data key="sourcecode">pumpRunning = 1;</data>
+   <data key="startline">489</data>
+   <data key="startoffset">11906</data>
+   <data key="assumption">pumpRunning == (1);</data>
+   <data key="assumption.scope">activatePump</data>
+  </edge>
+  <node id="A263"/>
+  <edge source="A262" target="A263">
+   <data key="sourcecode">return;</data>
+   <data key="startline">490</data>
+   <data key="startoffset">11925</data>
+   <data key="returnFrom">activatePump</data>
+  </edge>
+  <node id="A267"/>
+  <edge source="A263" target="A267">
+   <data key="sourcecode">return;</data>
+   <data key="startline">482</data>
+   <data key="startoffset">11859</data>
+   <data key="returnFrom">processEnvironment</data>
+  </edge>
+  <node id="A270"/>
+  <edge source="A267" target="A270">
+   <data key="sourcecode">__utac_acc__Specification1_spec__1();</data>
+   <data key="startline">447</data>
+   <data key="startoffset">11392</data>
+   <data key="enterFunction">__utac_acc__Specification1_spec__1</data>
+  </edge>
+  <node id="A272"/>
+  <edge source="A270" target="A272">
+   <data key="sourcecode">tmp = isMethaneLevelCritical();</data>
+   <data key="startline">785</data>
+   <data key="startoffset">15615</data>
+   <data key="enterFunction">isMethaneLevelCritical</data>
+  </edge>
+  <node id="A273"/>
+  <edge source="A272" target="A273">
+   <data key="sourcecode">retValue_acc = methaneLevelCritical;</data>
+   <data key="startline">848</data>
+   <data key="startoffset">16399</data>
+   <data key="assumption">retValue_acc == (1);</data>
+   <data key="assumption.scope">isMethaneLevelCritical</data>
+  </edge>
+  <node id="A274"/>
+  <edge source="A273" target="A274">
+   <data key="sourcecode">return (retValue_acc);</data>
+   <data key="startline">849</data>
+   <data key="startoffset">16438</data>
+   <data key="returnFrom">isMethaneLevelCritical</data>
+  </edge>
+  <node id="A276"/>
+  <edge source="A274" target="A276">
+   <data key="sourcecode">[(tmp == 0) == 0]</data>
+   <data key="startline">787</data>
+   <data key="startoffset">15657</data>
+   <data key="control">condition-true</data>
+  </edge>
+  <node id="A277"/>
+  <edge source="A276" target="A277">
+   <data key="sourcecode">tmp___0 = isPumpRunning();</data>
+   <data key="startline">789</data>
+   <data key="startoffset">15674</data>
+   <data key="enterFunction">isPumpRunning</data>
+  </edge>
+  <node id="A278"/>
+  <edge source="A277" target="A278">
+   <data key="sourcecode">retValue_acc = pumpRunning;</data>
+   <data key="startline">516</data>
+   <data key="startoffset">12215</data>
+   <data key="assumption">retValue_acc == (1);</data>
+   <data key="assumption.scope">isPumpRunning</data>
+  </edge>
+  <node id="A279"/>
+  <edge source="A278" target="A279">
+   <data key="sourcecode">return (retValue_acc);</data>
+   <data key="startline">517</data>
+   <data key="startoffset">12245</data>
+   <data key="returnFrom">isPumpRunning</data>
+  </edge>
+  <node id="A281"/>
+  <edge source="A279" target="A281">
+   <data key="sourcecode">[(tmp___0 == 0) == 0]</data>
+   <data key="startline">791</data>
+   <data key="startoffset">15715</data>
+   <data key="control">condition-true</data>
+  </edge>
+  <node id="A282">
+   <data key="violation">true</data>
+   <data key="violatedProperty">__VERIFIER_error(); called in line 410</data>
+  </node>
+  <edge source="A281" target="A282">
+   <data key="sourcecode">__automaton_fail();</data>
+   <data key="startline">793</data>
+   <data key="startoffset">15740</data>
+   <data key="enterFunction">__automaton_fail</data>
+  </edge>
+ </graph>
+</graphml>
