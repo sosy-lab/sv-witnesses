@@ -221,8 +221,6 @@ CPAchecker 1.6.1-svn (OpenJDK 64-Bit Server VM 1.8.0_111) started (CPAchecker.ru
 
 [...]
 
-line 193: Function pointer *__cil_tmp10 with type int (*)(int, int) is called, but no possible target functions were found. (CFunctionPointerResolver.replaceFunctionPointerCall, WARNING)
-
 Using predicate analysis with SMTInterpol 2.1-327-g92cafef and JFactory 1.21. (PredicateCPA:PredicateCPA.<init>, INFO)
 
 Using refinement for predicate analysis with PredicateAbstractionRefinementStrategy strategy. (PredicateCPA:PredicateCPARefiner.<init>, INFO)
@@ -244,19 +242,9 @@ More details about the verification run can be found in the directory "./output"
 
 Using refinement for predicate analysis with PredicateAbstractionRefinementStrategy strategy.
 (PredicateCPA:PredicateCPARefiner.init, INFO)
-
-[...]
-
-Starting analysis ... (CPAchecker.runAlgorithm, INFO)
-
-Stopping analysis ... (CPAchecker.runAlgorithm, INFO)
-
-Verification result: FALSE. Property violation (__VERIFIER_error(); called in line 751)
-found by chosen configuration.
-More details about the verification run can be found in the directory "./output".
 </pre>
 
-The violation-witness automaton is written to ``output/witness.graphml``. If the verification is applied to the task ``ssh-simplified/s3_clnt_1_false-unreach-call.cil.c`` from the SV-COMP benchmark set, the witness should look similar to [this witness](s3_cln1_false.witness.cpachecker.graphml).
+The violation-witness automaton is written to ``output/witness.graphml``. If the verification is applied an [example program](minepump_spec1_product33_false-unreach-call_false-termination.cil.c) and [specification](PropertyUnreachCall.prp) from the SV-COMP'17 benchmark set, the witness should look similar to [this witness](minepump_spec1_product33_false-unreach-call_false-termination.cil.graphml).
 
 ### Writing a Violation Witness with Ultimate Automizer
 From the Ultimate Automizer directory, the following command will start Ultimate Automizer to verify a task for which it will come up with a feasible counterexample:
@@ -286,24 +274,22 @@ Result:
 FALSE
 </pre>
 
-The violation-witness automaton is written to ``witness.graphml``. If the verification is applied to the task ``ssh-simplified/s3_clnt_1_false-unreach-call.cil.c`` from the SV-COMP benchmark set, the witness should look similar to [this witness](s3_cln1_false.witness.ultimateautomizer.graphml).
+The violation-witness automaton is written to ``witness.graphml``. If the verification is applied an [example program](minepump_spec1_product33_false-unreach-call_false-termination.cil.c) and [specification](PropertyUnreachCall.prp) from the SV-COMP'17 benchmark set, the witness should look similar to [this witness](minepump_spec1_product33_false-unreach-call_false-termination.cil.ultimateautomizer.graphml).
 
 ## Validating Correctness Witnesses
 
 As a running example, we use the verification task [multivar_true-unreach-call1.i](multivar_true-unreach-call1.i) from the SV-COMP'17 benchmark set.
 
-We assume that the two tool directories of CPAchecker and Ultimate Automizer are placed alongside each other in the same parent directory.
+We assume that the program as well as its [specification](PropertyUnreachCall.prp) have been placed in the desired tool's directory.
 
 ### Producing Correctness Witnesses with CPAchecker
 
 To produce a witness for the example task with CPAchecker, simply execute the following commands:
 
-<pre>  cd CPAchecker/
-scripts/cpa.sh \
+<pre>scripts/cpa.sh \
 -correctness-witnesses-k-induction \
--spec ../svcomp/c/Loops.prp \
-../svcomp/c/loop-acceleration/multivar_true-unreach-call1.i
-cd ..
+-spec PropertyUnreachCall.prp \
+multivar_true-unreach-call1.i
 </pre>
 
 The output of CPAchecker should be similar to the following listing:
@@ -343,22 +329,20 @@ at ``CPAchecker/output/correctness-witness.graphml``.
 The procedure for producing a correctness witness with Ultimate Automizer does not differ from producing a violation witness. 
 To produce a witness for the example task, simply execute the following commands:
 
-<pre> 
-cd UAutomizer-linux
-./Ultimate.py \
-../svcomp/c/Loops.prp \
+<pre>./Ultimate.py \
+PropertyUnreachCall.prp \
 32bit precise \
-../svcomp/c/loop-acceleration/multivar_true-unreach-call1.i
+multivar_true-unreach-call1.i
 </pre>
 
 The output of Ultimate Automizer should look similar to the following listing:
 
 <pre>
-# ./Ultimate.py ../svcomp/c/Loops.prp 32bit precise ../svcomp/c/loop-acceleration/multivar_true-unreach-call1.i
+# ./Ultimate.py PropertyUnreachCall.prp 32bit precise multivar_true-unreach-call1.i
 Checking for ERROR reachability
 Using default analysis
 Version cda1b3ec
-Calling Ultimate with: java -Xmx12G -Xms1G -jar [...] -data @user.home/.ultimate -tc [...] -i ../svcomp/c/loop-acceleration/multivar_true-unreach-call1.i -s [...]
+Calling Ultimate with: java -Xmx12G -Xms1G -jar [...] -data @user.home/.ultimate -tc [...] -i multivar_true-unreach-call1.i -s [...]
 ........
 Execution finished normally
 Writing output log to file Ultimate.log
@@ -371,15 +355,13 @@ at ``UAutomizer-linux/witness.graphml``.
 
 ### Validating Correctness Witnesses with CPAchecker
 
-For the validation, we assume that one of the previously obtained witnesses for the example task has been named ``correctness-witness.graphml`` and moved to the parent directory of the two tool directories. To validate the correctness witness with CPAchecker, simply execute the following commands:
+For the validation, we assume that one of the previously obtained witnesses for the example task has been named ``correctness-witness.graphml`` and placed in the desired tool directory. To validate the correctness witness with CPAchecker, simply execute the following commands:
 
-<pre>  cd CPAchecker/
-scripts/cpa.sh \
+<pre>scripts/cpa.sh \
 -correctness-witness-validation \
-    -setprop invariantGeneration.kInduction.invariantsAutomatonFile=../correctness-witness.graphml \
-    -spec ../svcomp/c/Loops.prp \
-    ../svcomp/c/loop-acceleration/multivar_true-unreach-call1.i
-  cd ..
+    -setprop invariantGeneration.kInduction.invariantsAutomatonFile=correctness-witness.graphml \
+    -spec PropertyUnreachCall.prp \
+    multivar_true-unreach-call1.i
 </pre>
 
 If the witness is valid, the output of CPAchecker should end in the following lines:
@@ -395,25 +377,23 @@ in ``CPAchecker/output/correctness-witness.graphml``.
 
 ### Validating Correctness Witnesses with Ultimate Automizer
 Again, the procedure for validating a correctness witness with Ultimate Automizer does not differ from validating a violation witness. 
-For the validation example, we assume that one of the previously obtained witnesses for the example task has been named ``correctness-witness.graphml`` and moved to the parent directory of the two tool directories. To validate the correctness witness with Ultimate Automizer, simply execute the following commands:
+For the validation example, we assume that one of the previously obtained witnesses for the example task has been named ``correctness-witness.graphml`` and placed in the desired tool directory. To validate the correctness witness with Ultimate Automizer, simply execute the following commands:
 
-<pre>  
-cd UAutomizer-linux/
-./Ultimate.py \
-	../svcomp/c/Loops.prp \
+<pre>./Ultimate.py \
+	PropertyUnreachCall.prp \
 	32bit precise \
-	../svcomp/c/loop-acceleration/multivar_true-unreach-call1.i \
-	../correctness-witness.graphml
+	multivar_true-unreach-call1.i \
+	correctness-witness.graphml
 </pre>
 
 A successful validation will result in an output similar to the following:
 
 <pre>
-# ./Ultimate.py ../svcomp/c/Loops.prp 32bit precise ../svcomp/c/loop-acceleration/multivar_true-unreach-call1.i ../correctness-witness.graphml
+# ./Ultimate.py PropertyUnreachCall.prp 32bit precise multivar_true-unreach-call1.i correctness-witness.graphml
 Checking for ERROR reachability
 Using default analysis
 Version c3312191
-Calling Ultimate with: java -Xmx12G -Xms1G -jar [...] -data @user.home/.ultimate -tc [...] -i ../svcomp/c/loop-acceleration/multivar_true-unreach-call1.i ../correctness-witness.graphml -s [...]
+Calling Ultimate with: java -Xmx12G -Xms1G -jar [...] -data @user.home/.ultimate -tc [...] -i multivar_true-unreach-call1.i correctness-witness.graphml -s [...]
 ........
 Execution finished normally
 Writing output log to file Ultimate.log
