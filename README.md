@@ -71,7 +71,7 @@ Witnesses can be validated by CPAchecker or Ultimate Automizer. To validate a wi
 
 In the following, we present the violation-witness validation service followed by listing examples of available witness checkers (in alphabetic order).
 
-## Validating Witnesses using a Violation-Witness Validation Service
+## Validating Witnesses using a Witness Validation Service
 
 The witness-validation service is designed to be as simple to use as possible. Therefore you will not not need to manually select the specification and architecture the witness was produced for, but may instead include this information within the witness file itself. See the XML ``data`` tags with the keys ``specification`` and ``architecture`` in the [example violation witness](minepump_spec1_product33_false-unreach-call_false-termination.cil.graphml) the assumed [specification](PropertyUnreachCall.prp) and [buggy program](minepump_spec1_product33_false-unreach-call_false-termination.cil.c). Accepted values for the architecture are ``32bit`` (default) and ``64bit``. If you would rather keep the original specification separate, you can still use the witness validators manually, as described further down.
 In addition to the [example violation witness](minepump_spec1_product33_false-unreach-call_false-termination.cil.graphml) above, we also provide an [example correctness witness](multivar_true-unreach-call1.graphml) corresponding to a [correct program](multivar_true-unreach-call1.i) for the same [specification](PropertyUnreachCall.prp).
