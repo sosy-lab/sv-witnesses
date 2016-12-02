@@ -17,17 +17,17 @@ In order to represent the witness automaton in GraphML, the edges and nodes of t
 
 These annotations are used for the ``graph`` GraphML tag,
 i.e. for ``data`` tags that are direct children of the ``graph`` tag.
-All of the annotations are required.
 
-| key | Meaning |
-| --- | --- |
-| witness-type | *Valid values:* ``correctness_witness`` or ``violation_witness`` <br /> Specifies the witness type. A correctness witness is identified by the value ``correctness_witness``, a violation witness is identified by the value ``violation_witness``. |
-| sourcecodelang | *Valid values:* Currently, only ``C`` is supported. <br /> The name of the programming language. |
-| producer | *Valid values:* Any <br /> The name of the tool that produced the witness automaton, e.g. ``CPAchecker 1.6.8`` |
-| specification | *Valid values:* The specification text <br /> The specification text used to verify the program, e.g. ``CHECK( init(main()), LTL(G ! call(__VERIFIER_error())) )`` |
-| programfile | *Valid values:* The program file path as passed to the verifier <br /> The path to the program file, e.g. ``/home/me/benchmarks/c/loop-acceleration/multivar_true-unreach-call1_true-termination.i`` |
-| programhash | *Valid values:* SHA-1-Hashsum <br /> The SHA-1-Hashsum of the verified program, e.g. ``bec44c8c30d753a31070dd280c7a98510270704c``. |
-| architecture | *Valid values:* An identifier for the assumed architecture <br /> The architecture assumed for the verification task, e.g. ``32bit`` or ``64bit`` |
+| key | Meaning | Required |
+| --- | --- | --- |
+| witness-type | *Valid values:* ``correctness_witness`` or ``violation_witness`` <br /> Specifies the witness type. A correctness witness is identified by the value ``correctness_witness``, a violation witness is identified by the value ``violation_witness``. | Yes |
+| sourcecodelang | *Valid values:* Currently, only ``C`` is supported. <br /> The name of the programming language. | Yes |
+| producer | *Valid values:* Any <br /> The name of the tool that produced the witness automaton, e.g. ``CPAchecker 1.6.8`` | Yes |
+| specification | *Valid values:* The specification text <br /> The specification text used to verify the program, e.g. ``CHECK( init(main()), LTL(G ! call(__VERIFIER_error())) )`` | Yes |
+| programfile | *Valid values:* The program file path as passed to the verifier <br /> The path to the program file, e.g. ``/home/me/benchmarks/c/loop-acceleration/multivar_true-unreach-call1_true-termination.i`` | Yes |
+| programhash | *Valid values:* SHA-1-Hashsum <br /> The SHA-1-Hashsum of the verified program, e.g. ``bec44c8c30d753a31070dd280c7a98510270704c``. | Yes |
+| architecture | *Valid values:* An identifier for the assumed architecture <br /> The architecture assumed for the verification task, e.g. ``32bit`` or ``64bit`` | Yes |
+| creationtime | *Valid values:* Date and time of creation in ISO 8601 format. <br /> The date and time the witness was created in ISO 8601 format. The date must contain the year, the month, and the day, separated by dashes ('-'). The date is separated from the time using the capital letter 'T'. The time must be given in hours, minutes, and seconds, separated by colons (':'). If the timestamp is not given in UTC time, a positive ('+') or negative ('-') time offset consisting of hours and minutes separated by a colon (':') can be appended. Example: ``2016-12-24T13:15:32+02:00``. | No |
 
 #### Node Data for Automata States
 
