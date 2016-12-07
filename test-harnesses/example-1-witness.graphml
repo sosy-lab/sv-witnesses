@@ -23,8 +23,8 @@
   <data key="sourcecodelang">C</data>
   <data key="producer">CPAchecker 1.6.1-svn</data>
   <data key="specification">CHECK( init(main()), LTL(G ! call(__VERIFIER_error())) )</data>
-  <data key="programfile">example.i</data>
-  <data key="programhash">1776ed2413d170f227b69d8c79ba700d31db6f75</data>
+  <data key="programfile">example-1.i</data>
+  <data key="programhash">52d5a94d276546e3d370ffb120a6264519696d08</data>
   <data key="memorymodel">precise</data>
   <data key="architecture">32bit</data>
   <node id="entry">
