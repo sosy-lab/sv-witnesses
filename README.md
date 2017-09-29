@@ -96,18 +96,24 @@ The following command will start CPAchecker to validate an violation witness for
 
 An easy way to validate violation witnesses with CPAchecker that should be able to handle most scenarios is provided by a predifined configuration:
 
-<pre>./scripts/cpa.sh -violation-witness-validation \
--spec witness-to-validate.graphml \
+<pre>./scripts/cpa.sh -witnessValidation \
+-witness witness-to-validate.graphml \
 -spec PropertyUnreachCall.prp \
 test.c
 </pre>
 
-There may be cases where you want to use different analyses. It is therefore possible to derive a custom configuration. The following example shows how to configure CPAchecker to use linear-arithmetic predicate analysis to consume a witness:
+There may be cases where you want to use different analyses. It is therefore possible to derive a custom configuration.
+Because choosing an analysis yourself requires some basic knowledge of CPAchecker anyway, we assume for this section of the paragraph that you are familiar with CPAchecker's configuration mechanism.
 
-<pre>./scripts/cpa.sh -noout -heap 10000M -predicateAnalysis \
+The easiest way to obtain a new witness-validation configuration is by creating a new configuration file.
+As an example, we recommend looking at the configuration file for CPAchecker's default witness-validation analysis used above in ``config/witnessValidation.properties`` and the subconfigurations included from there.
+
+Configuring a new witness-validation analysis directly on the command-line prompt is a bit more involved, because you first need to find the ``.spc`` file corresponding to the ``.prp`` specification file you want to use. For ``PropertyUnreachCall.prp``, this would be ``config/specification/sv-comp-reachability.spc``.
+The following example shows how to configure CPAchecker to use linear-arithmetic predicate analysis to consume a witness:
+
+<pre>./scripts/cpa.sh -noout -heap 10000M -predicateAnalysis-linear \
 -setprop cpa.composite.aggregateBasicBlocks=false \
 -setprop cfa.simplifyCfa=false \
--setprop cfa.allowBranchSwapping=false \
 -setprop cpa.predicate.ignoreIrrelevantVariables=false \
 -setprop counterexample.export.assumptions.assumeLinearArithmetics=true \
 -setprop analysis.traversal.byAutomatonVariable=__DISTANCE_TO_VIOLATION \
@@ -115,8 +121,7 @@ There may be cases where you want to use different analyses. It is therefore pos
 -setprop WitnessAutomaton.cpa.automaton.treatErrorsAsTargets=true \
 -setprop parser.transformTokensToLines=false \
 -skipRecursion \
--spec witness-to-validate.graphml \
--spec PropertyUnreachCall.prp \
+-setprop specification=witness-to-validate.graphml,config/specification/sv-comp-reachability.spc \
 test.c
 </pre>
 
@@ -358,8 +363,8 @@ at ``witness.graphml``.
 For the validation, we assume that one of the previously obtained witnesses for the example task has been named ``correctness-witness.graphml`` and placed in the desired tool directory. To validate the correctness witness with CPAchecker, simply execute the following commands:
 
 <pre>scripts/cpa.sh \
--correctness-witness-validation \
-    -setprop invariantGeneration.kInduction.invariantsAutomatonFile=correctness-witness.graphml \
+-witnessValidation \
+    -witness invariantGeneration.kInduction.invariantsAutomatonFile=correctness-witness.graphml \
     -spec PropertyUnreachCall.prp \
     multivar_true-unreach-call1.i
 </pre>
