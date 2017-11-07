@@ -89,7 +89,7 @@ CPAchecker produces the following [test harness](example-1-harness.c) (``example
 
 ```C
 #include <stdlib.h>
-void __VERIFIER_error(void) { exit(EXIT_FAILURE); }
+void __VERIFIER_error(void) { exit(107); }
 void __VERIFIER_assume(int cond) { if (!(cond)) { exit(EXIT_SUCCESS); }}
 int __VERIFIER_nondet_int() {
   int retval;
@@ -99,7 +99,7 @@ int __VERIFIER_nondet_int() {
 ```
 
 Now, an executable can be produced by running ``gcc example-1.i example-1-harness.c -o example-1``.
-Running ``./example-1 || echo 'Failure'`` immediately shows that the executable returns the status code ``EXIT_FAILURE``:
+Running ``./example-1; rc=$?; if [[ $rc == 107 ]]; then echo 'Failure'; fi`` immediately shows that the executable returns the (arbitrarily chosen) status code ``107``:
 
 ``Failure``
 
@@ -201,7 +201,7 @@ CPAchecker produces the following [test harness](example-2-harness.c) (``example
 
 ```C
 #include <stdlib.h>
-void __VERIFIER_error(void) { exit(EXIT_FAILURE); }
+void __VERIFIER_error(void) { exit(107); }
 void __VERIFIER_assume(int cond) { if (!(cond)) { exit(EXIT_SUCCESS); }}
 unsigned int __VERIFIER_nondet_int_index__ = 0;
 int __VERIFIER_nondet_int() {
@@ -217,7 +217,7 @@ int __VERIFIER_nondet_int() {
 ```
 
 Now, an executable can be produced by running ``gcc example-2.i example-2-harness.c -o example-2``.
-Running ``./example-2 || echo 'Failure'`` immediately shows that the executable returns the status code ``EXIT_FAILURE``:
+Running ``./example-2; rc=$?; if [[ $rc == 107 ]]; then echo 'Failure'; fi'`` immediately shows that the executable returns the (arbitrarily chosen) status code ``107``:
 
 ``Failure``
 
