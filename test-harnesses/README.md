@@ -104,7 +104,7 @@ Running ``./example-1 || echo 'Failure'`` immediately shows that the executable 
 ``Failure``
 
 If the validator is trusted, this indicates that even if the witness ``example-1-witness.graphml`` is valid even if was obtained from an untrusted source.
-If the executable ``example-1`` or the imperative test harness ``example-1-harness.c`` were obtained directly from the untrusted source, no such guarantee about the validity would be possible without laborious manual inspection, because the executable may have been produced from altered source code, or imperative the test harness may itself violate the specification.
+If the executable ``example-1`` or the test harness ``example-1-harness.c`` were obtained directly from the untrusted source, no such guarantee about the validity would be possible without laborious manual inspection, because the executable may have been produced from altered source code, or the test harness may itself violate the specification.
 
 ## Example 2
 
