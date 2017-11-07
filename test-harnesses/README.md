@@ -99,7 +99,7 @@ int __VERIFIER_nondet_int() {
 ```
 
 Now, an executable can be produced by running ``gcc example-1.i example-1-harness.c -o example-1``.
-Running ``./example-1; rc=$?; if [[ $rc == 107 ]]; then echo 'Failure'; fi`` immediately shows that the executable returns the (arbitrarily chosen) status code ``107``:
+Running ``./example-1; rc=$?; if [[ $rc == 107 ]]; then echo 'Failure'; fi`` immediately shows that the executable returns the (arbitrarily chosen) error-status code ``107``:
 
 ``Failure``
 
@@ -217,7 +217,7 @@ int __VERIFIER_nondet_int() {
 ```
 
 Now, an executable can be produced by running ``gcc example-2.i example-2-harness.c -o example-2``.
-Running ``./example-2; rc=$?; if [[ $rc == 107 ]]; then echo 'Failure'; fi'`` immediately shows that the executable returns the (arbitrarily chosen) status code ``107``:
+Running ``./example-2; rc=$?; if [[ $rc == 107 ]]; then echo 'Failure'; fi'`` immediately shows that the executable returns the (arbitrarily chosen) error-status code ``107``:
 
 ``Failure``
 
