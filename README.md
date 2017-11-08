@@ -71,13 +71,13 @@ This witness specification is a work in progress and will be subject to modifica
 ### Additional Edge Data for Concurrent Programs
 
 Validating concurrent programs is a complex task,
-because we need to know possible interleavings of thread operations and when a thread is started or exited.
+because it is necessary to determine possible interleavings of thread operations and when a thread is started or exited.
 The following information should additionally be available in the witness:
 
 | key | Meaning | Allowed in Violation Witnesses | Allowed in Correctness Witnesses |
 | --- | --- | ---- | ---- |
 | threadId | Represents the currently active thread for the transition. If no ``threadId`` is given, any thread can be active. The value should be a unique identififer for a thread. | Yes | Yes |
-| createThread | The currently active thread (value of ``threadId``) creates a new thread (value of ``createThread``) . In general, using a ``threadId`` is only allowed after creating a matching thread. The new thread's function can be entered on a second transition following this transition, such that the transition with the ``enterFunction`` key has the ``threadId`` of the created thread. When the function of the thread is exited, we assume that the thread is terminated and its ``threadId`` is no longer used. | Yes | Yes |
+| createThread | The currently active thread (value of ``threadId``) creates a new thread (value of ``createThread``) . In general, using a ``threadId`` is only allowed after creating a matching thread. The new thread's function can be entered on a second transition following this transition, such that the transition with the ``enterFunction`` key has the ``threadId`` of the created thread. When the function of the thread is exited, the thread is assumed to be terminated and its ``threadId`` should no longer be used. | Yes | Yes |
 
 CPAchecker partially supports the validation of violation witnesses for concurrent programs.
 This witness specification and the validator are a work in progress and will be subject to modifications.
