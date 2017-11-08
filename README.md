@@ -67,6 +67,23 @@ Tools may introduce their own data nodes with custom keys and values. Other tool
 
 This witness specification is a work in progress and will be subject to modifications.
 
+
+### Additional Edge Data for Concurrent Programs
+
+Validating concurrent programs is a complex task,
+because we need to know possible interleavings of thread operations and when a thread is started or exited.
+The following information should additionally be available in the witness:
+
+| key | Meaning | Allowed in Violation Witnesses | Allowed in Correctness Witnesses |
+| --- | --- | ---- | ---- |
+| threadId | Represents the currently active thread for the edge. If no ``threadId`` is given, any thread can be active. The value should be a unique identififer for a thread. | Yes | Yes |
+| createThread | The currently active thread creates a new thread. Using a ``threadId`` is only allowed after creating a matching thread. The thread's function can be entered after this edge, using the ``enterFunction`` key in combination with the ``threadId`` of the created thread. | Yes | Yes |
+| destroyThread | The currently active thread terminates itself. Do no longer use the ``threadId`` of the destroyed thread. The thread's function must be exited before this edge, uing the ``leaveFunction`` key. | Yes | Yes |
+
+CPAchecker partially supports the validation of violation witnesses for concurrent programs.
+This witness specification and the validator are a work in progress and will be subject to modifications.
+
+
 ## Validating Violation Witnesses
 
 Witnesses can be validated by CPAchecker or Ultimate Automizer. To validate a witness, you need to provide the specification the witness was produced with and the witness itself as an additional specification to the tool, as well as any other parameter required by the tool to check the specific type of program, if any.
