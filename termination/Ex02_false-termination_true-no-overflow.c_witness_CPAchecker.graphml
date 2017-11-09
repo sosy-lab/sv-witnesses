@@ -1,0 +1,152 @@
+﻿<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<graphml xmlns="http://graphml.graphdrawing.org/xmlns" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+ <key attr.name="invariant" attr.type="string" for="node" id="invariant"/>
+ <key attr.name="label" attr.type="string" for="node" id="label"/>
+ <key attr.name="isEntryNode" attr.type="boolean" for="node" id="entry">
+  <default>false</default>
+ </key>
+ <key attr.name="isSinkNode" attr.type="boolean" for="node" id="sink">
+  <default>false</default>
+ </key>
+ <key attr.name="isCycleHead" attr.type="boolean" for="node" id="cyclehead">
+  <default>false</default>
+ </key>
+ <key attr.name="enterLoopHead" attr.type="boolean" for="edge" id="enterLoopHead">
+  <default>false</default>
+ </key>
+ <key attr.name="sourcecodeLanguage" attr.type="string" for="graph" id="sourcecodelang"/>
+ <key attr.name="programFile" attr.type="string" for="graph" id="programfile"/>
+ <key attr.name="programHash" attr.type="string" for="graph" id="programhash"/>
+ <key attr.name="specification" attr.type="string" for="graph" id="specification"/>
+ <key attr.name="architecture" attr.type="string" for="graph" id="architecture"/>
+ <key attr.name="producer" attr.type="string" for="graph" id="producer"/>
+ <key attr.name="creationTime" attr.type="string" for="graph" id="creationtime"/>
+ <key attr.name="startline" attr.type="int" for="edge" id="startline"/>
+ <key attr.name="endline" attr.type="int" for="edge" id="endline"/>
+ <key attr.name="startoffset" attr.type="int" for="edge" id="startoffset"/>
+ <key attr.name="endoffset" attr.type="int" for="edge" id="endoffset"/>
+ <key attr.name="originFileName" attr.type="string" for="edge" id="originfile">
+  <default>Ex02_false-termination_true-no-overflow.c</default>
+ </key>
+ <key attr.name="control" attr.type="string" for="edge" id="control"/>
+ <key attr.name="enterFunction" attr.type="string" for="edge" id="enterFunction"/>
+ <key attr.name="witness-type" attr.type="string" for="graph" id="witness-type"/>
+ <key attr.name="inputWitnessHash" attr.type="string" for="graph" id="inputwitnesshash"/>
+ <graph edgedefault="directed">
+  <data key="witness-type">violation_witness</data>
+  <data key="sourcecodelang">C</data>
+  <data key="producer">CPAchecker 1.6.1-svn</data>
+  <data key="specification">CHECK( init(main()), LTL(F end) )</data>
+  <data key="programfile">Ex02_false-termination_true-no-overflow.c</data>
+  <data key="programhash">8a1f6c693f3ebab5fc8f1f2cefae182dae2b1437</data>
+  <data key="architecture">32bit</data>
+  <data key="creationtime">2017-11-09T08:33:13+01:00</data>
+  <node id="A1">
+   <data key="label">A1</data>
+   <data key="entry">true</data>
+  </node>
+  <node id="A5_2_1">
+   <data key="label">A5_2_1</data>
+  </node>
+  <edge source="A1" target="A5_2_1">
+   <data key="startline">3</data>
+   <data key="endline">3</data>
+   <data key="startoffset">41</data>
+   <data key="endoffset">51</data>
+   <data key="enterFunction">main</data>
+  </edge>
+  <node id="A5">
+   <data key="label">A5</data>
+  </node>
+  <edge source="A5_2_1" target="A5">
+   <data key="enterLoopHead">true</data>
+   <data key="startline">6</data>
+   <data key="endline">6</data>
+   <data key="startoffset">70</data>
+   <data key="endoffset">96</data>
+  </edge>
+  <node id="A16">
+   <data key="label">A16</data>
+  </node>
+  <edge source="A5" target="A16">
+   <data key="startline">8</data>
+   <data key="endline">8</data>
+   <data key="startoffset">115</data>
+   <data key="endoffset">119</data>
+   <data key="control">condition-true</data>
+  </edge>
+  <node id="sink">
+   <data key="label">sink</data>
+   <data key="sink">true</data>
+  </node>
+  <edge source="A5" target="sink">
+   <data key="startline">8</data>
+   <data key="endline">8</data>
+   <data key="startoffset">115</data>
+   <data key="endoffset">119</data>
+   <data key="control">condition-false</data>
+  </edge>
+  <edge source="A16" target="sink">
+   <data key="startline">10</data>
+   <data key="endline">10</data>
+   <data key="startoffset">139</data>
+   <data key="endoffset">144</data>
+   <data key="control">condition-true</data>
+  </edge>
+  <node id="A58">
+   <data key="label">A58</data>
+   <data key="cyclehead">true</data>
+   <data key="invariant">i == (5)</data>
+  </node>
+  <edge source="A16" target="A58">
+   <data key="enterLoopHead">true</data>
+   <data key="startline">10</data>
+   <data key="endline">10</data>
+   <data key="startoffset">139</data>
+   <data key="endoffset">144</data>
+   <data key="control">condition-false</data>
+  </edge>
+  <node id="A55">
+   <data key="label">A55</data>
+  </node>
+  <edge source="A58" target="A55">
+   <data key="startline">8</data>
+   <data key="endline">8</data>
+   <data key="startoffset">115</data>
+   <data key="endoffset">119</data>
+   <data key="control">condition-true</data>
+  </edge>
+  <edge source="A58" target="sink">
+   <data key="startline">8</data>
+   <data key="endline">8</data>
+   <data key="startoffset">115</data>
+   <data key="endoffset">119</data>
+   <data key="control">condition-false</data>
+  </edge>
+  <node id="A56">
+   <data key="label">A56</data>
+  </node>
+  <edge source="A55" target="A56">
+   <data key="startline">10</data>
+   <data key="endline">10</data>
+   <data key="startoffset">139</data>
+   <data key="endoffset">144</data>
+   <data key="control">condition-true</data>
+  </edge>
+  <edge source="A55" target="A58">
+   <data key="enterLoopHead">true</data>
+   <data key="startline">10</data>
+   <data key="endline">10</data>
+   <data key="startoffset">139</data>
+   <data key="endoffset">144</data>
+   <data key="control">condition-false</data>
+  </edge>
+  <edge source="A56" target="A58">
+   <data key="enterLoopHead">true</data>
+   <data key="startline">12</data>
+   <data key="endline">12</data>
+   <data key="startoffset">166</data>
+   <data key="endoffset">172</data>
+  </edge>
+ </graph>
+</graphml>
