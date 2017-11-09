@@ -188,29 +188,30 @@ More details about the verification run can be found in the directory "./output"
 The verification result *"FALSE"* means that the violation witness was successfully validated, i.e., one of the paths that is described by the witness automaton leads to a violation of the specification. The result *"TRUE"* would mean that none of the paths described by the witness automaton lead to a violation of the specification, or in other words, that the witness was rejected. A witness is also rejected if the witness validation does not terminate normally.
 
 ### Validating a Violation Witness with Ultimate Automizer
-Download a current version of Ultimate Automizer from [Ultimate Automizer's website](https://ultimate.informatik.uni-freiburg.de/automizer). 
+Download a current version of Ultimate Automizer from [Ultimate Automizer's GitHub page](https://github.com/ultimate-pa/ultimate/releases) or use the [latest SVCOMP release](http://ultimate.informatik.uni-freiburg.de/downloads/svcomp2018/UltimateAutomizer-linux.zip) (supports only Linux platforms).
 
 The following command will start Ultimate Automizer to validate an violation witness for ``test.c``. We assume that the violation witnesses is stored in the file ``witness-to-validate.graphml``.
 
 <pre>./Ultimate.py \
---validate \
-PropertyUnreachCall.prp \
-32bit precise \
-test.c \
-witness-to-validate.graphml
+--spec PropertyUnreachCall.prp \
+--file test.c \
+--architecture 32bit \
+--validate witness-to-validate.graphml
 </pre>
 
-For tasks where a 64 bit linux machine model is assumed, you also need to use the parameter ``64bit`` instead of ``32bit``.
+For tasks where a 64 bit linux machine model is assumed, you also need to use the parameter ``--architecture 64bit`` instead of ``--architecture 32bit``.
+You can use the additional parameter ``--full-output`` to get the complete log of the validation run. 
 
 The output of the command should look similar to the following:
 
 <pre>
-# ./Ultimate.py --validate PropertyUnreachCall.prp 32bit precise test.c witness-to-validate.graphml
+# ./Ultimate.py --spec PropertyUnreachCall.prp --file test.c --architecture 32bit --validate witness-to-validate.graphml
+
 Checking for ERROR reachability
 Using default analysis
-Version cda1b3ec
-Calling Ultimate with: java -Xmx12G -Xms1G -jar [...] -data @user.home/.ultimate -tc [...] -i test.c witness-to-validate.graphml -s [...]
-........
+Version 2f4433ab
+Calling Ultimate with: java -Xmx12G -Xms1G -jar [...] -data [...] -tc [...] -i test.c witness-to-validate.graphml -s [...] --cacsl2boogietranslator.entry.function main
+.......
 Execution finished normally
 Writing output log to file Ultimate.log
 Writing human readable error path to file UltimateCounterExample.errorpath
@@ -279,24 +280,24 @@ The violation-witness automaton is written to ``output/witness.graphml``. If the
 ### Writing a Violation Witness with Ultimate Automizer
 From the Ultimate Automizer directory, the following command will start Ultimate Automizer to verify a task for which it will come up with a feasible counterexample:
 
-<pre>
-./Ultimate.py \
-PropertyUnreachCall.prp \
-32bit precise \
-test.c 
+<pre>./Ultimate.py \
+--spec PropertyUnreachCall.prp \
+--file test.c \
+--architecture 32bit
 </pre>
 
-For tasks where a 64 bit linux machine model is assumed, you also need to use the parameter ``64bit`` instead of ``32bit``.
+For tasks where a 64 bit linux machine model is assumed, you also need to use the parameter ``--architecture 64bit`` instead of ``--architecture 32bit``.
+You can use the additional parameter ``--full-output`` to get the complete log of the verification run. 
 
 The output of the command should look similar to the following:
 
 <pre>
-# ./Ultimate.py PropertyUnreachCall.prp 32bit precise test.c 
+# ./Ultimate.py --spec PropertyUnreachCall.prp --file test.c --architecture 32bit
 Checking for ERROR reachability
 Using default analysis
-Version cda1b3ec
-Calling Ultimate with: java -Xmx12G -Xms1G -jar [...] -data @user.home/.ultimate -tc [...] -i test.c -s [...]
-........
+Version 2f4433ab
+Calling Ultimate with: java -Xmx12G -Xms1G -jar [...] -data [...] -tc [...] -i test.c -s [...] --cacsl2boogietranslator.entry.function main --witnessprinter.witness.directory [...] --witnessprinter.witness.filename witness.graphml --witnessprinter.write.witness.besides.input.file false --witnessprinter.graph.data.specification [...] --witnessprinter.graph.data.producer Automizer --witnessprinter.graph.data.architecture 32bit --witnessprinter.graph.data.programhash [...]
+.............
 Execution finished normally
 Writing output log to file Ultimate.log
 Writing human readable error path to file UltimateCounterExample.errorpath
@@ -360,20 +361,25 @@ The procedure for producing a correctness witness with Ultimate Automizer does n
 To produce a witness for the example task, simply execute the following commands:
 
 <pre>./Ultimate.py \
-PropertyUnreachCall.prp \
-32bit precise \
-multivar_true-unreach-call1.i
+--spec PropertyUnreachCall.prp \
+--file multivar_true-unreach-call1.i \
+--architecture 32bit
 </pre>
 
 The output of Ultimate Automizer should look similar to the following listing:
 
+For tasks where a 64 bit linux machine model is assumed, you also need to use the parameter ``--architecture 64bit`` instead of ``--architecture 32bit``.
+You can use the additional parameter ``--full-output`` to get the complete log of the verification run. 
+
+The output of the command should look similar to the following:
+
 <pre>
-# ./Ultimate.py PropertyUnreachCall.prp 32bit precise multivar_true-unreach-call1.i
+# ./Ultimate.py --spec PropertyUnreachCall.prp --file multivar_true-unreach-call1.i --architecture 32bit
 Checking for ERROR reachability
 Using default analysis
-Version cda1b3ec
-Calling Ultimate with: java -Xmx12G -Xms1G -jar [...] -data @user.home/.ultimate -tc [...] -i multivar_true-unreach-call1.i -s [...]
-........
+Version 2f4433ab
+Calling Ultimate with: java -Xmx12G -Xms1G -jar [...] -data [...] -tc [...] -i multivar_true-unreach-call1.i -s [...] --cacsl2boogietranslator.entry.function main --witnessprinter.witness.directory [...] --witnessprinter.witness.filename witness.graphml --witnessprinter.write.witness.besides.input.file false --witnessprinter.graph.data.specification [...] --witnessprinter.graph.data.producer Automizer --witnessprinter.graph.data.architecture 32bit --witnessprinter.graph.data.programhash [...]
+.............
 Execution finished normally
 Writing output log to file Ultimate.log
 Result:
@@ -410,23 +416,24 @@ Again, the procedure for validating a correctness witness with Ultimate Automize
 For the validation example, we assume that one of the previously obtained witnesses for the example task has been named ``correctness-witness.graphml`` and placed in the desired tool directory. To validate the correctness witness with Ultimate Automizer, simply execute the following commands:
 
 <pre>./Ultimate.py \
-	PropertyUnreachCall.prp \
-	32bit precise \
-	multivar_true-unreach-call1.i \
-	correctness-witness.graphml
+--spec PropertyUnreachCall.prp \
+--file multivar_true-unreach-call1.i \
+--architecture 32bit \
+--validate correctness-witness.graphml
 </pre>
 
 A successful validation will result in an output similar to the following:
 
 <pre>
-# ./Ultimate.py PropertyUnreachCall.prp 32bit precise multivar_true-unreach-call1.i correctness-witness.graphml
+# ./Ultimate.py --spec PropertyUnreachCall.prp --file multivar_true-unreach-call1.i --architecture 32bit --validate correctness-witness.graphml
 Checking for ERROR reachability
 Using default analysis
-Version c3312191
-Calling Ultimate with: java -Xmx12G -Xms1G -jar [...] -data @user.home/.ultimate -tc [...] -i multivar_true-unreach-call1.i correctness-witness.graphml -s [...]
-........
+Version 2f4433ab
+Calling Ultimate with: java -Xmx12G -Xms1G -jar [...] -data [...] -tc [...] -i multivar_true-unreach-call1.i correctness-witness.graphml -s [...] --cacsl2boogietranslator.entry.function main
+.......
 Execution finished normally
 Writing output log to file Ultimate.log
+Writing human readable error path to file UltimateCounterExample.errorpath
 Result:
 TRUE
 </pre>
