@@ -83,6 +83,11 @@ CPAchecker partially supports the validation of violation witnesses for concurre
 This witness specification and the validator are a work in progress and will be subject to modifications.
 
 
+### Witnessing Program Termination
+Termination is a liveness property and, in contrast to safety properties, its violation cannot be witnessed by a finite number of program execution steps. The witness format proposed so far is designed for witnessing safety properties. Due to the conceputal differences, termination witnesses require some elements that are forbidden for them in the format described above. To avoid confusion, we separated the description of witnesses for safety properties and witnesses for termination.
+
+The description of the termination witness format and how to validate and construct termination witness with CPAchecker can be found [here](termination/README.md). Currently, only violation witnesses are supported.
+
 ## Validating Violation Witnesses
 
 Witnesses can be validated by CPAchecker or Ultimate Automizer. To validate a witness, you need to provide the specification the witness was produced with and the witness itself as an additional specification to the tool, as well as any other parameter required by the tool to check the specific type of program, if any.
