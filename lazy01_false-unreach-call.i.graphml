@@ -1,0 +1,159 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<graphml xmlns="http://graphml.graphdrawing.org/xmlns" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+ <key attr.name="isViolationNode" attr.type="boolean" for="node" id="violation">
+  <default>false</default>
+ </key>
+ <key attr.name="isEntryNode" attr.type="boolean" for="node" id="entry">
+  <default>false</default>
+ </key>
+ <key attr.name="isSinkNode" attr.type="boolean" for="node" id="sink">
+  <default>false</default>
+ </key>
+ <key attr.name="violatedProperty" attr.type="string" for="node" id="violatedProperty"/>
+ <key attr.name="threadId" attr.type="string" for="edge" id="threadId"/>
+ <key attr.name="createThread" attr.type="string" for="edge" id="createThread"/>
+ <key attr.name="sourcecodeLanguage" attr.type="string" for="graph" id="sourcecodelang"/>
+ <key attr.name="programFile" attr.type="string" for="graph" id="programfile"/>
+ <key attr.name="programHash" attr.type="string" for="graph" id="programhash"/>
+ <key attr.name="specification" attr.type="string" for="graph" id="specification"/>
+ <key attr.name="architecture" attr.type="string" for="graph" id="architecture"/>
+ <key attr.name="producer" attr.type="string" for="graph" id="producer"/>
+ <key attr.name="creationTime" attr.type="string" for="graph" id="creationtime"/>
+ <key attr.name="startline" attr.type="int" for="edge" id="startline"/>
+ <key attr.name="endline" attr.type="int" for="edge" id="endline"/>
+ <key attr.name="startoffset" attr.type="int" for="edge" id="startoffset"/>
+ <key attr.name="endoffset" attr.type="int" for="edge" id="endoffset"/>
+ <key attr.name="originFileName" attr.type="string" for="edge" id="originfile">
+  <default>../sv-benchmarks/c/pthread/lazy01_false-unreach-call.i</default>
+ </key>
+ <key attr.name="control" attr.type="string" for="edge" id="control"/>
+ <key attr.name="enterFunction" attr.type="string" for="edge" id="enterFunction"/>
+ <key attr.name="returnFromFunction" attr.type="string" for="edge" id="returnFrom"/>
+ <key attr.name="witness-type" attr.type="string" for="graph" id="witness-type"/>
+ <key attr.name="inputWitnessHash" attr.type="string" for="graph" id="inputwitnesshash"/>
+ <graph edgedefault="directed">
+  <data key="witness-type">violation_witness</data>
+  <data key="sourcecodelang">C</data>
+  <data key="producer">CPAchecker 1.6.1-svn</data>
+  <data key="specification">CHECK( init(main()), LTL(G ! call(__VERIFIER_error())) )</data>
+  <data key="programfile">../sv-benchmarks/c/pthread/lazy01_false-unreach-call.i</data>
+  <data key="programhash">9f2b31ce9d2cde0ecebdfe4ab1034371aded2ee9</data>
+  <data key="architecture">32bit</data>
+  <data key="creationtime">2017-11-10T11:00:11+01:00</data>
+  <node id="A568">
+   <data key="entry">true</data>
+  </node>
+  <node id="A844"/>
+  <edge source="A568" target="A844">
+   <data key="threadId">0</data>
+   <data key="startline">1247</data>
+   <data key="endline">1247</data>
+   <data key="startoffset">28393</data>
+   <data key="endoffset">28403</data>
+   <data key="enterFunction">main</data>
+  </edge>
+  <node id="A848_to_A849_intermediate-0"/>
+  <edge source="A844" target="A848_to_A849_intermediate-0">
+   <data key="threadId">0</data>
+   <data key="createThread">1</data>
+   <data key="startline">1253</data>
+   <data key="endline">1253</data>
+   <data key="startoffset">28467</data>
+   <data key="endoffset">28500</data>
+  </edge>
+  <node id="A849"/>
+  <edge source="A848_to_A849_intermediate-0" target="A849">
+   <data key="threadId">1</data>
+   <data key="startline">1253</data>
+   <data key="endline">1253</data>
+   <data key="startoffset">28467</data>
+   <data key="endoffset">28500</data>
+   <data key="enterFunction">thread1</data>
+  </edge>
+  <node id="sink">
+   <data key="sink">true</data>
+  </node>
+  <edge source="A849" target="sink">
+   <data key="threadId">0</data>
+   <data key="createThread">2</data>
+   <data key="startline">1254</data>
+   <data key="endline">1254</data>
+   <data key="startoffset">28505</data>
+   <data key="endoffset">28538</data>
+  </edge>
+  <node id="A861"/>
+  <edge source="A849" target="A861">
+   <data key="threadId">1</data>
+   <data key="returnFrom">thread1</data>
+  </edge>
+  <node id="A861_to_A862_intermediate-0"/>
+  <edge source="A861" target="A861_to_A862_intermediate-0">
+   <data key="threadId">0</data>
+   <data key="createThread">2</data>
+   <data key="startline">1254</data>
+   <data key="endline">1254</data>
+   <data key="startoffset">28505</data>
+   <data key="endoffset">28538</data>
+  </edge>
+  <node id="A862"/>
+  <edge source="A861_to_A862_intermediate-0" target="A862">
+   <data key="threadId">2</data>
+   <data key="startline">1254</data>
+   <data key="endline">1254</data>
+   <data key="startoffset">28505</data>
+   <data key="endoffset">28538</data>
+   <data key="enterFunction">thread2</data>
+  </edge>
+  <edge source="A862" target="sink">
+   <data key="threadId">0</data>
+   <data key="createThread">3</data>
+   <data key="startline">1255</data>
+   <data key="endline">1255</data>
+   <data key="startoffset">28543</data>
+   <data key="endoffset">28576</data>
+  </edge>
+  <node id="A871"/>
+  <edge source="A862" target="A871">
+   <data key="threadId">2</data>
+   <data key="returnFrom">thread2</data>
+  </edge>
+  <node id="A871_to_A872_intermediate-0"/>
+  <edge source="A871" target="A871_to_A872_intermediate-0">
+   <data key="threadId">0</data>
+   <data key="createThread">3</data>
+   <data key="startline">1255</data>
+   <data key="endline">1255</data>
+   <data key="startoffset">28543</data>
+   <data key="endoffset">28576</data>
+  </edge>
+  <node id="A872"/>
+  <edge source="A871_to_A872_intermediate-0" target="A872">
+   <data key="threadId">3</data>
+   <data key="startline">1255</data>
+   <data key="endline">1255</data>
+   <data key="startoffset">28543</data>
+   <data key="endoffset">28576</data>
+   <data key="enterFunction">thread3</data>
+  </edge>
+  <node id="A881">
+   <data key="violation">true</data>
+   <data key="violatedProperty">__VERIFIER_error(); called in line 1240</data>
+  </node>
+  <edge source="A872" target="A881">
+   <data key="threadId">3</data>
+   <data key="startline">1239</data>
+   <data key="endline">1239</data>
+   <data key="startoffset">28304</data>
+   <data key="endoffset">28312</data>
+   <data key="control">condition-true</data>
+  </edge>
+  <edge source="A872" target="sink">
+   <data key="threadId">3</data>
+   <data key="startline">1239</data>
+   <data key="endline">1239</data>
+   <data key="startoffset">28304</data>
+   <data key="endoffset">28312</data>
+   <data key="control">condition-false</data>
+  </edge>
+ </graph>
+</graphml>
