@@ -61,7 +61,7 @@ The following [violation witness](example-1-witness.graphml) (``example-1-witnes
   <data key="producer">CPAchecker 1.6.1-svn</data>
   <data key="specification">CHECK( init(main()), LTL(G ! call(__VERIFIER_error())) )</data>
   <data key="programfile">example-1.i</data>
-  <data key="programhash">1776ed2413d170f227b69d8c79ba700d31db6f75</data>
+  <data key="programhash">f8e3e714d24698477286a93fa368a71bb1366b9bf2a5b8de5d4a7292ae4aa990</data>
   <data key="memorymodel">precise</data>
   <data key="architecture">32bit</data>
   <node id="entry">
@@ -158,8 +158,8 @@ The following [violation witness](example-2-witness.graphml) (``example-2-witnes
   <data key="sourcecodelang">C</data>
   <data key="producer">CPAchecker 1.6.1-svn</data>
   <data key="specification">CHECK( init(main()), LTL(G ! call(__VERIFIER_error())) )</data>
-  <data key="programfile">/home/dangl/markdown-playground/example-2.i</data>
-  <data key="programhash">cc0781266d4318110314aec0622d0a968991daaf</data>
+  <data key="programfile">example-2.i</data>
+  <data key="programhash">38a09cb40577ff27f33504302e5bf6fedcac610c6128114db6fbf6c2967c47de</data>
   <data key="memorymodel">precise</data>
   <data key="architecture">32bit</data>
   <node id="entry">
@@ -214,7 +214,6 @@ int __VERIFIER_nondet_int() {
   ++__VERIFIER_nondet_int_index__;
   return retval;
 }
-```
 
 Now, an executable can be produced by running ``gcc example-2.i example-2-harness.c -o example-2``.
 Running ``./example-2; rc=$?; if [[ $rc == 107 ]]; then echo 'Failure'; fi'`` immediately shows that the executable returns the (arbitrarily chosen) error-status code ``107``:
