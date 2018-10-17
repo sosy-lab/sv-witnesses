@@ -113,7 +113,7 @@ This service can also be used via the command line:
 
 <pre>./witness_validation_web_cloud.py --program source.i --witness witness.graphml</pre>
 
-using the [provided python script](witness-validation.zip).
+using the [provided python script](witness_validation_web_cloud.py).
 
 ### Validating a Violation Witness with CPAchecker
 
