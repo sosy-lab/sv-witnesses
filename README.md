@@ -88,9 +88,9 @@ Termination is a liveness property and, in contrast to safety properties, its vi
 The witness format proposed so far is designed for witnessing safety properties. 
 Due to the conceputal differences, some termination witness validators may require additional elements.
 
-The description of the termination witness format required by CPAChecker and how to validate and construct termination witnesses with CPAchecker can be found [here](termination/README.md). Currently, only violation witnesses are supported.
+The description of the termination witness format required by CPAchecker and how to validate and construct termination witnesses with CPAchecker can be found [here](termination/README.md). Currently, only violation witnesses are supported.
 
-Ultimate Automizer supports termination witnesses as specified by this document. No additional information is necessary. The extensions specified in [the termination witness format required by CPAChecker](termination/README.md) will not lead to rejections, but are currently not used. Currently, Ultimate Automizer supports only violation witnesses. 
+Ultimate Automizer supports termination witnesses as specified by this document. No additional information is necessary. The extensions specified in [the termination witness format required by CPAchecker](termination/README.md) will not lead to rejections, but are currently not used. Currently, Ultimate Automizer supports only violation witnesses. 
 
 ## Validating Violation Witnesses
 
