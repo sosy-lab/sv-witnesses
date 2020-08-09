@@ -40,6 +40,14 @@ class WitnessLint:
         self.check_existence_later = set()
 
     def handle_data(self, data, parent):
+        '''
+        Performs checks that are common to all data elements and invokes appropriate
+        specialized checks.
+
+        A data element must have a 'key' attribute specifying the kind of data it holds.
+
+        Data elements in a witness are currently not supposed have any children.
+        '''
         if len(data) > 0:
             logging.warning("Expected data element to not have any children but has %d", len(data))
         if len(data.attrib) > 1:
@@ -60,6 +68,9 @@ class WitnessLint:
             logging.warning("Expected data element to have attribute 'key'")
 
     def handle_node_data(self, data, key):
+        '''
+        Performs checks for data elements that are direct children of a node element.
+        '''
         if key == 'entry':
             if data.text == 'true':
                 self.num_entry_nodes += 1
@@ -90,6 +101,8 @@ class WitnessLint:
             #TODO: Check whether data.text is a valid invariant
         elif key == 'invariant.scope':
             self.correctness_witness_only.add(key)
+            #TODO: If programfile accessible:
+            #      Check whether data.text is a valid function name of the program
         elif self.defined_keys[key] == 'node':
             # Other, tool-specific keys are allowed as long as they have been defined
             pass
@@ -97,14 +110,22 @@ class WitnessLint:
             logging.warning("Unknown key for node data element: %s", key)
 
     def handle_edge_data(self, data, key):
+        '''
+        Performs checks for data elements that are direct children of an edge element.
+        '''
         if key == 'assumption':
             self.violation_witness_only.add(key)
-            #TODO: Check whether all expression from data.text are valid assumptions
+            #TODO: Check whether all expressions from data.text are valid assumptions
+            #TODO: If \result is used in an assumption, the key 'assumption.resultfunction'
+            #      also has to appear in the current transition
         elif key == 'assumption.scope':
             self.violation_witness_only.add(key)
+            #TODO: If programfile accessible:
+            #      Check whether data.text is a valid function name of the program
         elif key == 'assumption.resultfunction':
             self.violation_witness_only.add(key)
-            #TODO: Necessary if \result is used in an assumption of the current transition
+            #TODO: If programfile accessible:
+            #      Check whether data.text is a valid function name of the program
         elif key == 'control':
             if data.text not in ['condition-true', 'condition-false']:
                 logging.warning("Invalid value for key 'control': %s", data.text)
@@ -118,10 +139,12 @@ class WitnessLint:
             #      Check whether data.text is a valid line number of the program
             pass
         elif key == 'startoffset':
-            #TODO
+            #TODO: If programfile accessible:
+            #      Check whether data.text is a valid character offset of the program
             pass
         elif key == 'endoffset':
-            #TODO
+            #TODO: If programfile accessible:
+            #      Check whether data.text is a valid character offset of the program
             pass
         elif key == 'enterLoopHead':
             if data.text == 'false':
@@ -131,16 +154,22 @@ class WitnessLint:
                 logging.warning("Invalid value for key 'enterLoopHead': %s", data.text)
         elif key == 'enterFunction':
             #TODO: Must also use returnFromFunction
+            #TODO: If programfile accessible:
+            #      Check whether data.text is a valid function name of the program
             pass
         elif key == 'returnFromFunction':
             #TODO: Key id is usually 'returnFrom'
             #TODO: Must also use enterFunction
+            #TODO: If programfile accessible:
+            #      Check whether data.text is a valid function name of the program
             pass
         elif key == 'threadId':
-            #TODO
+            #TODO: The thread id must have been created before via a 'createThread' key
+            #TODO: The thread is assumed to be terminated once it leaves the first function
+            #      it entered
             pass
         elif key == 'createThread':
-            #TODO
+            #TODO: The new thread id has to be unique
             pass
         elif self.defined_keys[key] == 'edge':
             # Other, tool-specific keys are allowed as long as they have been defined
@@ -149,6 +178,9 @@ class WitnessLint:
             logging.warning("Unknown key for edge data element: %s", key)
 
     def handle_graph_data(self, data, key):
+        '''
+        Performs checks for data elements that are direct children of a graph element.
+        '''
         if key == 'witness-type':
             if data.text in ['correctness_witness', 'violation_witness']:
                 if self.witness_type is None:
@@ -344,6 +376,10 @@ class WitnessLint:
                 logging.warning("Unexpected child element of type '%s'", child.tag)
 
     def final_checks(self):
+        '''
+        Performs checks that cannot be done before the whole witness has been traversed
+        because elements may appear in almost arbitrary order.
+        '''
         for key in self.used_keys.difference(set(self.defined_keys)):
             if key in COMMON_KEYS:
                 # Already handled for other keys
