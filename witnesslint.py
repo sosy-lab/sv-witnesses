@@ -37,7 +37,7 @@ class WitnessLint:
         self.used_keys = set()
         self.violation_witness_only = set()
         self.correctness_witness_only = set()
-        self.check_existence_later = list()
+        self.check_existence_later = set()
 
     def handle_data(self, data, parent):
         if len(data) > 0:
@@ -219,9 +219,10 @@ class WitnessLint:
 
         Appropriate are all data elements that are direct children of an element of type
         key_domain, which is the value of the 'for' attribute.
+
+        Key definitions in a witness may have a child element of type 'default' specifying
+        the default value for this key, but are currently expected to have no other children.
         '''
-        if len(key.attrib) < 2:
-            logging.warning("Key definition must at least contain 'id' and 'for' attributes")
         if "id" in key.attrib:
             key_id = key.attrib['id']
         else:
@@ -256,37 +257,75 @@ class WitnessLint:
                 logging.warning("Invalid child for key element: %s", child.tag)
 
     def handle_node(self, node):
+        '''
+        Checks a node element for validity.
+
+        Nodes must have an unique id but should not have any other attributes.
+
+        Nodes in a witness are currently not supposed have any non-data children.
+        '''
         if len(node.attrib) > 1:
             logging.warning("Expected node element to have exactly one attribute but has %d",
                             len(node.attrib))
         if 'id' in node.attrib:
             node_id = node.attrib['id']
-            self.node_ids.add(node_id)
+            if node_id in self.node_ids:
+                logging.warning("Found multiple nodes with id '%s'", node_id)
+            else:
+                self.node_ids.add(node_id)
         else:
             logging.warning("Expected node element to have attribute 'id'")
         for child in node:
-            self.handle_data(child, 'node')
+            if child.tag == "{http://graphml.graphdrawing.org/xmlns}data":
+                self.handle_data(child, 'node')
+            else:
+                logging.warning("Node has unexpected child element of type '%s'", child.tag)
 
     def handle_edge(self, edge):
-        if len(edge.attrib) != 2:
-            logging.warning("Expected edge element to have exactly two attributes but has %d",
-                            len(edge.attrib))
+        '''
+        Checks an edge element for validity.
+
+        Edges must have attributes 'source' and 'target', each referencing a different existing
+        node by it's id.
+
+        Other attributes are allowed but no checks are currently performed for them.
+
+        Edges in a witness are currently not supposed to have any non-data children.
+        '''
         if 'source' in edge.attrib:
             source = edge.attrib['source']
             if source not in self.node_ids:
-                self.check_existence_later.append(source)
+                self.check_existence_later.add(source)
         else:
+            source = None
             logging.warning("Edge is missing attribute 'source'")
         if 'target' in edge.attrib:
             target = edge.attrib['target']
+            if source == target:
+                logging.warning("Node '%s' has self-loop", source)
             if target not in self.node_ids:
-                self.check_existence_later.append(target)
+                self.check_existence_later.add(target)
         else:
             logging.warning("Edge is missing attribute 'target'")
         for child in edge:
-            self.handle_data(child, 'edge')
+            if child.tag == "{http://graphml.graphdrawing.org/xmlns}data":
+                self.handle_data(child, 'edge')
+            else:
+                logging.warning("Edge has unexpected child element of type '%s'", child.tag)
 
     def handle_graph(self, graph):
+        '''
+        Checks a graph element for validity.
+
+        A graph may have an 'edgedefault' attribute specifying whether edges are directed
+        or undirected by default. As edges of witnesses should always be directed the value
+        of the 'edgedefault' attribute is checked to be 'directed'.
+
+        Other attributes are allowed but no checks are currently performed for them.
+
+        Currently a witness graph is not supposed to have any children of types other than
+        'node', 'edge' or 'data'.
+        '''
         if 'edgedefault' in graph.attrib:
             if graph.attrib['edgedefault'] != 'directed':
                 logging.warning("Edgedefault should be 'directed'")
