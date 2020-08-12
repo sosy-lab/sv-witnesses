@@ -56,14 +56,14 @@ class WitnessLint:
         if 'key' in data.attrib:
             key = data.attrib['key']
             self.used_keys.add(key)
-            if parent == 'node':
+            if parent.tag == '{http://graphml.graphdrawing.org/xmlns}node':
                 self.handle_node_data(data, key)
-            elif parent == 'edge':
-                self.handle_edge_data(data, key)
-            elif parent == 'graph':
+            elif parent.tag == '{http://graphml.graphdrawing.org/xmlns}edge':
+                self.handle_edge_data(data, key, parent)
+            elif parent.tag == '{http://graphml.graphdrawing.org/xmlns}graph':
                 self.handle_graph_data(data, key)
             else:
-                raise AssertionError("Invalid parent element: " + parent)
+                raise AssertionError("Invalid parent element of type " + parent.tag)
         else:
             logging.warning("Expected data element to have attribute 'key'")
 
@@ -103,21 +103,30 @@ class WitnessLint:
             self.correctness_witness_only.add(key)
             #TODO: If programfile accessible:
             #      Check whether data.text is a valid function name of the program
-        elif self.defined_keys[key] == 'node':
+        elif key in self.defined_keys and self.defined_keys[key] == 'node':
             # Other, tool-specific keys are allowed as long as they have been defined
             pass
         else:
             logging.warning("Unknown key for node data element: %s", key)
 
-    def handle_edge_data(self, data, key):
+    def handle_edge_data(self, data, key, parent):
         '''
         Performs checks for data elements that are direct children of an edge element.
         '''
         if key == 'assumption':
             self.violation_witness_only.add(key)
             #TODO: Check whether all expressions from data.text are valid assumptions
-            #TODO: If \result is used in an assumption, the key 'assumption.resultfunction'
-            #      also has to appear in the current transition
+            if '\\result' in data.text:
+                resultfunction_present = False
+                for child in parent:
+                    if (child.tag == '{http://graphml.graphdrawing.org/xmlns}data'
+                            and 'key' in child.attrib
+                            and child.attrib['key'] == 'assumption.resultfunction'):
+                        resultfunction_present = True
+                        break
+                if not resultfunction_present:
+                    logging.warning("Found assumption containing '\\result'"
+                                    "but no resultfunction was specified")
         elif key == 'assumption.scope':
             self.violation_witness_only.add(key)
             #TODO: If programfile accessible:
@@ -171,7 +180,7 @@ class WitnessLint:
         elif key == 'createThread':
             #TODO: The new thread id has to be unique
             pass
-        elif self.defined_keys[key] == 'edge':
+        elif key in self.defined_keys and self.defined_keys[key] == 'edge':
             # Other, tool-specific keys are allowed as long as they have been defined
             pass
         else:
@@ -235,7 +244,7 @@ class WitnessLint:
                 self.creationtime = data.text
             else:
                 logging.warning("Found multiple definitions of creationtime")
-        elif self.defined_keys[key] == 'graph':
+        elif key in self.defined_keys and self.defined_keys[key] == 'graph':
             # Other, tool-specific keys are allowed as long as they have been defined
             pass
         else:
@@ -309,7 +318,7 @@ class WitnessLint:
             logging.warning("Expected node element to have attribute 'id'")
         for child in node:
             if child.tag == "{http://graphml.graphdrawing.org/xmlns}data":
-                self.handle_data(child, 'node')
+                self.handle_data(child, node)
             else:
                 logging.warning("Node has unexpected child element of type '%s'", child.tag)
 
@@ -341,7 +350,7 @@ class WitnessLint:
             logging.warning("Edge is missing attribute 'target'")
         for child in edge:
             if child.tag == "{http://graphml.graphdrawing.org/xmlns}data":
-                self.handle_data(child, 'edge')
+                self.handle_data(child, edge)
             else:
                 logging.warning("Edge has unexpected child element of type '%s'", child.tag)
 
@@ -365,7 +374,7 @@ class WitnessLint:
             logging.warning("Graph definition is missing attribute 'edgedefault'")
         for child in graph:
             if child.tag == "{http://graphml.graphdrawing.org/xmlns}data":
-                self.handle_data(child, 'graph')
+                self.handle_data(child, graph)
             elif child.tag == "{http://graphml.graphdrawing.org/xmlns}node":
                 # Already handled
                 pass
