@@ -375,14 +375,9 @@ class WitnessLint:
         for child in graph:
             if child.tag == "{http://graphml.graphdrawing.org/xmlns}data":
                 self.handle_data(child, graph)
-            elif child.tag == "{http://graphml.graphdrawing.org/xmlns}node":
-                # Already handled
-                pass
-            elif child.tag == "{http://graphml.graphdrawing.org/xmlns}edge":
-                # Already handled
-                pass
             else:
-                logging.warning("Unexpected child element of type '%s'", child.tag)
+                # All other expected children have already been handled and removed
+                logging.warning("Graph element has unexpected child of type '%s'", child.tag)
 
     def final_checks(self):
         '''
@@ -425,33 +420,42 @@ class WitnessLint:
 
     def lint(self):
         num_graphs = 0
-        for (_, elem) in ET.iterparse(self.witness):
-            if elem.tag == "{http://graphml.graphdrawing.org/xmlns}data":
-                # Will be handled later
-                pass
-            elif elem.tag == "{http://graphml.graphdrawing.org/xmlns}default":
-                # Will be handled later
-                pass
-            elif elem.tag == "{http://graphml.graphdrawing.org/xmlns}key":
-                self.handle_key(elem)
-            elif elem.tag == "{http://graphml.graphdrawing.org/xmlns}node":
-                self.handle_node(elem)
-            elif elem.tag == "{http://graphml.graphdrawing.org/xmlns}edge":
-                self.handle_edge(elem)
-            elif elem.tag == "{http://graphml.graphdrawing.org/xmlns}graph":
-                num_graphs += 1
-                if num_graphs > 1:
-                    logging.warning("Found multiple graph definitions")
-                else:
-                    self.handle_graph(elem)
-            elif elem.tag == "{http://graphml.graphdrawing.org/xmlns}graphml":
-                #TODO: Check attributes - perhaps necessary to do outside of iterparse
-                for child in elem:
-                    if (child.tag not in ["{http://graphml.graphdrawing.org/xmlns}key",
-                                          "{http://graphml.graphdrawing.org/xmlns}graph"]):
-                        logging.warning("Unexpected child element of type '%s'", child.tag)
+        element_stack = list()
+        for (event, elem) in ET.iterparse(self.witness, events=('start', 'end')):
+            if event == 'start':
+                element_stack.append(elem)
             else:
-                logging.warning("Unknown tag: %s", elem.tag)
+                element_stack.pop()
+                if elem.tag == "{http://graphml.graphdrawing.org/xmlns}data":
+                    # Will be handled later
+                    pass
+                elif elem.tag == "{http://graphml.graphdrawing.org/xmlns}default":
+                    # Will be handled later
+                    pass
+                elif elem.tag == "{http://graphml.graphdrawing.org/xmlns}key":
+                    self.handle_key(elem)
+                    element_stack[-1].remove(elem)
+                elif elem.tag == "{http://graphml.graphdrawing.org/xmlns}node":
+                    self.handle_node(elem)
+                    element_stack[-1].remove(elem)
+                elif elem.tag == "{http://graphml.graphdrawing.org/xmlns}edge":
+                    self.handle_edge(elem)
+                    element_stack[-1].remove(elem)
+                elif elem.tag == "{http://graphml.graphdrawing.org/xmlns}graph":
+                    num_graphs += 1
+                    if num_graphs > 1:
+                        logging.warning("Found multiple graph definitions")
+                    else:
+                        self.handle_graph(elem)
+                    element_stack[-1].remove(elem)
+                elif elem.tag == "{http://graphml.graphdrawing.org/xmlns}graphml":
+                    #TODO: Check attributes - perhaps necessary to do outside of iterparse
+                    for child in elem:
+                        # All expected children have already been handled and removed
+                        logging.warning("Graphml element has unexpected child of type '%s'",
+                                        child.tag)
+                else:
+                    logging.warning("Unknown tag: %s", elem.tag)
         self.final_checks()
 
 def main(argv):
