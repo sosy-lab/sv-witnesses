@@ -19,10 +19,12 @@ COMMON_KEYS = {'witness-type' : 'graph', 'sourcecodelang' : 'graph', 'producer' 
                'threadId' : 'edge', 'createThread' : 'edge'}
 
 class WitnessLint:
+    '''
+    Check a GraphML file for basic consistency with the witness format
+    by calling lint(path_to_file).
+    '''
 
-    def __init__(self, witnessfile):
-        #TODO: witnessfile can likely be changed to a local variable in lint
-        self.witness = witnessfile
+    def __init__(self):
         self.witness_type = None
         self.sourcecodelang = None
         self.producer = None
@@ -162,13 +164,13 @@ class WitnessLint:
             elif not data.text == 'true':
                 logging.warning("Invalid value for key 'enterLoopHead': %s", data.text)
         elif key == 'enterFunction':
-            #TODO: Must also use returnFromFunction
+            #TODO: Must later also use returnFromFunction for that function
             #TODO: If programfile accessible:
             #      Check whether data.text is a valid function name of the program
             pass
         elif key == 'returnFromFunction':
             #TODO: Key id is usually 'returnFrom'
-            #TODO: Must also use enterFunction
+            #TODO: Must have used enterFunction for that function before
             #TODO: If programfile accessible:
             #      Check whether data.text is a valid function name of the program
             pass
@@ -418,10 +420,10 @@ class WitnessLint:
             if node_id not in self.node_ids:
                 logging.warning("Node %s has not been declared", node_id)
 
-    def lint(self):
+    def lint(self, witness):
         num_graphs = 0
         element_stack = list()
-        for (event, elem) in ET.iterparse(self.witness, events=('start', 'end')):
+        for (event, elem) in ET.iterparse(witness, events=('start', 'end')):
             if event == 'start':
                 element_stack.append(elem)
             else:
@@ -459,18 +461,16 @@ class WitnessLint:
         self.final_checks()
 
 def main(argv):
-    #TODO: Add cmdline option for loglevel
+    #TODO: Add cmdline option for displayed loglevel
     #TODO: Add cmdline option admitting that tool-specific keys are present in the witness
     #      -> set loglevel to info when encountering unknown key
-    #TODO: Change format of logging output
-    #TODO: Include position information
-    logging.basicConfig(level=logging.WARNING)
-    linter = WitnessLint(argv[1])
+    #TODO: Include position information in log messages
+    logging.basicConfig(level=logging.WARNING, format="%(levelname)-8s %(message)s")
+    linter = WitnessLint()
     start = time.time()
-    linter.lint()
-    print("Success")
+    linter.lint(argv[1])
     end = time.time()
-    print("took ", end - start, "s")
+    print("\ntook ", end - start, "s")
 
 if __name__ == '__main__':
     main(sys.argv)
