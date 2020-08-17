@@ -2,6 +2,7 @@
 This module contains a linter that can check witnesses for basic consistency.
 '''
 
+import argparse
 import logging
 import re
 import sys
@@ -18,13 +19,35 @@ COMMON_KEYS = {'witness-type' : 'graph', 'sourcecodelang' : 'graph', 'producer' 
                'enterLoopHead' : 'edge', 'enterFunction' : 'edge', 'returnFromFunction' : 'edge',
                'threadId' : 'edge', 'createThread' : 'edge'}
 
+LOGLEVELS = {'critical' : 50, 'error' : 40, 'warning' : 30, 'info' : 20, 'debug' : 10}
+
+def create_arg_parser():
+    parser = argparse.ArgumentParser()
+    parser.add_argument('witness',
+                        help="GraphML file containing a witness.",
+                        type=argparse.FileType('r'),
+                        metavar='WITNESS')
+    parser.add_argument('--loglevel',
+                        default='warning',
+                        choices=['critical', 'error', 'warning', 'info', 'debug'],
+                        help="Desired verbosity of logging output. Only log messages at or above"
+                             "the specified level are displayed.",
+                        metavar='LOGLEVEL')
+    parser.add_argument('--program',
+                        help="The program for which the witness was created.",
+                        type=argparse.FileType('r'),
+                        metavar='PROGRAM')
+    return parser
+
 class WitnessLint:
     '''
     Check a GraphML file for basic consistency with the witness format
     by calling lint(path_to_file).
     '''
 
-    def __init__(self):
+    def __init__(self, witness, program):
+        self.witness = witness
+        self.program = program
         self.witness_type = None
         self.sourcecodelang = None
         self.producer = None
@@ -420,10 +443,10 @@ class WitnessLint:
             if node_id not in self.node_ids:
                 logging.warning("Node %s has not been declared", node_id)
 
-    def lint(self, witness):
+    def lint(self):
         num_graphs = 0
         element_stack = list()
-        for (event, elem) in ET.iterparse(witness, events=('start', 'end')):
+        for (event, elem) in ET.iterparse(self.witness, events=('start', 'end')):
             if event == 'start':
                 element_stack.append(elem)
             else:
@@ -461,16 +484,19 @@ class WitnessLint:
         self.final_checks()
 
 def main(argv):
-    #TODO: Add cmdline option for displayed loglevel
-    #TODO: Add cmdline option admitting that tool-specific keys are present in the witness
-    #      -> set loglevel to info when encountering unknown key
     #TODO: Include position information in log messages
-    logging.basicConfig(level=logging.WARNING, format="%(levelname)-8s %(message)s")
-    linter = WitnessLint()
+    arg_parser = create_arg_parser()
+    parsed_args = arg_parser.parse_args(argv[1:])
+    loglevel = LOGLEVELS[parsed_args.loglevel]
+    program = parsed_args.program
+    witness = parsed_args.witness
+
+    logging.basicConfig(level=loglevel, format="%(levelname)-8s %(message)s")
+    linter = WitnessLint(witness, program)
     start = time.time()
-    linter.lint(argv[1])
+    linter.lint()
     end = time.time()
-    print("\ntook ", end - start, "s")
+    print("\ntook", end - start, "s")
 
 if __name__ == '__main__':
     main(sys.argv)
