@@ -84,6 +84,7 @@ class WitnessLint:
         self.num_entry_nodes = 0
         self.defined_keys = dict()
         self.used_keys = set()
+        self.threads = dict()
         self.violation_witness_only = set()
         self.correctness_witness_only = set()
         self.check_existence_later = set()
@@ -216,21 +217,35 @@ class WitnessLint:
                 logging.warning("Invalid value for key 'enterLoopHead': %s", data.text)
         elif key == 'enterFunction':
             #TODO: Must later also use returnFromFunction for that function
+            for child in parent:
+                if (child.tag == '{http://graphml.graphdrawing.org/xmlns}data'
+                        and 'key' in child.attrib
+                        and child.attrib['key'] == 'threadId'
+                        and self.threads[child.text] == None):
+                    self.threads[child.text] = data.text
+                    break
             self.check_if_program_accessible(lambda program: is_valid_functionname(data.text,
                                                                                    program))
         elif key == 'returnFromFunction':
             #TODO: Key id is usually 'returnFrom'
             #TODO: Must have used enterFunction for that function before
+            for child in parent:
+                if (child.tag == '{http://graphml.graphdrawing.org/xmlns}data'
+                        and 'key' in child.attrib
+                        and child.attrib['key'] == 'threadId'
+                        and self.threads[child.text] == data.text):
+                    del self.threads[child.text]
+                    break
             self.check_if_program_accessible(lambda program: is_valid_functionname(data.text,
                                                                                    program))
         elif key == 'threadId':
-            #TODO: The thread id must have been created before via a 'createThread' key
-            #TODO: The thread is assumed to be terminated once it leaves the first function
-            #      it entered
-            pass
+            if data.text not in self.threads:
+                logging.warning("Thread with id %s doesn't exist", data.text)
         elif key == 'createThread':
-            #TODO: The new thread id has to be unique
-            pass
+            if data.text in self.threads:
+                logging.warning("Thread with id %s has already been created", data.text)
+            else:
+                self.threads[data.text] = None
         elif key in self.defined_keys and self.defined_keys[key] == 'edge':
             # Other, tool-specific keys are allowed as long as they have been defined
             pass
