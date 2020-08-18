@@ -3,8 +3,8 @@ This module contains a linter that can check witnesses for basic consistency.
 '''
 
 import argparse
+import hashlib
 import logging
-import re
 import sys
 import time
 import xml.etree.ElementTree as ET
@@ -39,6 +39,30 @@ def create_arg_parser():
                         metavar='PROGRAM')
     return parser
 
+def is_valid_functionname(name, program):
+    #TODO: Check whether name is a valid functionname of the program
+    pass
+
+def is_valid_linenumber(ln, program):
+    #TODO: Check whether ln is a valid line number of the program
+    pass
+
+def is_valid_character_offset(offset, program):
+    #TODO: Check whether offset is a valid character offset of the program
+    pass
+
+def compute_sha1_hash(program):
+    sha1 = hashlib.sha1()
+    with open(program, 'rb') as f:
+        sha1.update(f.read())
+    return sha1.hexdigest()
+
+def compute_sha256_hash(program):
+    sha256 = hashlib.sha256()
+    with open(program, 'rb') as f:
+        sha256.update(f.read())
+    return sha256.hexdigest()
+
 class WitnessLint:
     '''
     Check a GraphML file for basic consistency with the witness format
@@ -63,6 +87,14 @@ class WitnessLint:
         self.violation_witness_only = set()
         self.correctness_witness_only = set()
         self.check_existence_later = set()
+
+    def check_if_program_accessible(self, check):
+        if self.program is not None:
+            with open(self.program, 'r') as program:
+                check(program)
+        else:
+            #TODO: Try again later, programfile given in witness may be accessible
+            pass
 
     def handle_data(self, data, parent):
         '''
@@ -126,8 +158,8 @@ class WitnessLint:
             #TODO: Check whether data.text is a valid invariant
         elif key == 'invariant.scope':
             self.correctness_witness_only.add(key)
-            #TODO: If programfile accessible:
-            #      Check whether data.text is a valid function name of the program
+            self.check_if_program_accessible(lambda program: is_valid_functionname(data.text,
+                                                                                   program))
         elif key in self.defined_keys and self.defined_keys[key] == 'node':
             # Other, tool-specific keys are allowed as long as they have been defined
             pass
@@ -154,32 +186,28 @@ class WitnessLint:
                                     "but no resultfunction was specified")
         elif key == 'assumption.scope':
             self.violation_witness_only.add(key)
-            #TODO: If programfile accessible:
-            #      Check whether data.text is a valid function name of the program
+            self.check_if_program_accessible(lambda program: is_valid_functionname(data.text,
+                                                                                   program))
         elif key == 'assumption.resultfunction':
             self.violation_witness_only.add(key)
-            #TODO: If programfile accessible:
-            #      Check whether data.text is a valid function name of the program
+            self.check_if_program_accessible(lambda program: is_valid_functionname(data.text,
+                                                                                   program))
         elif key == 'control':
             if data.text not in ['condition-true', 'condition-false']:
                 logging.warning("Invalid value for key 'control': %s", data.text)
             self.violation_witness_only.add(key)
         elif key == 'startline':
-            #TODO: If programfile accessible:
-            #      Check whether data.text is a valid line number of the program
-            pass
+            self.check_if_program_accessible(lambda program: is_valid_linenumber(data.text,
+                                                                                 program))
         elif key == 'endline':
-            #TODO: If programfile accessible:
-            #      Check whether data.text is a valid line number of the program
-            pass
+            self.check_if_program_accessible(lambda program: is_valid_linenumber(data.text,
+                                                                                 program))
         elif key == 'startoffset':
-            #TODO: If programfile accessible:
-            #      Check whether data.text is a valid character offset of the program
-            pass
+            self.check_if_program_accessible(lambda program: is_valid_character_offset(data.text,
+                                                                                       program))
         elif key == 'endoffset':
-            #TODO: If programfile accessible:
-            #      Check whether data.text is a valid character offset of the program
-            pass
+            self.check_if_program_accessible(lambda program: is_valid_character_offset(data.text,
+                                                                                       program))
         elif key == 'enterLoopHead':
             if data.text == 'false':
                 logging.info("Specifying value '%s' for key '%s' is unnecessary",
@@ -188,15 +216,13 @@ class WitnessLint:
                 logging.warning("Invalid value for key 'enterLoopHead': %s", data.text)
         elif key == 'enterFunction':
             #TODO: Must later also use returnFromFunction for that function
-            #TODO: If programfile accessible:
-            #      Check whether data.text is a valid function name of the program
-            pass
+            self.check_if_program_accessible(lambda program: is_valid_functionname(data.text,
+                                                                                   program))
         elif key == 'returnFromFunction':
             #TODO: Key id is usually 'returnFrom'
             #TODO: Must have used enterFunction for that function before
-            #TODO: If programfile accessible:
-            #      Check whether data.text is a valid function name of the program
-            pass
+            self.check_if_program_accessible(lambda program: is_valid_functionname(data.text,
+                                                                                   program))
         elif key == 'threadId':
             #TODO: The thread id must have been created before via a 'createThread' key
             #TODO: The thread is assumed to be terminated once it leaves the first function
@@ -245,18 +271,27 @@ class WitnessLint:
         elif key == 'programfile':
             if self.programfile is None:
                 self.programfile = data.text
+                try:
+                    f = open(self.programfile)
+                    f.close()
+                    if self.program is None:
+                        self.program = self.programfile
+                except FileNotFoundError:
+                    logging.info("Programfile specified in witness could not be accessed")
             else:
                 logging.warning("Found multiple definitions of programfile")
         elif key == 'programhash':
-            if re.match(r'[\da-f]{40}|[\da-f]{64}', data.text):
-                #TODO: If programfile accessible:
-                #      Compute hash of programfile and compare with hash from witness
-                if self.programhash is None:
-                    self.programhash = data.text
-                else:
-                    logging.warning("Found multiple definitions of programhash")
+            if self.program is not None:
+                sha256_hash = compute_sha256_hash(self.program)
+                if data.text.lower() != sha256_hash:
+                    sha1_hash = compute_sha1_hash(self.program)
+                    if data.text.lower() != sha1_hash:
+                        logging.warning("Programhash does not match the hash "
+                                        "specified in the witness")
+            if self.programhash is None:
+                self.programhash = data.text
             else:
-                logging.warning("%s is not a valid sha1 or sha256 hashsum", data.text)
+                logging.warning("Found multiple definitions of programhash")
         elif key == 'architecture':
             if self.architecture is None:
                 #TODO: Check architecture identifier
@@ -489,6 +524,8 @@ def main(argv):
     parsed_args = arg_parser.parse_args(argv[1:])
     loglevel = LOGLEVELS[parsed_args.loglevel]
     program = parsed_args.program
+    if program is not None:
+        program = program.name
     witness = parsed_args.witness
 
     logging.basicConfig(level=loglevel, format="%(levelname)-8s %(message)s")
