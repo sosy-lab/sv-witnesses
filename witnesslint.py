@@ -85,6 +85,7 @@ class WitnessLint:
         self.defined_keys = dict()
         self.used_keys = set()
         self.threads = dict()
+        self.function_stack = list()
         self.violation_witness_only = set()
         self.correctness_witness_only = set()
         self.check_existence_later = set()
@@ -216,7 +217,7 @@ class WitnessLint:
             elif not data.text == 'true':
                 logging.warning("Invalid value for key 'enterLoopHead': %s", data.text)
         elif key == 'enterFunction':
-            #TODO: Must later also use returnFromFunction for that function
+            self.function_stack.append(data.text)
             for child in parent:
                 if (child.tag == '{http://graphml.graphdrawing.org/xmlns}data'
                         and 'key' in child.attrib
@@ -226,9 +227,12 @@ class WitnessLint:
                     break
             self.check_if_program_accessible(lambda program: is_valid_functionname(data.text,
                                                                                    program))
-        elif key == 'returnFromFunction':
-            #TODO: Key id is usually 'returnFrom'
-            #TODO: Must have used enterFunction for that function before
+        elif key == 'returnFrom' or key == 'returnFromFunction':
+            if data.text == self.function_stack[-1]:
+                self.function_stack.pop()
+            else:
+                logging.warning("Trying to return from function %s but currently in function %s",
+                                data.text, self.function_stack[-1])
             for child in parent:
                 if (child.tag == '{http://graphml.graphdrawing.org/xmlns}data'
                         and 'key' in child.attrib
@@ -492,6 +496,8 @@ class WitnessLint:
         for node_id in self.check_existence_later:
             if node_id not in self.node_ids:
                 logging.warning("Node %s has not been declared", node_id)
+        for functionname in self.function_stack:
+            logging.warning("Entered but did not return from function '%s'", functionname)
 
     def lint(self):
         num_graphs = 0
