@@ -39,30 +39,6 @@ def create_arg_parser():
                         metavar='PROGRAM')
     return parser
 
-def is_valid_functionname(name, program):
-    #TODO: Check whether name is a valid functionname of the program
-    pass
-
-def is_valid_linenumber(ln, program):
-    #TODO: Check whether ln is a valid line number of the program
-    pass
-
-def is_valid_character_offset(offset, program):
-    #TODO: Check whether offset is a valid character offset of the program
-    pass
-
-def compute_sha1_hash(program):
-    sha1 = hashlib.sha1()
-    with open(program, 'rb') as f:
-        sha1.update(f.read())
-    return sha1.hexdigest()
-
-def compute_sha256_hash(program):
-    sha256 = hashlib.sha256()
-    with open(program, 'rb') as f:
-        sha256.update(f.read())
-    return sha256.hexdigest()
-
 class WitnessLint:
     '''
     Check a GraphML file for basic consistency with the witness format
@@ -71,7 +47,9 @@ class WitnessLint:
 
     def __init__(self, witness, program):
         self.witness = witness
-        self.program = program
+        self.program_info = None
+        if program is not None:
+            self.collect_program_info(program)
         self.witness_type = None
         self.sourcecodelang = None
         self.producer = None
@@ -89,14 +67,43 @@ class WitnessLint:
         self.violation_witness_only = set()
         self.correctness_witness_only = set()
         self.check_existence_later = set()
+        self.check_later = list()
 
-    def check_if_program_accessible(self, check):
-        if self.program is not None:
-            with open(self.program, 'r') as program:
-                check(program)
+    def collect_program_info(self, program):
+        with open(program, 'r') as source:
+            content = source.read()
+            num_chars = len(content)
+            num_lines = len(content.split('\n'))
+            #TODO: Collect all function names
+            function_names = list()
+        with open(program, 'rb') as source:
+            content = source.read()
+            sha1_hash = hashlib.sha1(content).hexdigest()
+            sha256_hash = hashlib.sha256(content).hexdigest()
+        self.program_info = {'name' : program, 'num_chars' : num_chars, 'num_lines' : num_lines,
+                             'sha1_hash' : sha1_hash, 'sha256_hash' : sha256_hash,
+                             'function_names' : function_names}
+
+    def check_functionname(self, name):
+        if self.program_info is not None:
+            if name not in self.program_info['function_names']:
+                logging.warning("'%s' is not a functionname of the program", name)
         else:
-            #TODO: Try again later, programfile given in witness may be accessible
-            pass
+            self.check_later.append(lambda: self.check_functionname(name))
+
+    def check_linenumber(self, line):
+        if self.program_info is not None:
+            if int(line) < 1 or int(line) > self.program_info['num_lines']:
+                logging.warning("%s is not a valid linenumber", line)
+        else:
+            self.check_later.append(lambda: self.check_linenumber(line))
+
+    def check_character_offset(self, offset):
+        if self.program_info is not None:
+            if int(offset) < 0 or int(offset) >= self.program_info['num_chars']:
+                logging.warning("%s is not a valid character offset", offset)
+        else:
+            self.check_later.append(lambda: self.check_character_offset(offset))
 
     def handle_data(self, data, parent):
         '''
@@ -160,8 +167,7 @@ class WitnessLint:
             #TODO: Check whether data.text is a valid invariant
         elif key == 'invariant.scope':
             self.correctness_witness_only.add(key)
-            self.check_if_program_accessible(lambda program: is_valid_functionname(data.text,
-                                                                                   program))
+            self.check_functionname(data.text)
         elif key in self.defined_keys and self.defined_keys[key] == 'node':
             # Other, tool-specific keys are allowed as long as they have been defined
             pass
@@ -188,28 +194,22 @@ class WitnessLint:
                                     "but no resultfunction was specified")
         elif key == 'assumption.scope':
             self.violation_witness_only.add(key)
-            self.check_if_program_accessible(lambda program: is_valid_functionname(data.text,
-                                                                                   program))
+            self.check_functionname(data.text)
         elif key == 'assumption.resultfunction':
             self.violation_witness_only.add(key)
-            self.check_if_program_accessible(lambda program: is_valid_functionname(data.text,
-                                                                                   program))
+            self.check_functionname(data.text)
         elif key == 'control':
             if data.text not in ['condition-true', 'condition-false']:
                 logging.warning("Invalid value for key 'control': %s", data.text)
             self.violation_witness_only.add(key)
         elif key == 'startline':
-            self.check_if_program_accessible(lambda program: is_valid_linenumber(data.text,
-                                                                                 program))
+            self.check_linenumber(data.text)
         elif key == 'endline':
-            self.check_if_program_accessible(lambda program: is_valid_linenumber(data.text,
-                                                                                 program))
+            self.check_linenumber(data.text)
         elif key == 'startoffset':
-            self.check_if_program_accessible(lambda program: is_valid_character_offset(data.text,
-                                                                                       program))
+            self.check_character_offset(data.text)
         elif key == 'endoffset':
-            self.check_if_program_accessible(lambda program: is_valid_character_offset(data.text,
-                                                                                       program))
+            self.check_character_offset(data.text)
         elif key == 'enterLoopHead':
             if data.text == 'false':
                 logging.info("Specifying value '%s' for key '%s' is unnecessary",
@@ -222,11 +222,10 @@ class WitnessLint:
                 if (child.tag == '{http://graphml.graphdrawing.org/xmlns}data'
                         and 'key' in child.attrib
                         and child.attrib['key'] == 'threadId'
-                        and self.threads[child.text] == None):
+                        and self.threads[child.text] is None):
                     self.threads[child.text] = data.text
                     break
-            self.check_if_program_accessible(lambda program: is_valid_functionname(data.text,
-                                                                                   program))
+            self.check_functionname(data.text)
         elif key == 'returnFrom' or key == 'returnFromFunction':
             if data.text == self.function_stack[-1]:
                 self.function_stack.pop()
@@ -240,8 +239,7 @@ class WitnessLint:
                         and self.threads[child.text] == data.text):
                     del self.threads[child.text]
                     break
-            self.check_if_program_accessible(lambda program: is_valid_functionname(data.text,
-                                                                                   program))
+            self.check_functionname(data.text)
         elif key == 'threadId':
             if data.text not in self.threads:
                 logging.warning("Thread with id %s doesn't exist", data.text)
@@ -291,22 +289,19 @@ class WitnessLint:
             if self.programfile is None:
                 self.programfile = data.text
                 try:
-                    f = open(self.programfile)
-                    f.close()
-                    if self.program is None:
-                        self.program = self.programfile
+                    source = open(self.programfile)
+                    source.close()
+                    if self.program_info is None:
+                        self.collect_program_info(self.programfile)
                 except FileNotFoundError:
                     logging.info("Programfile specified in witness could not be accessed")
             else:
                 logging.warning("Found multiple definitions of programfile")
         elif key == 'programhash':
-            if self.program is not None:
-                sha256_hash = compute_sha256_hash(self.program)
-                if data.text.lower() != sha256_hash:
-                    sha1_hash = compute_sha1_hash(self.program)
-                    if data.text.lower() != sha1_hash:
-                        logging.warning("Programhash does not match the hash "
-                                        "specified in the witness")
+            if self.program_info is not None:
+                if (data.text.lower() != self.program_info['sha256_hash']
+                        and data.text.lower() != self.program_info['sha1_hash']):
+                    logging.warning("Programhash does not match the hash specified in the witness")
             if self.programhash is None:
                 self.programhash = data.text
             else:
@@ -498,6 +493,9 @@ class WitnessLint:
                 logging.warning("Node %s has not been declared", node_id)
         for functionname in self.function_stack:
             logging.warning("Entered but did not return from function '%s'", functionname)
+        if self.program_info is not None:
+            for check in self.check_later:
+                check()
 
     def lint(self):
         num_graphs = 0
