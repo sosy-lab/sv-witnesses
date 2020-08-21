@@ -7,7 +7,7 @@ import hashlib
 import logging
 import sys
 import time
-import xml.etree.ElementTree as ET
+from lxml import etree as ET
 
 COMMON_KEYS = {'witness-type' : 'graph', 'sourcecodelang' : 'graph', 'producer' : 'graph',
                'specification' : 'graph', 'programfile' : 'graph', 'programhash' : 'graph',
@@ -122,11 +122,12 @@ class WitnessLint:
         if 'key' in data.attrib:
             key = data.attrib['key']
             self.used_keys.add(key)
-            if parent.tag == '{http://graphml.graphdrawing.org/xmlns}node':
+            _, _, tag = parent.tag.rpartition('}')
+            if tag == 'node':
                 self.handle_node_data(data, key)
-            elif parent.tag == '{http://graphml.graphdrawing.org/xmlns}edge':
+            elif tag == 'edge':
                 self.handle_edge_data(data, key, parent)
-            elif parent.tag == '{http://graphml.graphdrawing.org/xmlns}graph':
+            elif tag == 'graph':
                 self.handle_graph_data(data, key)
             else:
                 raise AssertionError("Invalid parent element of type " + parent.tag)
@@ -184,7 +185,7 @@ class WitnessLint:
             if '\\result' in data.text:
                 resultfunction_present = False
                 for child in parent:
-                    if (child.tag == '{http://graphml.graphdrawing.org/xmlns}data'
+                    if (child.tag.rpartition('}')[2] == 'data'
                             and 'key' in child.attrib
                             and child.attrib['key'] == 'assumption.resultfunction'):
                         resultfunction_present = True
@@ -219,7 +220,7 @@ class WitnessLint:
         elif key == 'enterFunction':
             self.function_stack.append(data.text)
             for child in parent:
-                if (child.tag == '{http://graphml.graphdrawing.org/xmlns}data'
+                if (child.tag.rpartition('}')[2] == 'data'
                         and 'key' in child.attrib
                         and child.attrib['key'] == 'threadId'
                         and self.threads[child.text] is None):
@@ -233,7 +234,7 @@ class WitnessLint:
                 logging.warning("Trying to return from function %s but currently in function %s",
                                 data.text, self.function_stack[-1])
             for child in parent:
-                if (child.tag == '{http://graphml.graphdrawing.org/xmlns}data'
+                if (child.tag.rpartition('}')[2] == 'data'
                         and 'key' in child.attrib
                         and child.attrib['key'] == 'threadId'
                         and self.threads[child.text] == data.text):
@@ -360,7 +361,7 @@ class WitnessLint:
         if len(key) > 1:
             logging.warning("Expected key to have at most one child but has %s", len(key))
         for child in key:
-            if child.tag == "{http://graphml.graphdrawing.org/xmlns}default":
+            if child.tag.rpartition('}')[2] == "default":
                 if len(child.attrib) != 0:
                     logging.warning(
                         "Expected no attributes for 'default' element but found %d (%s)",
@@ -391,7 +392,7 @@ class WitnessLint:
         else:
             logging.warning("Expected node element to have attribute 'id'")
         for child in node:
-            if child.tag == "{http://graphml.graphdrawing.org/xmlns}data":
+            if child.tag.rpartition('}')[2] == "data":
                 self.handle_data(child, node)
             else:
                 logging.warning("Node has unexpected child element of type '%s'", child.tag)
@@ -423,7 +424,7 @@ class WitnessLint:
         else:
             logging.warning("Edge is missing attribute 'target'")
         for child in edge:
-            if child.tag == "{http://graphml.graphdrawing.org/xmlns}data":
+            if child.tag.rpartition('}')[2] == "data":
                 self.handle_data(child, edge)
             else:
                 logging.warning("Edge has unexpected child element of type '%s'", child.tag)
@@ -447,7 +448,7 @@ class WitnessLint:
         else:
             logging.warning("Graph definition is missing attribute 'edgedefault'")
         for child in graph:
-            if child.tag == "{http://graphml.graphdrawing.org/xmlns}data":
+            if child.tag.rpartition('}')[2] == "data":
                 self.handle_data(child, graph)
             else:
                 # All other expected children have already been handled and removed
@@ -498,37 +499,56 @@ class WitnessLint:
                 check()
 
     def lint(self):
-        num_graphs = 0
+        saw_graph = False
+        saw_graphml = False
         element_stack = list()
         for (event, elem) in ET.iterparse(self.witness, events=('start', 'end')):
             if event == 'start':
                 element_stack.append(elem)
             else:
                 element_stack.pop()
-                if elem.tag == "{http://graphml.graphdrawing.org/xmlns}data":
+                _, _, tag = elem.tag.rpartition('}')
+                if tag == "data":
                     # Will be handled later
                     pass
-                elif elem.tag == "{http://graphml.graphdrawing.org/xmlns}default":
+                elif tag == "default":
                     # Will be handled later
                     pass
-                elif elem.tag == "{http://graphml.graphdrawing.org/xmlns}key":
+                elif tag == "key":
                     self.handle_key(elem)
                     element_stack[-1].remove(elem)
-                elif elem.tag == "{http://graphml.graphdrawing.org/xmlns}node":
+                elif tag == "node":
                     self.handle_node(elem)
                     element_stack[-1].remove(elem)
-                elif elem.tag == "{http://graphml.graphdrawing.org/xmlns}edge":
+                elif tag == "edge":
                     self.handle_edge(elem)
                     element_stack[-1].remove(elem)
-                elif elem.tag == "{http://graphml.graphdrawing.org/xmlns}graph":
-                    num_graphs += 1
-                    if num_graphs > 1:
+                elif tag == "graph":
+                    if saw_graph:
                         logging.warning("Found multiple graph definitions")
-                    else:
-                        self.handle_graph(elem)
+                        continue
+                    saw_graph = True
+                    self.handle_graph(elem)
                     element_stack[-1].remove(elem)
-                elif elem.tag == "{http://graphml.graphdrawing.org/xmlns}graphml":
-                    #TODO: Check attributes - perhaps necessary to do outside of iterparse
+                elif tag == "graphml":
+                    if saw_graphml:
+                        logging.warning("Found multiple graphml elements")
+                        continue
+                    saw_graphml = True
+                    if len(elem.attrib) > 0:
+                        logging.warning("Expected graphml element to have no attributes")
+                    if None in elem.nsmap:
+                        if elem.nsmap[None] != 'http://graphml.graphdrawing.org/xmlns':
+                            logging.warning("Unexpected default namespace: %s", elem.nsmap[None])
+                    else:
+                        logging.warning("Missing default namespace")
+                    if 'xsi' in elem.nsmap:
+                        if elem.nsmap['xsi'] != 'http://www.w3.org/2001/XMLSchema-instance':
+                            logging.warning("Expected 'xsi' to be namespace prefix for "
+                                            "'http://www.w3.org/2001/XMLSchema-instance'")
+                    else:
+                        logging.warning("Missing xml schema namespace "
+                                        "or namespace prefix is not called 'xsi'")
                     for child in elem:
                         # All expected children have already been handled and removed
                         logging.warning("Graphml element has unexpected child of type '%s'",
@@ -546,6 +566,8 @@ def main(argv):
     if program is not None:
         program = program.name
     witness = parsed_args.witness
+    if witness is not None:
+        witness = witness.name
 
     logging.basicConfig(level=loglevel, format="%(levelname)-8s %(message)s")
     linter = WitnessLint(witness, program)
