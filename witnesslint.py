@@ -41,17 +41,19 @@ def create_arg_parser():
 
 def create_logger(loglevel):
     pos_logger = logging.getLogger("with_position")
-    pos_handler = logging.StreamHandler()
-    pos_formatter = logging.Formatter("%(levelname)-8s: line %(line)s: %(message)s")
-    pos_handler.setFormatter(pos_formatter)
-    pos_logger.addHandler(pos_handler)
+    if not pos_logger.hasHandlers():
+        pos_handler = logging.StreamHandler()
+        pos_formatter = logging.Formatter("%(levelname)-8s: line %(line)s: %(message)s")
+        pos_handler.setFormatter(pos_formatter)
+        pos_logger.addHandler(pos_handler)
     pos_logger.setLevel(loglevel)
 
     no_pos_logger = logging.getLogger("without_position")
-    no_pos_handler = logging.StreamHandler()
-    no_pos_formatter = logging.Formatter("%(levelname)-8s: %(message)s")
-    no_pos_handler.setFormatter(no_pos_formatter)
-    no_pos_logger.addHandler(no_pos_handler)
+    if not no_pos_logger.hasHandlers():
+        no_pos_handler = logging.StreamHandler()
+        no_pos_formatter = logging.Formatter("%(levelname)-8s: %(message)s")
+        no_pos_handler.setFormatter(no_pos_formatter)
+        no_pos_logger.addHandler(no_pos_handler)
     no_pos_logger.setLevel(loglevel)
 
 class WitnessLint:
