@@ -75,6 +75,8 @@ class WitnessLint:
         self.creationtime = None
         self.node_ids = set()
         self.num_entry_nodes = 0
+        self.sink_nodes = set()
+        self.transition_sources = set()
         self.defined_keys = dict()
         self.used_keys = set()
         self.threads = dict()
@@ -148,7 +150,7 @@ class WitnessLint:
             self.used_keys.add(key)
             _, _, tag = parent.tag.rpartition('}')
             if tag == 'node':
-                self.handle_node_data(data, key)
+                self.handle_node_data(data, key, parent)
             elif tag == 'edge':
                 self.handle_edge_data(data, key, parent)
             elif tag == 'graph':
@@ -160,7 +162,7 @@ class WitnessLint:
                    .warning("Expected data element to have attribute 'key'",
                             extra={'line' : data.sourceline})
 
-    def handle_node_data(self, data, key):
+    def handle_node_data(self, data, key, parent):
         '''
         Performs checks for data elements that are direct children of a node element.
         '''
@@ -183,12 +185,19 @@ class WitnessLint:
                 logging.getLogger("with_position") \
                        .info("Specifying value '%s' for key '%s' is unnecessary",
                              data.text, key, extra={'line' : data.sourceline})
-            elif not data.text == 'true':
+            elif data.text == 'true':
+                if 'id' in parent.attrib:
+                    node_id = parent.attrib['id']
+                    if node_id in self.transition_sources:
+                        logging.getLogger("with_position") \
+                               .warning("Sink node should have no leaving edges",
+                                        extra={'line' : data.sourceline})
+                    self.sink_nodes.add(node_id)
+            else:
                 logging.getLogger("with_position") \
                        .warning("Invalid value for key 'sink': %s",
                                 data.text, extra={'line' : data.sourceline})
             self.violation_witness_only.add(key)
-            #TODO: Make sure there are no leaving transitions for the wrapping node
         elif key == 'violation':
             if data.text == 'false':
                 logging.getLogger("with_position") \
@@ -508,6 +517,11 @@ class WitnessLint:
         '''
         if 'source' in edge.attrib:
             source = edge.attrib['source']
+            if source in self.sink_nodes:
+                logging.getLogger("with_position") \
+                       .warning("Sink node should have no leaving edges",
+                                extra={'line' : edge.sourceline})
+            self.transition_sources.add(source)
             if source not in self.node_ids:
                 self.check_existence_later.add(source)
         else:
