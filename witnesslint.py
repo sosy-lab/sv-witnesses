@@ -283,13 +283,20 @@ class WitnessLint:
                     break
             self.check_functionname(data.text, data.sourceline)
         elif key == 'returnFrom' or key == 'returnFromFunction':
-            if data.text == self.function_stack[-1]:
-                self.function_stack.pop()
+            if self.function_stack:
+                if data.text == self.function_stack[-1]:
+                    self.function_stack.pop()
+                else:
+                    logging.getLogger("with_position") \
+                           .warning("Trying to return from function '%s'"
+                                    "but currently in function '%s'",
+                                    data.text, self.function_stack[-1],
+                                    extra={'line' : data.sourceline})
             else:
                 logging.getLogger("with_position") \
-                       .warning("Trying to return from function %s but currently in function %s",
-                                data.text, self.function_stack[-1],
-                                extra={'line' : data.sourceline})
+                       .warning("Trying to return from function '%s'"
+                                "but currently not in a function",
+                                data.text, extra={'line' : data.sourceline})
             for child in parent:
                 if (child.tag.rpartition('}')[2] == 'data'
                         and 'key' in child.attrib
