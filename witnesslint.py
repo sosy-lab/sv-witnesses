@@ -649,80 +649,84 @@ class WitnessLint:
                 check()
 
     def lint(self):
-        saw_graph = False
-        saw_graphml = False
-        element_stack = list()
-        for (event, elem) in ET.iterparse(self.witness, events=('start', 'end')):
-            if event == 'start':
-                element_stack.append(elem)
-            else:
-                element_stack.pop()
-                _, _, tag = elem.tag.rpartition('}')
-                if tag == "data":
-                    # Will be handled later
-                    pass
-                elif tag == "default":
-                    # Will be handled later
-                    pass
-                elif tag == "key":
-                    self.handle_key(elem)
-                    element_stack[-1].remove(elem)
-                elif tag == "node":
-                    self.handle_node(elem)
-                    element_stack[-1].remove(elem)
-                elif tag == "edge":
-                    self.handle_edge(elem)
-                    element_stack[-1].remove(elem)
-                elif tag == "graph":
-                    if saw_graph:
-                        logging.getLogger("with_position") \
-                               .warning("Found multiple graph definitions",
-                                        extra={'line' : elem.sourceline})
-                        continue
-                    saw_graph = True
-                    self.handle_graph(elem)
-                    element_stack[-1].remove(elem)
-                elif tag == "graphml":
-                    if saw_graphml:
-                        logging.getLogger("with_position") \
-                               .warning("Found multiple graphml elements",
-                                        extra={'line' : elem.sourceline})
-                        continue
-                    saw_graphml = True
-                    if len(elem.attrib) > 0:
-                        logging.getLogger("with_position") \
-                               .warning("Expected graphml element to have no attributes",
-                                        extra={'line' : elem.sourceline})
-                    if None in elem.nsmap:
-                        if elem.nsmap[None] != 'http://graphml.graphdrawing.org/xmlns':
-                            logging.getLogger("with_position") \
-                                   .warning("Unexpected default namespace: %s",
-                                            elem.nsmap[None], extra={'line' : elem.sourceline})
-                    else:
-                        logging.getLogger("with_position") \
-                               .warning("Missing default namespace",
-                                        extra={'line' : elem.sourceline})
-                    if 'xsi' in elem.nsmap:
-                        if elem.nsmap['xsi'] != 'http://www.w3.org/2001/XMLSchema-instance':
-                            logging.getLogger("with_position") \
-                                   .warning("Expected 'xsi' to be namespace prefix for "
-                                            "'http://www.w3.org/2001/XMLSchema-instance'",
-                                            extra={'line' : elem.sourceline})
-                    else:
-                        logging.getLogger("with_position") \
-                               .warning("Missing xml schema namespace "
-                                        "or namespace prefix is not called 'xsi'",
-                                        extra={'line' : elem.sourceline})
-                    for child in elem:
-                        # All expected children have already been handled and removed
-                        logging.getLogger("with_position") \
-                               .warning("Graphml element has unexpected child of type '%s'",
-                                        child.tag, extra={'line' : elem.sourceline})
+        try:
+            saw_graph = False
+            saw_graphml = False
+            element_stack = list()
+            for (event, elem) in ET.iterparse(self.witness, events=('start', 'end')):
+                if event == 'start':
+                    element_stack.append(elem)
                 else:
-                    logging.getLogger("with_position") \
-                           .warning("Unknown tag: %s",
-                                    elem.tag, extra={'line' : elem.sourceline})
-        self.final_checks()
+                    element_stack.pop()
+                    _, _, tag = elem.tag.rpartition('}')
+                    if tag == "data":
+                        # Will be handled later
+                        pass
+                    elif tag == "default":
+                        # Will be handled later
+                        pass
+                    elif tag == "key":
+                        self.handle_key(elem)
+                        element_stack[-1].remove(elem)
+                    elif tag == "node":
+                        self.handle_node(elem)
+                        element_stack[-1].remove(elem)
+                    elif tag == "edge":
+                        self.handle_edge(elem)
+                        element_stack[-1].remove(elem)
+                    elif tag == "graph":
+                        if saw_graph:
+                            logging.getLogger("with_position") \
+                                   .warning("Found multiple graph definitions",
+                                            extra={'line' : elem.sourceline})
+                            continue
+                        saw_graph = True
+                        self.handle_graph(elem)
+                        element_stack[-1].remove(elem)
+                    elif tag == "graphml":
+                        if saw_graphml:
+                            logging.getLogger("with_position") \
+                                   .warning("Found multiple graphml elements",
+                                            extra={'line' : elem.sourceline})
+                            continue
+                        saw_graphml = True
+                        if len(elem.attrib) > 0:
+                            logging.getLogger("with_position") \
+                                   .warning("Expected graphml element to have no attributes",
+                                            extra={'line' : elem.sourceline})
+                        if None in elem.nsmap:
+                            if elem.nsmap[None] != 'http://graphml.graphdrawing.org/xmlns':
+                                logging.getLogger("with_position") \
+                                       .warning("Unexpected default namespace: %s",
+                                                elem.nsmap[None], extra={'line' : elem.sourceline})
+                        else:
+                            logging.getLogger("with_position") \
+                                   .warning("Missing default namespace",
+                                            extra={'line' : elem.sourceline})
+                        if 'xsi' in elem.nsmap:
+                            if elem.nsmap['xsi'] != 'http://www.w3.org/2001/XMLSchema-instance':
+                                logging.getLogger("with_position") \
+                                       .warning("Expected 'xsi' to be namespace prefix for "
+                                                "'http://www.w3.org/2001/XMLSchema-instance'",
+                                                extra={'line' : elem.sourceline})
+                        else:
+                            logging.getLogger("with_position") \
+                                   .warning("Missing xml schema namespace "
+                                            "or namespace prefix is not called 'xsi'",
+                                            extra={'line' : elem.sourceline})
+                        for child in elem:
+                            # All expected children have already been handled and removed
+                            logging.getLogger("with_position") \
+                                   .warning("Graphml element has unexpected child of type '%s'",
+                                            child.tag, extra={'line' : elem.sourceline})
+                    else:
+                        logging.getLogger("with_position") \
+                               .warning("Unknown tag: %s",
+                                        elem.tag, extra={'line' : elem.sourceline})
+            self.final_checks()
+        except ET.XMLSyntaxError as err:
+            logging.getLogger("with_position") \
+                   .critical("Malformed witness:\n\t" + err.msg, extra={'line' : err.lineno})
 
 def main(argv):
     arg_parser = create_arg_parser()
