@@ -112,7 +112,7 @@ class WitnessLint:
         self.witness_type = None
         self.sourcecodelang = None
         self.producer = None
-        self.specification = None
+        self.specifications = set()
         self.programfile = None
         self.programhash = None
         self.architecture = None
@@ -394,14 +394,8 @@ class WitnessLint:
                        .warning("Found multiple definitions of producer",
                                 extra={'line' : data.sourceline})
         elif key == 'specification':
-            #TODO: Allow multiple specifications?
-            if self.specification is None:
-                #TODO: Check specification text
-                self.specification = data.text
-            else:
-                logging.getLogger("with_position") \
-                       .warning("Found multiple definitions of specification",
-                                extra={'line' : data.sourceline})
+            #TODO: Check specification text
+            self.specifications.add(data.text)
         elif key == 'programfile':
             if self.programfile is None:
                 self.programfile = data.text
