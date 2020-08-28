@@ -3,6 +3,7 @@ This module contains a linter that can check witnesses for basic consistency.
 '''
 
 import argparse
+import collections
 import hashlib
 import logging
 import sys
@@ -37,6 +38,10 @@ def create_arg_parser():
                         help="The program for which the witness was created.",
                         type=argparse.FileType('r'),
                         metavar='PROGRAM')
+    parser.add_argument('--checkCallstack',
+                        help="Perform checks whether transitions are consistent with callstack. "
+                             "Better left disabled for big witnesses.",
+                        action='store_true')
     return parser
 
 def create_logger(loglevel):
@@ -56,17 +61,54 @@ def create_logger(loglevel):
         no_pos_logger.addHandler(no_pos_handler)
     no_pos_logger.setLevel(loglevel)
 
+def check_function_stack(transitions, start_node):
+    to_visit = [(start_node, [])]
+    visited = set()
+    while to_visit:
+        current_node, current_stack = to_visit.pop()
+        if current_node in visited:
+            continue
+        else:
+            visited.add(current_node)
+        if current_node not in transitions:
+            if current_stack:
+                logging.getLogger("without_position") \
+                       .warning("No leaving transition for node %s "
+                                "but not all functions have been left", current_node)
+        else:
+            for outgoing in transitions[current_node]:
+                function_stack = current_stack[:]
+                if outgoing[2] is not None and outgoing[2] != outgoing[1]:
+                    if not function_stack:
+                        logging.getLogger("without_position") \
+                               .warning("Trying to return from function '%s' "
+                                        "in transition %s -> %s "
+                                        "but currently not in a function",
+                                        outgoing[2], current_node, outgoing[0])
+                    elif outgoing[2] == current_stack[-1]:
+                        function_stack.pop()
+                    else:
+                        logging.getLogger("without_position") \
+                               .warning("Trying to return from function '%s' "
+                                        "in transition %s -> %s "
+                                        "but currently in function %s",
+                                        outgoing[2], current_node, outgoing[0], function_stack[-1])
+                if outgoing[1] is not None and outgoing[1] != outgoing[2]:
+                    function_stack.append(outgoing[1])
+                to_visit.append((outgoing[0], function_stack))
+
 class WitnessLint:
     '''
     Check a GraphML file for basic consistency with the witness format
     by calling lint(path_to_file).
     '''
 
-    def __init__(self, witness, program):
+    def __init__(self, witness, program, check_callstack):
         self.witness = witness
         self.program_info = None
         if program is not None:
             self.collect_program_info(program)
+        self.check_callstack = check_callstack
         self.witness_type = None
         self.sourcecodelang = None
         self.producer = None
@@ -75,13 +117,14 @@ class WitnessLint:
         self.programhash = None
         self.architecture = None
         self.creationtime = None
+        self.entry_node = None
         self.node_ids = set()
-        self.num_entry_nodes = 0
         self.sink_nodes = set()
         self.transition_sources = set()
         self.defined_keys = dict()
         self.used_keys = set()
         self.threads = dict()
+        self.transitions = dict()
         self.function_stack = list()
         self.violation_witness_only = set()
         self.correctness_witness_only = set()
@@ -170,10 +213,15 @@ class WitnessLint:
         '''
         if key == 'entry':
             if data.text == 'true':
-                self.num_entry_nodes += 1
-                if self.num_entry_nodes > 1:
+                if self.entry_node is None:
+                    if 'id' in parent.attrib:
+                        self.entry_node = parent.attrib['id']
+                    else:
+                        self.entry_node = ''
+                else:
                     logging.getLogger("with_position") \
                            .warning("Found multiple entry nodes", extra={'line' : data.sourceline})
+
             elif data.text == 'false':
                 logging.getLogger("with_position") \
                        .info("Specifying value '%s' for key '%s' is unnecessary",
@@ -273,7 +321,6 @@ class WitnessLint:
                        .warning("Invalid value for key 'enterLoopHead': %s",
                                 data.text, extra={'line' : data.sourceline})
         elif key == 'enterFunction':
-            self.function_stack.append(data.text)
             for child in parent:
                 if (child.tag.rpartition('}')[2] == 'data'
                         and 'key' in child.attrib
@@ -283,20 +330,6 @@ class WitnessLint:
                     break
             self.check_functionname(data.text, data.sourceline)
         elif key == 'returnFrom' or key == 'returnFromFunction':
-            if self.function_stack:
-                if data.text == self.function_stack[-1]:
-                    self.function_stack.pop()
-                else:
-                    logging.getLogger("with_position") \
-                           .warning("Trying to return from function '%s'"
-                                    "but currently in function '%s'",
-                                    data.text, self.function_stack[-1],
-                                    extra={'line' : data.sourceline})
-            else:
-                logging.getLogger("with_position") \
-                       .warning("Trying to return from function '%s'"
-                                "but currently not in a function",
-                                data.text, extra={'line' : data.sourceline})
             for child in parent:
                 if (child.tag.rpartition('}')[2] == 'data'
                         and 'key' in child.attrib
@@ -361,6 +394,7 @@ class WitnessLint:
                        .warning("Found multiple definitions of producer",
                                 extra={'line' : data.sourceline})
         elif key == 'specification':
+            #TODO: Allow multiple specifications?
             if self.specification is None:
                 #TODO: Check specification text
                 self.specification = data.text
@@ -547,16 +581,38 @@ class WitnessLint:
             if target not in self.node_ids:
                 self.check_existence_later.add(target)
         else:
+            target = None
             logging.getLogger("with_position") \
                    .warning("Edge is missing attribute 'target'",
                             extra={'line' : edge.sourceline})
-        for child in edge:
-            if child.tag.rpartition('}')[2] == "data":
-                self.handle_data(child, edge)
-            else:
-                logging.getLogger("with_position") \
-                       .warning("Edge has unexpected child element of type '%s'",
-                                child.tag, extra={'line' : child.sourceline})
+        if self.check_callstack:
+            enter, return_from = (None, None)
+            for child in edge:
+                if child.tag.rpartition('}')[2] == "data":
+                    self.handle_data(child, edge)
+                    if 'key' in child.attrib:
+                        if child.attrib['key'] == 'enterFunction':
+                            enter = child.text
+                        elif (child.attrib['key'] == 'returnFromFunction'
+                              or child.attrib['key'] == 'returnFrom'):
+                            return_from = child.text
+                else:
+                    logging.getLogger("with_position") \
+                           .warning("Edge has unexpected child element of type '%s'",
+                                    child.tag, extra={'line' : child.sourceline})
+            if source and target:
+                if source in self.transitions:
+                    self.transitions[source].append((target, enter, return_from))
+                else:
+                    self.transitions[source] = [(target, enter, return_from)]
+        else:
+            for child in edge:
+                if child.tag.rpartition('}')[2] == "data":
+                    self.handle_data(child, edge)
+                else:
+                    logging.getLogger("with_position") \
+                           .warning("Edge has unexpected child element of type '%s'",
+                                    child.tag, extra={'line' : child.sourceline})
 
     def handle_graph(self, graph):
         '''
@@ -626,7 +682,7 @@ class WitnessLint:
         if self.creationtime is None:
             logging.getLogger("without_position") \
                    .warning("Creationtime has not been specified")
-        if self.num_entry_nodes == 0 and len(self.node_ids) > 0:
+        if self.entry_node is None and len(self.node_ids) > 0:
             logging.getLogger("without_position") \
                    .warning("No entry node has been specified")
         if self.witness_type == 'correctness_witness':
@@ -641,9 +697,9 @@ class WitnessLint:
             if node_id not in self.node_ids:
                 logging.getLogger("without_position") \
                        .warning("Node %s has not been declared", node_id)
-        for functionname in self.function_stack:
-            logging.getLogger("without_position") \
-                   .warning("Entered but did not return from function '%s'", functionname)
+        if self.check_callstack:
+            check_function_stack(collections.OrderedDict(sorted(self.transitions.items())),
+                                 self.entry_node)
         if self.program_info is not None:
             for check in self.check_later:
                 check()
@@ -726,7 +782,7 @@ class WitnessLint:
             self.final_checks()
         except ET.XMLSyntaxError as err:
             logging.getLogger("with_position") \
-                   .critical("Malformed witness:\n\t" + err.msg, extra={'line' : err.lineno})
+                   .critical("Malformed witness:\n\t%s", err.msg, extra={'line' : err.lineno})
 
 def main(argv):
     arg_parser = create_arg_parser()
@@ -739,7 +795,7 @@ def main(argv):
     witness = parsed_args.witness
     if witness is not None:
         witness = witness.name
-    linter = WitnessLint(witness, program)
+    linter = WitnessLint(witness, program, parsed_args.checkCallstack)
     start = time.time()
     linter.lint()
     end = time.time()
