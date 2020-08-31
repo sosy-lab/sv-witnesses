@@ -6,6 +6,7 @@ import argparse
 import collections
 import hashlib
 import logging
+import re
 import sys
 import time
 from lxml import etree as ET
@@ -21,6 +22,8 @@ COMMON_KEYS = {'witness-type' : 'graph', 'sourcecodelang' : 'graph', 'producer' 
                'threadId' : 'edge', 'createThread' : 'edge'}
 
 LOGLEVELS = {'critical' : 50, 'error' : 40, 'warning' : 30, 'info' : 20, 'debug' : 10}
+
+CREATIONTIME_PATTERN = r'^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}([+-]\d{2}:\d{2})?$'
 
 def create_arg_parser():
     parser = argparse.ArgumentParser()
@@ -435,7 +438,10 @@ class WitnessLint:
                                 extra={'line' : data.sourceline})
         elif key == 'creationtime':
             if self.creationtime is None:
-                #TODO: Check whether creationtime format conforms to ISO 8601
+                if not re.match(CREATIONTIME_PATTERN, data.text.strip()):
+                    logging.getLogger("with_position") \
+                           .warning("Invalid format for creationtime",
+                                    extra={'line' : data.sourceline})
                 self.creationtime = data.text
             else:
                 logging.getLogger("with_position") \
@@ -661,9 +667,9 @@ class WitnessLint:
         if self.producer is None:
             logging.getLogger("without_position") \
                    .warning("Producer has not been specified")
-        if self.specification is None:
+        if not self.specifications:
             logging.getLogger("without_position") \
-                   .warning("Specification has not been specified")
+                   .warning("No specification has been specified")
         if self.programfile is None:
             logging.getLogger("without_position") \
                    .warning("Programfile has not been specified")
