@@ -1,5 +1,8 @@
 '''
-This module contains a linter that can check witnesses for basic consistency.
+This module contains a linter that can check witnesses for consistency
+with the witness format [1].
+
+[1]: github.com/sosy-lab/sv-witnesses/blob/master/README.md
 '''
 
 import argparse
@@ -48,6 +51,7 @@ def create_arg_parser():
     return parser
 
 def create_logger(loglevel):
+    '''Initializes the logger instances used in the linter.'''
     pos_logger = logging.getLogger("with_position")
     if not pos_logger.hasHandlers():
         pos_handler = logging.StreamHandler()
@@ -65,6 +69,10 @@ def create_logger(loglevel):
     no_pos_logger.setLevel(loglevel)
 
 def check_function_stack(transitions, start_node):
+    '''
+    Performs DFS on the given transitions to make sure that all
+    possible paths have a consistent order of function entries and exits.
+    '''
     to_visit = [(start_node, [])]
     visited = set()
     while to_visit:
@@ -102,8 +110,9 @@ def check_function_stack(transitions, start_node):
 
 class WitnessLint:
     '''
-    Check a GraphML file for basic consistency with the witness format
-    by calling lint(path_to_file).
+    Contains methods that check different parts of a witness for consistency
+    with the witness format.
+    The lint() method checks the whole witness.
     '''
 
     def __init__(self, witness, program, check_callstack):
@@ -135,6 +144,11 @@ class WitnessLint:
         self.check_later = list()
 
     def collect_program_info(self, program):
+        '''
+        Collects and stores some data about the program for later usage.
+
+        This method assumes that the given program can be accessed.
+        '''
         with open(program, 'r') as source:
             content = source.read()
             num_chars = len(content)
@@ -705,6 +719,11 @@ class WitnessLint:
                 check()
 
     def lint(self):
+        '''
+        Splits the witness into manageable chunks and triggers or performs
+        checks for the resulting elements. Also stores some information to be
+        able to trigger checks for the witness as a whole.
+        '''
         try:
             saw_graph = False
             saw_graphml = False
