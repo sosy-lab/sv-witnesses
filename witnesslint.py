@@ -48,6 +48,8 @@ def create_arg_parser():
                         help="Perform checks whether transitions are consistent with callstack. "
                              "Better left disabled for big witnesses.",
                         action='store_true')
+    parser.add_argument('--ignoreSelfLoops',
+                        action='store_true')
     return parser
 
 def create_logger(loglevel):
@@ -115,12 +117,13 @@ class WitnessLint:
     The lint() method checks the whole witness.
     '''
 
-    def __init__(self, witness, program, check_callstack):
+    def __init__(self, witness, program, check_callstack, ignore_self_loops):
         self.witness = witness
         self.program_info = None
         if program is not None:
             self.collect_program_info(program)
         self.check_callstack = check_callstack
+        self.ignore_self_loops = ignore_self_loops
         self.witness_type = None
         self.sourcecodelang = None
         self.producer = None
@@ -411,7 +414,6 @@ class WitnessLint:
                        .warning("Found multiple definitions of producer",
                                 extra={'line' : data.sourceline})
         elif key == 'specification':
-            #TODO: Check specification text
             self.specifications.add(data.text)
         elif key == 'programfile':
             if self.programfile is None:
@@ -444,8 +446,12 @@ class WitnessLint:
                                 extra={'line' : data.sourceline})
         elif key == 'architecture':
             if self.architecture is None:
-                #TODO: Check architecture identifier
-                self.architecture = data.text
+                if data.text in ['32bit', '64bit']:
+                    self.architecture = data.text
+                else:
+                    logging.getLogger("with_position") \
+                           .warning("Invalid architecture identifier",
+                                    extra={'line' : data.sourceline})
             else:
                 logging.getLogger("with_position") \
                        .warning("Found multiple definitions of architecture",
@@ -588,7 +594,7 @@ class WitnessLint:
                             extra={'line' : edge.sourceline})
         if 'target' in edge.attrib:
             target = edge.attrib['target']
-            if source == target:
+            if source == target and not self.ignore_self_loops:
                 logging.getLogger("with_position") \
                        .warning("Node '%s' has self-loop",
                                 source, extra={'line' : edge.sourceline})
@@ -814,7 +820,7 @@ def main(argv):
     witness = parsed_args.witness
     if witness is not None:
         witness = witness.name
-    linter = WitnessLint(witness, program, parsed_args.checkCallstack)
+    linter = WitnessLint(witness, program, parsed_args.checkCallstack, parsed_args.ignoreSelfLoops)
     start = time.time()
     linter.lint()
     end = time.time()
