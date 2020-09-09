@@ -24,7 +24,8 @@ COMMON_KEYS = {'witness-type' : 'graph', 'sourcecodelang' : 'graph', 'producer' 
                'enterLoopHead' : 'edge', 'enterFunction' : 'edge', 'returnFromFunction' : 'edge',
                'threadId' : 'edge', 'createThread' : 'edge'}
 
-LOGLEVELS = {'critical' : 50, 'error' : 40, 'warning' : 30, 'info' : 20, 'debug' : 10}
+LOGLEVELS = {'critical' : logging.CRITICAL, 'error' : logging.ERROR, 'warning' : logging.WARNING,
+             'info' : logging.INFO, 'debug' : logging.DEBUG}
 
 CREATIONTIME_PATTERN = r'^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}([+-]\d{2}:\d{2})?$'
 
@@ -70,6 +71,12 @@ def create_logger(loglevel):
         no_pos_logger.addHandler(no_pos_handler)
     no_pos_logger.setLevel(loglevel)
 
+def log(level, msg, *args):
+    logging.getLogger("without_position").log(level, msg, *args)
+
+def log_with_position(level, lineno, msg, *args):
+    logging.getLogger("with_position").log(level, msg, *args, extra={'line' : lineno})
+
 def check_function_stack(transitions, start_node):
     '''
     Performs DFS on the given transitions to make sure that all
@@ -85,27 +92,25 @@ def check_function_stack(transitions, start_node):
             visited.add(current_node)
         if current_node not in transitions:
             if current_stack:
-                logging.getLogger("without_position") \
-                       .warning("No leaving transition for node %s "
-                                "but not all functions have been left", current_node)
+                log(LOGLEVELS['warning'],
+                    "No leaving transition for node %s but not all functions have been left",
+                    current_node)
         else:
             for outgoing in transitions[current_node]:
                 function_stack = current_stack[:]
                 if outgoing[2] is not None and outgoing[2] != outgoing[1]:
                     if not function_stack:
-                        logging.getLogger("without_position") \
-                               .warning("Trying to return from function '%s' "
-                                        "in transition %s -> %s "
-                                        "but currently not in a function",
-                                        outgoing[2], current_node, outgoing[0])
+                        log(LOGLEVELS['warning'],
+                            "Trying to return from function '%s' in transition %s -> %s "
+                            "but currently not in a function",
+                            outgoing[2], current_node, outgoing[0])
                     elif outgoing[2] == current_stack[-1]:
                         function_stack.pop()
                     else:
-                        logging.getLogger("without_position") \
-                               .warning("Trying to return from function '%s' "
-                                        "in transition %s -> %s "
-                                        "but currently in function %s",
-                                        outgoing[2], current_node, outgoing[0], function_stack[-1])
+                        log(LOGLEVELS['warning'],
+                            "Trying to return from function '%s' in transition %s -> %s "
+                            "but currently in function %s",
+                            outgoing[2], current_node, outgoing[0], function_stack[-1])
                 if outgoing[1] is not None and outgoing[1] != outgoing[2]:
                     function_stack.append(outgoing[1])
                 to_visit.append((outgoing[0], function_stack))
@@ -169,27 +174,24 @@ class WitnessLint:
     def check_functionname(self, name, pos):
         if self.program_info is not None:
             if name not in self.program_info['function_names']:
-                logging.getLogger("with_position") \
-                       .warning("'%s' is not a functionname of the program",
-                                name, extra={'line' : pos})
+                log_with_position(LOGLEVELS['warning'], pos,
+                                  "'%s' is not a functionname of the program", name)
         else:
             self.check_later.append(lambda: self.check_functionname(name, pos))
 
     def check_linenumber(self, line, pos):
         if self.program_info is not None:
             if int(line) < 1 or int(line) > self.program_info['num_lines']:
-                logging.getLogger("with_position") \
-                       .warning("%s is not a valid linenumber",
-                                line, extra={'line' : pos})
+                log_with_position(LOGLEVELS['warning'], pos,
+                                  "%s is not a valid linenumber", line)
         else:
             self.check_later.append(lambda: self.check_linenumber(line, pos))
 
     def check_character_offset(self, offset, pos):
         if self.program_info is not None:
             if int(offset) < 0 or int(offset) >= self.program_info['num_chars']:
-                logging.getLogger("with_position") \
-                       .warning("%s is not a valid character offset",
-                                offset, extra={'line' : pos})
+                log_with_position(LOGLEVELS['warning'], pos,
+                                  "%s is not a valid character offset", offset)
         else:
             self.check_later.append(lambda: self.check_character_offset(offset, pos))
 
@@ -203,13 +205,13 @@ class WitnessLint:
         Data elements in a witness are currently not supposed have any children.
         '''
         if len(data) > 0:
-            logging.getLogger("with_position") \
-                   .warning("Expected data element to not have any children but has %d",
-                            len(data), extra={'line' : data.sourceline})
+            log_with_position(LOGLEVELS['warning'], data.sourceline,
+                              "Expected data element to not have any children but has %d",
+                              len(data))
         if len(data.attrib) > 1:
-            logging.getLogger("with_position") \
-                   .warning("Expected data element to have exactly one attribute but has %d",
-                            len(data.attrib), extra={'line' : data.sourceline})
+            log_with_position(LOGLEVELS['warning'], data.sourceline,
+                              "Expected data element to have exactly one attribute but has %d",
+                              len(data.attrib))
         if 'key' in data.attrib:
             key = data.attrib['key']
             self.used_keys.add(key)
@@ -223,9 +225,8 @@ class WitnessLint:
             else:
                 raise AssertionError("Invalid parent element of type " + parent.tag)
         else:
-            logging.getLogger("with_position") \
-                   .warning("Expected data element to have attribute 'key'",
-                            extra={'line' : data.sourceline})
+            log_with_position(LOGLEVELS['warning'], data.sourceline,
+                              "Expected data element to have attribute 'key'")
 
     def handle_node_data(self, data, key, parent):
         '''
@@ -239,44 +240,40 @@ class WitnessLint:
                     else:
                         self.entry_node = ''
                 else:
-                    logging.getLogger("with_position") \
-                           .warning("Found multiple entry nodes", extra={'line' : data.sourceline})
-
+                    log_with_position(LOGLEVELS['warning'], data.sourceline,
+                                      "Found multiple entry nodes")
             elif data.text == 'false':
-                logging.getLogger("with_position") \
-                       .info("Specifying value '%s' for key '%s' is unnecessary",
-                             data.text, key, extra={'line' : data.sourceline})
+                log_with_position(LOGLEVELS['info'], data.sourceline,
+                                  "Specifying value 'false' for key '%s' is unnecessary",
+                                  key)
             else:
-                logging.getLogger("with_position") \
-                       .warning("Invalid value for key 'entry': %s",
-                                data.text, extra={'line' : data.sourceline})
+                log_with_position(LOGLEVELS['warning'], data.sourceline,
+                                  "Invalid value for key 'entry': %s",
+                                  data.text)
         elif key == 'sink':
             if data.text == 'false':
-                logging.getLogger("with_position") \
-                       .info("Specifying value '%s' for key '%s' is unnecessary",
-                             data.text, key, extra={'line' : data.sourceline})
+                log_with_position(LOGLEVELS['info'], data.sourceline,
+                                  "Specifying value 'false' for key '%s' is unnecessary",
+                                  key)
             elif data.text == 'true':
                 if 'id' in parent.attrib:
                     node_id = parent.attrib['id']
                     if node_id in self.transition_sources:
-                        logging.getLogger("with_position") \
-                               .warning("Sink node should have no leaving edges",
-                                        extra={'line' : data.sourceline})
+                        log_with_position(LOGLEVELS['warning'], data.sourceline,
+                                          "Sink node should have no leaving edges")
                     self.sink_nodes.add(node_id)
             else:
-                logging.getLogger("with_position") \
-                       .warning("Invalid value for key 'sink': %s",
-                                data.text, extra={'line' : data.sourceline})
+                log_with_position(LOGLEVELS['warning'], data.sourceline,
+                                  "Invalid value for key 'sink': %s",
+                                  data.text)
             self.violation_witness_only.add(key)
         elif key == 'violation':
             if data.text == 'false':
-                logging.getLogger("with_position") \
-                       .info("Specifying value '%s' for key '%s' is unnecessary",
-                             data.text, key, extra={'line' : data.sourceline})
+                log_with_position(LOGLEVELS['info'], data.sourceline,
+                                  "Specifying value 'false' for key '%s' is unnecessary", key)
             elif not data.text == 'true':
-                logging.getLogger("with_position") \
-                       .warning("Invalid value for key 'violation': %s",
-                                data.text, extra={'line' : data.sourceline})
+                log_with_position(LOGLEVELS['warning'], data.sourceline,
+                                  "Invalid value for key 'violation': %s", data.text)
             self.violation_witness_only.add(key)
         elif key == 'invariant':
             self.correctness_witness_only.add(key)
@@ -288,9 +285,8 @@ class WitnessLint:
             # Other, tool-specific keys are allowed as long as they have been defined
             pass
         else:
-            logging.getLogger("with_position") \
-                   .warning("Unknown key for node data element: %s",
-                            key, extra={'line' : data.sourceline})
+            log_with_position(LOGLEVELS['warning'], data.sourceline,
+                              "Unknown key for node data element: %s", key)
 
     def handle_edge_data(self, data, key, parent):
         '''
@@ -308,9 +304,9 @@ class WitnessLint:
                         resultfunction_present = True
                         break
                 if not resultfunction_present:
-                    logging.getLogger("with_position") \
-                           .warning("Found assumption containing '\\result' but no resultfunction"
-                                    "was specified", extra={'line' : data.sourceline})
+                    log_with_position(LOGLEVELS['warning'], data.sourceline,
+                                      "Found assumption containing '\\result' "
+                                      "but no resultfunction was specified")
         elif key == 'assumption.scope':
             self.violation_witness_only.add(key)
             self.check_functionname(data.text, data.sourceline)
@@ -319,9 +315,8 @@ class WitnessLint:
             self.check_functionname(data.text, data.sourceline)
         elif key == 'control':
             if data.text not in ['condition-true', 'condition-false']:
-                logging.getLogger("with_position") \
-                       .warning("Invalid value for key 'control': %s", data.text,
-                                extra={'line' : data.sourceline})
+                log_with_position(LOGLEVELS['warning'], data.sourceline,
+                                  "Invalid value for key 'control': %s", data.text)
             self.violation_witness_only.add(key)
         elif key == 'startline':
             self.check_linenumber(data.text, data.sourceline)
@@ -333,13 +328,11 @@ class WitnessLint:
             self.check_character_offset(data.text, data.sourceline)
         elif key == 'enterLoopHead':
             if data.text == 'false':
-                logging.getLogger("with_position") \
-                       .info("Specifying value '%s' for key '%s' is unnecessary",
-                             data.text, key, extra={'line' : data.sourceline})
+                log_with_position(LOGLEVELS['info'], data.sourceline,
+                                  "Specifying value 'false' for key '%s' is unnecessary", key)
             elif not data.text == 'true':
-                logging.getLogger("with_position") \
-                       .warning("Invalid value for key 'enterLoopHead': %s",
-                                data.text, extra={'line' : data.sourceline})
+                log_with_position(LOGLEVELS['warning'], data.sourceline,
+                                  "Invalid value for key 'enterLoopHead': %s", data.text)
         elif key == 'enterFunction':
             for child in parent:
                 if (child.tag.rpartition('}')[2] == 'data'
@@ -360,23 +353,20 @@ class WitnessLint:
             self.check_functionname(data.text, data.sourceline)
         elif key == 'threadId':
             if data.text not in self.threads:
-                logging.getLogger("with_position") \
-                       .warning("Thread with id %s doesn't exist",
-                                data.text, extra={'line' : data.sourceline})
+                log_with_position(LOGLEVELS['warning'], data.sourceline,
+                                  "Thread with id %s doesn't exist", data.text)
         elif key == 'createThread':
             if data.text in self.threads:
-                logging.getLogger("with_position") \
-                       .warning("Thread with id %s has already been created",
-                                data.text, extra={'line' : data.sourceline})
+                log_with_position(LOGLEVELS['warning'], data.sourceline,
+                                  "Thread with id %s has already been created", data.text)
             else:
                 self.threads[data.text] = None
         elif key in self.defined_keys and self.defined_keys[key] == 'edge':
             # Other, tool-specific keys are allowed as long as they have been defined
             pass
         else:
-            logging.getLogger("with_position") \
-                   .warning("Unknown key for edge data element: %s",
-                            key, extra={'line' : data.sourceline})
+            log_with_position(LOGLEVELS['warning'], data.sourceline,
+                              "Unknown key for edge data element: %s", key)
 
     def handle_graph_data(self, data, key):
         '''
@@ -387,32 +377,27 @@ class WitnessLint:
                 if self.witness_type is None:
                     self.witness_type = data.text
                 else:
-                    logging.getLogger("with_position") \
-                           .warning("Found multiple definitions of witness-type",
-                                    extra={'line' : data.sourceline})
+                    log_with_position(LOGLEVELS['warning'], data.sourceline,
+                                      "Found multiple definitions of witness-type")
             else:
-                logging.getLogger("with_position") \
-                       .warning("Invalid value for key 'witness-type': %s",
-                                data.text, extra={'line' : data.sourceline})
+                log_with_position(LOGLEVELS['warning'], data.sourceline,
+                                  "Invalid value for key 'witness-type': %s", data.text)
         elif key == 'sourcecodelang':
             if data.text in ['C', 'Java']:
                 if self.sourcecodelang is None:
                     self.sourcecodelang = data.text
                 else:
-                    logging.getLogger("with_position") \
-                           .warning("Found multiple definitions of sourcecodelang",
-                                    extra={'line' : data.sourceline})
+                    log_with_position(LOGLEVELS['warning'], data.sourceline,
+                                      "Found multiple definitions of sourcecodelang")
             else:
-                logging.getLogger("with_position") \
-                       .warning("Invalid value for key 'sourcecodelang': %s",
-                                data.text, extra={'line' : data.sourceline})
+                log_with_position(LOGLEVELS['warning'], data.sourceline,
+                                  "Invalid value for key 'sourcecodelang': %s", data.text)
         elif key == 'producer':
             if self.producer is None:
                 self.producer = data.text
             else:
-                logging.getLogger("with_position") \
-                       .warning("Found multiple definitions of producer",
-                                extra={'line' : data.sourceline})
+                log_with_position(LOGLEVELS['warning'], data.sourceline,
+                                  "Found multiple definitions of producer")
         elif key == 'specification':
             self.specifications.add(data.text)
         elif key == 'programfile':
@@ -424,56 +409,48 @@ class WitnessLint:
                     if self.program_info is None:
                         self.collect_program_info(self.programfile)
                 except FileNotFoundError:
-                    logging.getLogger("with_position") \
-                           .info("Programfile specified in witness could not be accessed",
-                                 extra={'line' : data.sourceline})
+                    log_with_position(LOGLEVELS['info'], data.sourceline,
+                                      "Programfile specified in witness could not be accessed")
             else:
-                logging.getLogger("with_position") \
-                       .warning("Found multiple definitions of programfile",
-                                extra={'line' : data.sourceline})
+                log_with_position(LOGLEVELS['warning'], data.sourceline,
+                                  "Found multiple definitions of programfile")
         elif key == 'programhash':
             if self.program_info is not None:
                 if (data.text.lower() != self.program_info['sha256_hash']
                         and data.text.lower() != self.program_info['sha1_hash']):
-                    logging.getLogger("with_position") \
-                           .warning("Programhash does not match the hash specified"
-                                    "in the witness", extra={'line' : data.sourceline})
+                    log_with_position(LOGLEVELS['warning'], data.sourceline,
+                                      "Programhash does not match the hash specified "
+                                      "in the witness")
             if self.programhash is None:
                 self.programhash = data.text
             else:
-                logging.getLogger("with_position") \
-                       .warning("Found multiple definitions of programhash",
-                                extra={'line' : data.sourceline})
+                log_with_position(LOGLEVELS['warning'], data.sourceline,
+                                  "Found multiple definitions of programhash")
         elif key == 'architecture':
             if self.architecture is None:
                 if data.text in ['32bit', '64bit']:
                     self.architecture = data.text
                 else:
-                    logging.getLogger("with_position") \
-                           .warning("Invalid architecture identifier",
-                                    extra={'line' : data.sourceline})
+                    log_with_position(LOGLEVELS['warning'], data.sourceline,
+                                      "Invalid architecture identifier")
             else:
-                logging.getLogger("with_position") \
-                       .warning("Found multiple definitions of architecture",
-                                extra={'line' : data.sourceline})
+                log_with_position(LOGLEVELS['warning'], data.sourceline,
+                                  "Found multiple definitions of architecture")
         elif key == 'creationtime':
             if self.creationtime is None:
                 if not re.match(CREATIONTIME_PATTERN, data.text.strip()):
-                    logging.getLogger("with_position") \
-                           .warning("Invalid format for creationtime",
-                                    extra={'line' : data.sourceline})
+                    log_with_position(LOGLEVELS['warning'], data.sourceline,
+                                      "Invalid format for creationtime")
                 self.creationtime = data.text
             else:
-                logging.getLogger("with_position") \
-                       .warning("Found multiple definitions of creationtime",
-                                extra={'line' : data.sourceline})
+                log_with_position(LOGLEVELS['warning'], data.sourceline,
+                                  "Found multiple definitions of creationtime")
         elif key in self.defined_keys and self.defined_keys[key] == 'graph':
             # Other, tool-specific keys are allowed as long as they have been defined
             pass
         else:
-            logging.getLogger("with_position") \
-                   .warning("Unknown key for graph data element: %s",
-                            key, extra={'line' : data.sourceline})
+            log_with_position(LOGLEVELS['warning'], data.sourceline,
+                              "Unknown key for graph data element: %s", key)
 
     def handle_key(self, key):
         '''
@@ -492,48 +469,43 @@ class WitnessLint:
         if "id" in key.attrib:
             key_id = key.attrib['id']
         else:
-            logging.getLogger("with_position") \
-                   .warning("Key is missing attribute 'id'", extra={'line' : key.sourceline})
+            log_with_position(LOGLEVELS['warning'], key.sourceline,
+                              "Key is missing attribute 'id'")
             key_id = None
         if "for" in key.attrib:
             key_domain = key.attrib['for']
         else:
-            logging.getLogger("with_position") \
-                   .warning("Key is missing attribute 'for'", extra={'line' : key.sourceline})
+            log_with_position(LOGLEVELS['warning'], key.sourceline,
+                              "Key is missing attribute 'for'")
             key_domain = None
         if key_id and key_domain:
             if key_id in self.defined_keys:
-                logging.getLogger("with_position") \
-                       .warning("Found multiple key definitions with id '%s'",
-                                key_id, extra={'line' : key.sourceline})
+                log_with_position(LOGLEVELS['warning'], key.sourceline,
+                                  "Found multiple key definitions with id '%s'", key_id)
             else:
                 if key_id in COMMON_KEYS and not COMMON_KEYS[key_id] == key_domain:
-                    logging.getLogger("with_position") \
-                           .warning("Key '%s' should be used for '%s' elements "
-                                    "but was defined for '%s' elements",
-                                    key_id, COMMON_KEYS[key_id], key_domain,
-                                    extra={'line' : key.sourceline})
+                    log_with_position(LOGLEVELS['warning'], key.sourceline,
+                                      "Key '%s' should be used for '%s' elements "
+                                      "but was defined for '%s' elements",
+                                      key_id, COMMON_KEYS[key_id], key_domain)
                 self.defined_keys[key_id] = key_domain
         if len(key) > 1:
-            logging.getLogger("with_position") \
-                   .warning("Expected key to have at most one child but has %s",
-                            len(key), extra={'line' : key.sourceline})
+            log_with_position(LOGLEVELS['warning'], key.sourceline,
+                              "Expected key to have at most one child but has %s", len(key))
         for child in key:
             if child.tag.rpartition('}')[2] == "default":
                 if len(child.attrib) != 0:
-                    logging.getLogger("with_position") \
-                           .warning("Expected no attributes for 'default' element"
-                                    "but found %d (%s)", len(child.attrib),
-                                    list(child.attrib), extra={'line' : key.sourceline})
+                    log_with_position(LOGLEVELS['warning'], key.sourceline,
+                                      "Expected no attributes for 'default' element"
+                                      "but found %d (%s)",
+                                      len(child.attrib), list(child.attrib))
                 if key_id in ['entry', 'sink', 'violation', 'enterLoopHead']:
                     if not child.text == 'false':
-                        logging.getLogger("with_position") \
-                               .warning("Default value for %s should be 'false'",
-                                        key_id, extra={'line' : key.sourceline})
+                        log_with_position(LOGLEVELS['warning'], key.sourceline,
+                                          "Default value for %s should be 'false'", key_id)
             else:
-                logging.getLogger("with_position") \
-                       .warning("Invalid child for key element: %s",
-                                child.tag, extra={'line' : child.sourceline})
+                log_with_position(LOGLEVELS['warning'], child.sourceline,
+                                  "Invalid child for key element: %s", child.tag)
 
     def handle_node(self, node):
         '''
@@ -544,28 +516,25 @@ class WitnessLint:
         Nodes in a witness are currently not supposed have any non-data children.
         '''
         if len(node.attrib) > 1:
-            logging.getLogger("with_position") \
-                   .warning("Expected node element to have exactly one attribute but has %d",
-                            len(node.attrib), extra={'line' : node.sourceline})
+            log_with_position(LOGLEVELS['warning'], node.sourceline,
+                              "Expected node element to have exactly one attribute but has %d",
+                              len(node.attrib))
         if 'id' in node.attrib:
             node_id = node.attrib['id']
             if node_id in self.node_ids:
-                logging.getLogger("with_position") \
-                       .warning("Found multiple nodes with id '%s'",
-                                node_id, extra={'line' : node.sourceline})
+                log_with_position(LOGLEVELS['warning'], node.sourceline,
+                                  "Found multiple nodes with id '%s'", node_id)
             else:
                 self.node_ids.add(node_id)
         else:
-            logging.getLogger("with_position") \
-                   .warning("Expected node element to have attribute 'id'",
-                            extra={'line' : node.sourceline})
+            log_with_position(LOGLEVELS['warning'], node.sourceline,
+                              "Expected node element to have attribute 'id'")
         for child in node:
             if child.tag.rpartition('}')[2] == "data":
                 self.handle_data(child, node)
             else:
-                logging.getLogger("with_position") \
-                       .warning("Node has unexpected child element of type '%s'",
-                                child.tag, extra={'line' : child.sourceline})
+                log_with_position(LOGLEVELS['warning'], child.sourceline,
+                                  "Node has unexpected child element of type '%s'", child.tag)
 
     def handle_edge(self, edge):
         '''
@@ -581,30 +550,26 @@ class WitnessLint:
         if 'source' in edge.attrib:
             source = edge.attrib['source']
             if source in self.sink_nodes:
-                logging.getLogger("with_position") \
-                       .warning("Sink node should have no leaving edges",
-                                extra={'line' : edge.sourceline})
+                log_with_position(LOGLEVELS['warning'], edge.sourceline,
+                                  "Sink node should have no leaving edges")
             self.transition_sources.add(source)
             if source not in self.node_ids:
                 self.check_existence_later.add(source)
         else:
             source = None
-            logging.getLogger("with_position") \
-                   .warning("Edge is missing attribute 'source'",
-                            extra={'line' : edge.sourceline})
+            log_with_position(LOGLEVELS['warning'], edge.sourceline,
+                              "Edge is missing attribute 'source'")
         if 'target' in edge.attrib:
             target = edge.attrib['target']
             if source == target and not self.ignore_self_loops:
-                logging.getLogger("with_position") \
-                       .warning("Node '%s' has self-loop",
-                                source, extra={'line' : edge.sourceline})
+                log_with_position(LOGLEVELS['warning'], edge.sourceline,
+                                  "Node '%s' has self-loop", source)
             if target not in self.node_ids:
                 self.check_existence_later.add(target)
         else:
             target = None
-            logging.getLogger("with_position") \
-                   .warning("Edge is missing attribute 'target'",
-                            extra={'line' : edge.sourceline})
+            log_with_position(LOGLEVELS['warning'], edge.sourceline,
+                              "Edge is missing attribute 'target'")
         if self.check_callstack:
             enter, return_from = (None, None)
             for child in edge:
@@ -617,9 +582,8 @@ class WitnessLint:
                               or child.attrib['key'] == 'returnFrom'):
                             return_from = child.text
                 else:
-                    logging.getLogger("with_position") \
-                           .warning("Edge has unexpected child element of type '%s'",
-                                    child.tag, extra={'line' : child.sourceline})
+                    log_with_position(LOGLEVELS['warning'], child.sourceline,
+                                      "Edge has unexpected child element of type '%s'", child.tag)
             if source and target:
                 if source in self.transitions:
                     self.transitions[source].append((target, enter, return_from))
@@ -630,9 +594,8 @@ class WitnessLint:
                 if child.tag.rpartition('}')[2] == "data":
                     self.handle_data(child, edge)
                 else:
-                    logging.getLogger("with_position") \
-                           .warning("Edge has unexpected child element of type '%s'",
-                                    child.tag, extra={'line' : child.sourceline})
+                    log_with_position(LOGLEVELS['warning'], child.sourceline,
+                                      "Edge has unexpected child element of type '%s'", child.tag)
 
     def handle_graph(self, graph):
         '''
@@ -649,21 +612,18 @@ class WitnessLint:
         '''
         if 'edgedefault' in graph.attrib:
             if graph.attrib['edgedefault'] != 'directed':
-                logging.getLogger("with_position") \
-                       .warning("Edgedefault should be 'directed'",
-                                extra={'line' : graph.sourceline})
+                log_with_position(LOGLEVELS['warning'], graph.sourceline,
+                                  "Edgedefault should be 'directed'")
         else:
-            logging.getLogger("with_position") \
-                   .warning("Graph definition is missing attribute 'edgedefault'",
-                            extra={'line' : graph.sourceline})
+            log_with_position(LOGLEVELS['warning'], graph.sourceline,
+                              "Graph definition is missing attribute 'edgedefault'")
         for child in graph:
             if child.tag.rpartition('}')[2] == "data":
                 self.handle_data(child, graph)
             else:
                 # All other expected children have already been handled and removed
-                logging.getLogger("with_position") \
-                       .warning("Graph element has unexpected child of type '%s'",
-                                child.tag, extra={'line' : child.sourceline})
+                log_with_position(LOGLEVELS['warning'], child.sourceline,
+                                  "Graph element has unexpected child of type '%s'", child.tag)
 
     def final_checks(self):
         '''
@@ -673,50 +633,37 @@ class WitnessLint:
         for key in self.used_keys.difference(set(self.defined_keys)):
             if key in COMMON_KEYS:
                 # Already handled for other keys
-                logging.getLogger("without_position") \
-                       .warning("Key '%s' has been used but not defined", key)
+                log(LOGLEVELS['warning'], "Key '%s' has been used but not defined", key)
         for key in set(self.defined_keys).difference(self.used_keys):
-            logging.getLogger("without_position") \
-                   .info("Unnecessary definition of key '%s', key has never been used", key)
+            log(LOGLEVELS['info'],
+                "Unnecessary definition of key '%s', key has never been used", key)
         if self.witness_type is None:
-            logging.getLogger("without_position") \
-                   .warning("Witness-type has not been specified")
+            log(LOGLEVELS['warning'], "Witness-type has not been specified")
         if self.sourcecodelang is None:
-            logging.getLogger("without_position") \
-                   .warning("Sourcecodelang has not been specified")
+            log(LOGLEVELS['warning'], "Sourcecodelang has not been specified")
         if self.producer is None:
-            logging.getLogger("without_position") \
-                   .warning("Producer has not been specified")
+            log(LOGLEVELS['warning'], "Producer has not been specified")
         if not self.specifications:
-            logging.getLogger("without_position") \
-                   .warning("No specification has been specified")
+            log(LOGLEVELS['warning'], "No specification has been specified")
         if self.programfile is None:
-            logging.getLogger("without_position") \
-                   .warning("Programfile has not been specified")
+            log(LOGLEVELS['warning'], "Programfile has not been specified")
         if self.programhash is None:
-            logging.getLogger("without_position") \
-                   .warning("Programhash has not been specified")
+            log(LOGLEVELS['warning'], "Programhash has not been specified")
         if self.architecture is None:
-            logging.getLogger("without_position") \
-                   .warning("Architecture has not been specified")
+            log(LOGLEVELS['warning'], "Architecture has not been specified")
         if self.creationtime is None:
-            logging.getLogger("without_position") \
-                   .warning("Creationtime has not been specified")
+            log(LOGLEVELS['warning'], "Creationtime has not been specified")
         if self.entry_node is None and len(self.node_ids) > 0:
-            logging.getLogger("without_position") \
-                   .warning("No entry node has been specified")
+            log(LOGLEVELS['warning'], "No entry node has been specified")
         if self.witness_type == 'correctness_witness':
             for key in self.violation_witness_only:
-                logging.getLogger("without_position") \
-                       .warning("Key '%s' is not allowed in correctness witness", key)
+                log(LOGLEVELS['warning'], "Key '%s' is not allowed in correctness witness", key)
         elif self.witness_type == 'violation_witness':
             for key in self.correctness_witness_only:
-                logging.getLogger("without_position") \
-                       .warning("Key '%s' is not allowed in violation witness", key)
+                log(LOGLEVELS['warning'], "Key '%s' is not allowed in violation witness", key)
         for node_id in self.check_existence_later:
             if node_id not in self.node_ids:
-                logging.getLogger("without_position") \
-                       .warning("Node %s has not been declared", node_id)
+                log(LOGLEVELS['warning'], "Node %s has not been declared", node_id)
         if self.check_callstack:
             check_function_stack(collections.OrderedDict(sorted(self.transitions.items())),
                                  self.entry_node)
@@ -757,57 +704,50 @@ class WitnessLint:
                         element_stack[-1].remove(elem)
                     elif tag == "graph":
                         if saw_graph:
-                            logging.getLogger("with_position") \
-                                   .warning("Found multiple graph definitions",
-                                            extra={'line' : elem.sourceline})
+                            log_with_position(LOGLEVELS['warning'], elem.sourceline,
+                                              "Found multiple graph definitions")
                             continue
                         saw_graph = True
                         self.handle_graph(elem)
                         element_stack[-1].remove(elem)
                     elif tag == "graphml":
                         if saw_graphml:
-                            logging.getLogger("with_position") \
-                                   .warning("Found multiple graphml elements",
-                                            extra={'line' : elem.sourceline})
+                            log_with_position(LOGLEVELS['warning'], elem.sourceline,
+                                              "Found multiple graphml elements")
                             continue
                         saw_graphml = True
                         if len(elem.attrib) > 0:
-                            logging.getLogger("with_position") \
-                                   .warning("Expected graphml element to have no attributes",
-                                            extra={'line' : elem.sourceline})
+                            log_with_position(LOGLEVELS['warning'], elem.sourceline,
+                                              "Expected graphml element to have no attributes")
                         if None in elem.nsmap:
                             if elem.nsmap[None] != 'http://graphml.graphdrawing.org/xmlns':
-                                logging.getLogger("with_position") \
-                                       .warning("Unexpected default namespace: %s",
-                                                elem.nsmap[None], extra={'line' : elem.sourceline})
+                                log_with_position(LOGLEVELS['warning'], elem.sourceline,
+                                                  "Unexpected default namespace: %s",
+                                                  elem.nsmap[None])
                         else:
-                            logging.getLogger("with_position") \
-                                   .warning("Missing default namespace",
-                                            extra={'line' : elem.sourceline})
+                            log_with_position(LOGLEVELS['warning'], elem.sourceline,
+                                              "Missing default namespace")
                         if 'xsi' in elem.nsmap:
                             if elem.nsmap['xsi'] != 'http://www.w3.org/2001/XMLSchema-instance':
-                                logging.getLogger("with_position") \
-                                       .warning("Expected 'xsi' to be namespace prefix for "
-                                                "'http://www.w3.org/2001/XMLSchema-instance'",
-                                                extra={'line' : elem.sourceline})
+                                log_with_position(LOGLEVELS['warning'], elem.sourceline,
+                                                  "Expected 'xsi' to be namespace prefix for "
+                                                  "'http://www.w3.org/2001/XMLSchema-instance'")
                         else:
-                            logging.getLogger("with_position") \
-                                   .warning("Missing xml schema namespace "
-                                            "or namespace prefix is not called 'xsi'",
-                                            extra={'line' : elem.sourceline})
+                            log_with_position(LOGLEVELS['warning'], elem.sourceline,
+                                              "Missing xml schema namespace "
+                                              "or namespace prefix is not called 'xsi'")
                         for child in elem:
                             # All expected children have already been handled and removed
-                            logging.getLogger("with_position") \
-                                   .warning("Graphml element has unexpected child of type '%s'",
-                                            child.tag, extra={'line' : elem.sourceline})
+                            log_with_position(LOGLEVELS['warning'], elem.sourceline,
+                                              "Graphml element has unexpected child of type '%s'",
+                                              child.tag)
                     else:
-                        logging.getLogger("with_position") \
-                               .warning("Unknown tag: %s",
-                                        elem.tag, extra={'line' : elem.sourceline})
+                        log_with_position(LOGLEVELS['warning'], elem.sourceline,
+                                          "Unknown tag: %s", elem.tag)
             self.final_checks()
         except ET.XMLSyntaxError as err:
-            logging.getLogger("with_position") \
-                   .critical("Malformed witness:\n\t%s", err.msg, extra={'line' : err.lineno})
+            log_with_position(LOGLEVELS['critical'], err.lineno,
+                              "Malformed witness:\n\t%s", err.msg)
 
 def main(argv):
     arg_parser = create_arg_parser()
