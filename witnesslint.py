@@ -31,6 +31,19 @@ LOGLEVELS = {'critical' : logging.CRITICAL, 'error' : logging.ERROR, 'warning' :
 
 CREATIONTIME_PATTERN = r'^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}([+-]\d{2}:\d{2})?$'
 
+def create_linter(argv):
+    arg_parser = create_arg_parser()
+    parsed_args = arg_parser.parse_args(argv)
+    loglevel = LOGLEVELS[parsed_args.loglevel]
+    create_logger(loglevel)
+    program = parsed_args.program
+    if program is not None:
+        program = program.name
+    witness = parsed_args.witness
+    if witness is not None:
+        witness = witness.name
+    return WitnessLint(witness, program, parsed_args.checkCallstack, parsed_args.ignoreSelfLoops)
+
 def create_arg_parser():
     parser = argparse.ArgumentParser()
     parser.add_argument('witness',
@@ -40,7 +53,7 @@ def create_arg_parser():
     parser.add_argument('--loglevel',
                         default='warning',
                         choices=['critical', 'error', 'warning', 'info', 'debug'],
-                        help="Desired verbosity of logging output. Only log messages at or above"
+                        help="Desired verbosity of logging output. Only log messages at or above "
                              "the specified level are displayed.",
                         metavar='LOGLEVEL')
     parser.add_argument('--program',
@@ -753,17 +766,7 @@ class WitnessLint:
                               "Malformed witness:\n\t%s", err.msg)
 
 def main(argv):
-    arg_parser = create_arg_parser()
-    parsed_args = arg_parser.parse_args(argv[1:])
-    loglevel = LOGLEVELS[parsed_args.loglevel]
-    create_logger(loglevel)
-    program = parsed_args.program
-    if program is not None:
-        program = program.name
-    witness = parsed_args.witness
-    if witness is not None:
-        witness = witness.name
-    linter = WitnessLint(witness, program, parsed_args.checkCallstack, parsed_args.ignoreSelfLoops)
+    linter = create_linter(argv[1:])
     start = time.time()
     linter.lint()
     end = time.time()
