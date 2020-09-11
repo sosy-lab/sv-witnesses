@@ -116,8 +116,6 @@ class WitnessLint:
         self.used_keys = set()
         self.threads = dict()
         self.transitions = dict()
-        self.function_stack = list()
-        self.check_existence_later = set()
         self.check_later = list()
         self.exit_code = 0
 
@@ -174,6 +172,10 @@ class WitnessLint:
                                        "%s is not a valid character offset", offset)
         else:
             self.check_later.append(lambda: self.check_character_offset(offset, pos))
+
+    def check_existence(self, node_id):
+        if node_id not in self.node_ids:
+            self.log(LOGLEVELS['warning'], "Node %s has not been declared", node_id)
 
     def check_witness_type(self, key, expected, pos):
         if self.witness_type is not None:
@@ -588,7 +590,7 @@ class WitnessLint:
                                        "Sink node should have no leaving edges")
             self.transition_sources.add(source)
             if source not in self.node_ids:
-                self.check_existence_later.add(source)
+                self.check_later.append(lambda: self.check_existence(source))
         else:
             source = None
             self.log_with_position(LOGLEVELS['warning'], edge.sourceline,
@@ -599,7 +601,7 @@ class WitnessLint:
                 self.log_with_position(LOGLEVELS['warning'], edge.sourceline,
                                        "Node '%s' has self-loop", source)
             if target not in self.node_ids:
-                self.check_existence_later.add(target)
+                self.check_later.append(lambda: self.check_existence(target))
         else:
             target = None
             self.log_with_position(LOGLEVELS['warning'], edge.sourceline,
@@ -720,9 +722,6 @@ class WitnessLint:
             self.log(LOGLEVELS['warning'], "Creationtime has not been specified")
         if self.entry_node is None and len(self.node_ids) > 0:
             self.log(LOGLEVELS['warning'], "No entry node has been specified")
-        for node_id in self.check_existence_later:
-            if node_id not in self.node_ids:
-                self.log(LOGLEVELS['warning'], "Node %s has not been declared", node_id)
         if self.check_callstack:
             self.check_function_stack(collections.OrderedDict(sorted(self.transitions.items())),
                                       self.entry_node)
