@@ -24,8 +24,6 @@ COMMON_KEYS = {'witness-type' : 'graph', 'sourcecodelang' : 'graph', 'producer' 
                'enterLoopHead' : 'edge', 'enterFunction' : 'edge', 'returnFromFunction' : 'edge',
                'threadId' : 'edge', 'createThread' : 'edge'}
 
-WITNESS_TYPES = {'correctness_witness' : 'correctness', 'violation_witness' : 'violation'}
-
 LOGLEVELS = {'critical' : logging.CRITICAL, 'error' : logging.ERROR, 'warning' : logging.WARNING,
              'info' : logging.INFO, 'debug' : logging.DEBUG}
 
@@ -116,6 +114,10 @@ class WitnessLint:
         self.used_keys = set()
         self.threads = dict()
         self.transitions = dict()
+        self.function_stack = list()
+        self.violation_witness_only = set()
+        self.correctness_witness_only = set()
+        self.check_existence_later = set()
         self.check_later = list()
         self.exit_code = 0
 
@@ -172,19 +174,6 @@ class WitnessLint:
                                        "%s is not a valid character offset", offset)
         else:
             self.check_later.append(lambda: self.check_character_offset(offset, pos))
-
-    def check_existence(self, node_id):
-        if node_id not in self.node_ids:
-            self.log(LOGLEVELS['warning'], "Node %s has not been declared", node_id)
-
-    def check_witness_type(self, key, expected, pos):
-        if self.witness_type is not None:
-            if self.witness_type != expected:
-                self.log_with_position(LOGLEVELS['error'], pos,
-                                       "Key '%s' is not allowed in %s witness",
-                                       key, self.witness_type)
-        else:
-            self.check_later.append(lambda: self.check_witness_type(key, expected, pos))
 
     def check_function_stack(self, transitions, start_node):
         '''
@@ -297,7 +286,7 @@ class WitnessLint:
                 self.log_with_position(LOGLEVELS['warning'], data.sourceline,
                                        "Invalid value for key 'sink': %s",
                                        data.text)
-            self.check_witness_type(key, WITNESS_TYPES['violation_witness'], data.sourceline)
+            self.violation_witness_only.add(key)
         elif key == 'violation':
             if data.text == 'false':
                 self.log_with_position(LOGLEVELS['info'], data.sourceline,
@@ -306,12 +295,12 @@ class WitnessLint:
             elif not data.text == 'true':
                 self.log_with_position(LOGLEVELS['warning'], data.sourceline,
                                        "Invalid value for key 'violation': %s", data.text)
-            self.check_witness_type(key, WITNESS_TYPES['violation_witness'], data.sourceline)
+            self.violation_witness_only.add(key)
         elif key == 'invariant':
-            self.check_witness_type(key, WITNESS_TYPES['correctness_witness'], data.sourceline)
+            self.correctness_witness_only.add(key)
             #TODO: Check whether data.text is a valid invariant
         elif key == 'invariant.scope':
-            self.check_witness_type(key, WITNESS_TYPES['correctness_witness'], data.sourceline)
+            self.correctness_witness_only.add(key)
             self.check_functionname(data.text, data.sourceline)
         elif key in self.defined_keys and self.defined_keys[key] == 'node':
             # Other, tool-specific keys are allowed as long as they have been defined
@@ -325,7 +314,7 @@ class WitnessLint:
         Performs checks for data elements that are direct children of an edge element.
         '''
         if key == 'assumption':
-            self.check_witness_type(key, WITNESS_TYPES['violation_witness'], data.sourceline)
+            self.violation_witness_only.add(key)
             #TODO: Check whether all expressions from data.text are valid assumptions
             if '\\result' in data.text:
                 resultfunction_present = False
@@ -340,16 +329,16 @@ class WitnessLint:
                                            "Found assumption containing '\\result' "
                                            "but no resultfunction was specified")
         elif key == 'assumption.scope':
-            self.check_witness_type(key, WITNESS_TYPES['violation_witness'], data.sourceline)
+            self.violation_witness_only.add(key)
             self.check_functionname(data.text, data.sourceline)
         elif key == 'assumption.resultfunction':
-            self.check_witness_type(key, WITNESS_TYPES['violation_witness'], data.sourceline)
+            self.violation_witness_only.add(key)
             self.check_functionname(data.text, data.sourceline)
         elif key == 'control':
             if data.text not in ['condition-true', 'condition-false']:
                 self.log_with_position(LOGLEVELS['warning'], data.sourceline,
                                        "Invalid value for key 'control': %s", data.text)
-            self.check_witness_type(key, WITNESS_TYPES['violation_witness'], data.sourceline)
+            self.violation_witness_only.add(key)
         elif key == 'startline':
             self.check_linenumber(data.text, data.sourceline)
         elif key == 'endline':
@@ -408,7 +397,7 @@ class WitnessLint:
         if key == 'witness-type':
             if data.text in ['correctness_witness', 'violation_witness']:
                 if self.witness_type is None:
-                    self.witness_type = WITNESS_TYPES[data.text]
+                    self.witness_type = data.text
                 else:
                     self.log_with_position(LOGLEVELS['warning'], data.sourceline,
                                            "Found multiple definitions of witness-type")
@@ -590,7 +579,7 @@ class WitnessLint:
                                        "Sink node should have no leaving edges")
             self.transition_sources.add(source)
             if source not in self.node_ids:
-                self.check_later.append(lambda: self.check_existence(source))
+                self.check_existence_later.add(source)
         else:
             source = None
             self.log_with_position(LOGLEVELS['warning'], edge.sourceline,
@@ -601,7 +590,7 @@ class WitnessLint:
                 self.log_with_position(LOGLEVELS['warning'], edge.sourceline,
                                        "Node '%s' has self-loop", source)
             if target not in self.node_ids:
-                self.check_later.append(lambda: self.check_existence(target))
+                self.check_existence_later.add(target)
         else:
             target = None
             self.log_with_position(LOGLEVELS['warning'], edge.sourceline,
@@ -722,13 +711,24 @@ class WitnessLint:
             self.log(LOGLEVELS['warning'], "Creationtime has not been specified")
         if self.entry_node is None and len(self.node_ids) > 0:
             self.log(LOGLEVELS['warning'], "No entry node has been specified")
+        if self.witness_type == 'correctness_witness':
+            for key in self.violation_witness_only:
+                self.log(LOGLEVELS['warning'],
+                         "Key '%s' is not allowed in correctness witness", key)
+        elif self.witness_type == 'violation_witness':
+            for key in self.correctness_witness_only:
+                self.log(LOGLEVELS['warning'],
+                         "Key '%s' is not allowed in violation witness", key)
+        for node_id in self.check_existence_later:
+            if node_id not in self.node_ids:
+                self.log(LOGLEVELS['warning'], "Node %s has not been declared", node_id)
         if self.check_callstack:
             self.check_function_stack(collections.OrderedDict(sorted(self.transitions.items())),
                                       self.entry_node)
-        check_now = self.check_later[:]
-        self.check_later = list()
-        for check in check_now:
-            check()
+        if self.program_info is not None:
+            for check in self.check_later:
+                check()
+
 
     def lint(self):
         '''
