@@ -59,10 +59,13 @@ def create_arg_parser():
                         type=argparse.FileType('r'),
                         metavar='PROGRAM')
     parser.add_argument('--checkCallstack',
-                        help="Perform checks whether transitions are consistent with callstack. "
+                        help="Check whether transitions specified via enterFunction "
+                             "and returnFromFunction are consistent. "
                              "Better left disabled for big witnesses.",
                         action='store_true')
     parser.add_argument('--ignoreSelfLoops',
+                        help="Produce no warnings when encountering "
+                             "edges that represent a self-loop.",
                         action='store_true')
     return parser
 
@@ -87,7 +90,7 @@ def create_logger(loglevel):
 class WitnessLint:
     '''
     Contains methods that check different parts of a witness for consistency
-    with the witness format.
+    with the witness format as well as some utility methods for this purpose.
     The lint() method checks the whole witness.
     '''
 
@@ -114,7 +117,6 @@ class WitnessLint:
         self.used_keys = set()
         self.threads = dict()
         self.transitions = dict()
-        self.function_stack = list()
         self.violation_witness_only = set()
         self.correctness_witness_only = set()
         self.check_existence_later = set()
@@ -566,7 +568,7 @@ class WitnessLint:
         Checks an edge element for validity.
 
         Edges must have attributes 'source' and 'target', each referencing a different existing
-        node by it's id.
+        node by its id.
 
         Other attributes are allowed but no checks are currently performed for them.
 
@@ -728,7 +730,6 @@ class WitnessLint:
         if self.program_info is not None:
             for check in self.check_later:
                 check()
-
 
     def lint(self):
         '''
