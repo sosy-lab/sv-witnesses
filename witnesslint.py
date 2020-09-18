@@ -280,7 +280,7 @@ class WitnessLint:
             elif data.text == 'true':
                 if 'id' in parent.attrib:
                     node_id = parent.attrib['id']
-                    if node_id in self.transition_sources:
+                    if node_id in self.transition_sources or node_id in self.transitions:
                         self.log_with_position(LOGLEVELS['warning'], data.sourceline,
                                                "Sink node should have no leaving edges")
                     self.sink_nodes.add(node_id)
@@ -579,7 +579,9 @@ class WitnessLint:
             if source in self.sink_nodes:
                 self.log_with_position(LOGLEVELS['warning'], edge.sourceline,
                                        "Sink node should have no leaving edges")
-            self.transition_sources.add(source)
+            if not self.check_callstack:
+                # Otherwise this information is stored in self.transitions
+                self.transition_sources.add(source)
             if source not in self.node_ids:
                 self.check_existence_later.add(source)
         else:
