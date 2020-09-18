@@ -7,6 +7,7 @@ with the witness format [1].
 
 import argparse
 import collections
+import gzip
 import hashlib
 import logging
 import re
@@ -40,6 +41,14 @@ def create_linter(argv):
     witness = parsed_args.witness
     if witness is not None:
         witness = witness.name
+        with gzip.open(witness) as unzipped_witness:
+            try:
+                unzipped_witness.read(1)
+                zipped = True
+            except OSError:
+                zipped = False
+        if zipped:
+            witness = gzip.open(witness)
     return WitnessLint(witness, program, parsed_args.checkCallstack, parsed_args.ignoreSelfLoops)
 
 def create_arg_parser():
