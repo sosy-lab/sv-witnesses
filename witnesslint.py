@@ -38,6 +38,7 @@ def create_linter(argv):
     program = parsed_args.program
     if program is not None:
         program = program.name
+    check_program = parsed_args.checkProgram or program is not None
     witness = parsed_args.witness
     if witness is not None:
         witness = witness.name
@@ -49,7 +50,8 @@ def create_linter(argv):
                 zipped = False
         if zipped:
             witness = gzip.open(witness)
-    return WitnessLint(witness, program, parsed_args.checkCallstack, parsed_args.ignoreSelfLoops)
+    return WitnessLint(witness, program, check_program,
+                       parsed_args.checkCallstack, parsed_args.ignoreSelfLoops)
 
 def create_arg_parser():
     parser = argparse.ArgumentParser()
@@ -67,6 +69,11 @@ def create_arg_parser():
                         help="The program for which the witness was created.",
                         type=argparse.FileType('r'),
                         metavar='PROGRAM')
+    parser.add_argument('--checkProgram',
+                        help="Perform some additional checks involving the program file. "
+                             "Better left disabled for big witnesses. This option is "
+                             "implicitly used when a program is given via the --program option.",
+                        action='store_true')
     parser.add_argument('--checkCallstack',
                         help="Check whether transitions specified via enterFunction "
                              "and returnFromFunction are consistent. "
@@ -103,11 +110,12 @@ class WitnessLint:
     The lint() method checks the whole witness.
     '''
 
-    def __init__(self, witness, program, check_callstack, ignore_self_loops):
+    def __init__(self, witness, program, check_program, check_callstack, ignore_self_loops):
         self.witness = witness
         self.program_info = None
         if program is not None:
             self.collect_program_info(program)
+        self.check_program = check_program
         self.check_callstack = check_callstack
         self.ignore_self_loops = ignore_self_loops
         self.witness_type = None
@@ -163,6 +171,8 @@ class WitnessLint:
                              'function_names' : function_names}
 
     def check_functionname(self, name, pos):
+        if not self.check_program:
+            return
         if self.program_info is not None:
             if name not in self.program_info['function_names']:
                 self.log_with_position(LOGLEVELS['warning'], pos,
@@ -171,6 +181,8 @@ class WitnessLint:
             self.check_later.append(lambda: self.check_functionname(name, pos))
 
     def check_linenumber(self, line, pos):
+        if not self.check_program:
+            return
         if self.program_info is not None:
             if int(line) < 1 or int(line) > self.program_info['num_lines']:
                 self.log_with_position(LOGLEVELS['warning'], pos,
@@ -179,6 +191,8 @@ class WitnessLint:
             self.check_later.append(lambda: self.check_linenumber(line, pos))
 
     def check_character_offset(self, offset, pos):
+        if not self.check_program:
+            return
         if self.program_info is not None:
             if int(offset) < 0 or int(offset) >= self.program_info['num_chars']:
                 self.log_with_position(LOGLEVELS['warning'], pos,
@@ -738,7 +752,7 @@ class WitnessLint:
         if self.check_callstack:
             self.check_function_stack(collections.OrderedDict(sorted(self.transitions.items())),
                                       self.entry_node)
-        if self.program_info is not None:
+        if self.check_program and self.program_info is not None:
             for check in self.check_later:
                 check()
 
