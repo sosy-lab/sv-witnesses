@@ -2,18 +2,43 @@
 
 The witness linter can be used to make sure that a given witness conforms to the exchange format.
 
+### Requirements
+
+The following modules are necessary to use the witness linter:
+
+- lxml
+- zlib
+
 ### Usage
 
 In order to use the witness linter you can run
 
 ```
-python3 witnesslint.py <path_to_witness>
+python3 witnesslint.py [<options>] <path_to_witness>
 ```
 
 For information on available options use
 
 ```
 python3 witnesslint.py -h
+```
+
+Currently supported options are:
+
+```
+  -h, --help           show this help message and exit
+  --loglevel LOGLEVEL  Desired verbosity of logging output. Only log messages
+                       at or above the specified level are displayed.
+  --program PROGRAM    The program for which the witness was created.
+  --checkProgram       Perform some additional checks involving the program
+                       file. Better left disabled for big witnesses. This
+                       option is implicitly used when a program is given via
+                       the --program option.
+  --checkCallstack     Check whether transitions specified via enterFunction
+                       and returnFromFunction are consistent. Better left
+                       disabled for big witnesses.
+  --ignoreSelfLoops    Produce no warnings when encountering edges that
+                       represent a self-loop.
 ```
 
 ### Output
