@@ -1,0 +1,10 @@
+[flake8]
+max-line-length = 88
+ignore =
+    # we have no isort config
+    I,
+    # do not match Black output
+    E203,W503,
+    # allow print
+    T001,
+
