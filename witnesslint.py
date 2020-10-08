@@ -266,33 +266,30 @@ class WitnessLint:
     def check_functionname(self, name, pos):
         if not self.check_program:
             return
-        if self.program_info is not None:
-            if name not in self.program_info["function_names"]:
-                self.logger.warning(
-                    "'{}' is not a functionname of the program".format(name), pos
-                )
-        else:
+        if self.program_info is None:
             self.check_later.append(lambda: self.check_functionname(name, pos))
+        elif name not in self.program_info["function_names"]:
+            self.logger.warning(
+                "'{}' is not a functionname of the program".format(name), pos
+            )
 
     def check_linenumber(self, line, pos):
         if not self.check_program:
             return
-        if self.program_info is not None:
-            if int(line) < 1 or int(line) > self.program_info["num_lines"]:
-                self.logger.warning("{} is not a valid linenumber".format(line), pos)
-        else:
+        if self.program_info is None:
             self.check_later.append(lambda: self.check_linenumber(line, pos))
+        elif int(line) < 1 or int(line) > self.program_info["num_lines"]:
+            self.logger.warning("{} is not a valid linenumber".format(line), pos)
 
     def check_character_offset(self, offset, pos):
         if not self.check_program:
             return
-        if self.program_info is not None:
-            if int(offset) < 0 or int(offset) >= self.program_info["num_chars"]:
-                self.logger.warning(
-                    "{} is not a valid character offset".format(offset), pos
-                )
-        else:
+        if self.program_info is None:
             self.check_later.append(lambda: self.check_character_offset(offset, pos))
+        elif int(offset) < 0 or int(offset) >= self.program_info["num_chars"]:
+            self.logger.warning(
+                "{} is not a valid character offset".format(offset), pos
+            )
 
     def check_function_stack(self, transitions, start_node):
         """
@@ -305,40 +302,37 @@ class WitnessLint:
             current_node, current_stack = to_visit.pop()
             if current_node in visited:
                 continue
-            else:
-                visited.add(current_node)
-            if current_node not in transitions:
-                if current_stack:
-                    self.logger.warning(
-                        "No leaving transition for node {} but not all "
-                        "functions have been left".format(current_node)
-                    )
-            else:
-                for outgoing in transitions[current_node]:
-                    function_stack = current_stack[:]
-                    if outgoing[2] is not None and outgoing[2] != outgoing[1]:
-                        if not function_stack:
-                            self.logger.warning(
-                                "Trying to return from function '{0}' in transition "
-                                "{1} -> {2} but currently not in a function".format(
-                                    outgoing[2], current_node, outgoing[0]
-                                )
+            visited.add(current_node)
+            if current_node not in transitions and current_stack:
+                self.logger.warning(
+                    "No leaving transition for node {} but not all "
+                    "functions have been left".format(current_node)
+                )
+            for outgoing in transitions.get(current_node, list()):
+                function_stack = current_stack[:]
+                if outgoing[2] is not None and outgoing[2] != outgoing[1]:
+                    if not function_stack:
+                        self.logger.warning(
+                            "Trying to return from function '{0}' in transition "
+                            "{1} -> {2} but currently not in a function".format(
+                                outgoing[2], current_node, outgoing[0]
                             )
-                        elif outgoing[2] == current_stack[-1]:
-                            function_stack.pop()
-                        else:
-                            self.logger.warning(
-                                "Trying to return from function '{0}' in transition "
-                                "{1} -> {2} but currently in function {3}".format(
-                                    outgoing[2],
-                                    current_node,
-                                    outgoing[0],
-                                    function_stack[-1],
-                                )
+                        )
+                    elif outgoing[2] == current_stack[-1]:
+                        function_stack.pop()
+                    else:
+                        self.logger.warning(
+                            "Trying to return from function '{0}' in transition "
+                            "{1} -> {2} but currently in function {3}".format(
+                                outgoing[2],
+                                current_node,
+                                outgoing[0],
+                                function_stack[-1],
                             )
-                    if outgoing[1] is not None and outgoing[1] != outgoing[2]:
-                        function_stack.append(outgoing[1])
-                    to_visit.append((outgoing[0], function_stack))
+                        )
+                if outgoing[1] is not None and outgoing[1] != outgoing[2]:
+                    function_stack.append(outgoing[1])
+                to_visit.append((outgoing[0], function_stack))
 
     def handle_data(self, data, parent):
         """
@@ -363,8 +357,12 @@ class WitnessLint:
                 ),
                 data.sourceline,
             )
-        if "key" in data.attrib:
-            key = data.attrib["key"]
+        key = data.attrib.get("key")
+        if key is None:
+            self.logger.warning(
+                "Expected data element to have attribute 'key'", data.sourceline
+            )
+        else:
             self.used_keys.add(key)
             _, _, tag = parent.tag.rpartition("}")
             if tag == "node":
@@ -375,10 +373,6 @@ class WitnessLint:
                 self.handle_graph_data(data, key)
             else:
                 raise AssertionError("Invalid parent element of type " + parent.tag)
-        else:
-            self.logger.warning(
-                "Expected data element to have attribute 'key'", data.sourceline
-            )
 
     def handle_node_data(self, data, key, parent):
         """
@@ -387,10 +381,7 @@ class WitnessLint:
         if key == "entry":
             if data.text == "true":
                 if self.entry_node is None:
-                    if "id" in parent.attrib:
-                        self.entry_node = parent.attrib["id"]
-                    else:
-                        self.entry_node = ""
+                    self.entry_node = parent.attrib.get("id", "")
                 else:
                     self.logger.warning("Found multiple entry nodes", data.sourceline)
             elif data.text == "false":
@@ -410,8 +401,8 @@ class WitnessLint:
                     data.sourceline,
                 )
             elif data.text == "true":
-                if "id" in parent.attrib:
-                    node_id = parent.attrib["id"]
+                node_id = parent.attrib.get("id")
+                if node_id is not None:
                     if (
                         node_id in self.transition_sources
                         or node_id in self.transitions
@@ -464,8 +455,7 @@ class WitnessLint:
                 for child in parent:
                     if (
                         child.tag.rpartition("}")[2] == "data"
-                        and "key" in child.attrib
-                        and child.attrib["key"] == "assumption.resultfunction"
+                        and child.attrib.get("key") == "assumption.resultfunction"
                     ):
                         resultfunction_present = True
                         break
@@ -511,19 +501,17 @@ class WitnessLint:
             for child in parent:
                 if (
                     child.tag.rpartition("}")[2] == "data"
-                    and "key" in child.attrib
-                    and child.attrib["key"] == "threadId"
+                    and child.attrib.get("key") == "threadId"
                     and self.threads[child.text] is None
                 ):
                     self.threads[child.text] = data.text
                     break
             self.check_functionname(data.text, data.sourceline)
-        elif key == "returnFrom" or key == "returnFromFunction":
+        elif key in ["returnFrom", "returnFromFunction"]:
             for child in parent:
                 if (
                     child.tag.rpartition("}")[2] == "data"
-                    and "key" in child.attrib
-                    and child.attrib["key"] == "threadId"
+                    and child.attrib.get("key") == "threadId"
                     and self.threads[child.text] == data.text
                 ):
                     del self.threads[child.text]
@@ -555,30 +543,28 @@ class WitnessLint:
         Performs checks for data elements that are direct children of a graph element.
         """
         if key == "witness-type":
-            if data.text in ["correctness_witness", "violation_witness"]:
-                if self.witness_type is None:
-                    self.witness_type = data.text
-                else:
-                    self.logger.warning(
-                        "Found multiple definitions of witness-type", data.sourceline
-                    )
-            else:
+            if data.text not in ["correctness_witness", "violation_witness"]:
                 self.logger.warning(
                     "Invalid value for key 'witness-type': {}".format(data.text),
                     data.sourceline,
                 )
-        elif key == "sourcecodelang":
-            if data.text in ["C", "Java"]:
-                if self.sourcecodelang is None:
-                    self.sourcecodelang = data.text
-                else:
-                    self.logger.warning(
-                        "Found multiple definitions of sourcecodelang", data.sourceline
-                    )
+            elif self.witness_type is None:
+                self.witness_type = data.text
             else:
+                self.logger.warning(
+                    "Found multiple definitions of witness-type", data.sourceline
+                )
+        elif key == "sourcecodelang":
+            if data.text not in ["C", "Java"]:
                 self.logger.warning(
                     "Invalid value for key 'sourcecodelang': {}".format(data.text),
                     data.sourceline,
+                )
+            elif self.sourcecodelang is None:
+                self.sourcecodelang = data.text
+            else:
+                self.logger.warning(
+                    "Found multiple definitions of sourcecodelang", data.sourceline
                 )
         elif key == "producer":
             if self.producer is None:
@@ -607,15 +593,15 @@ class WitnessLint:
                     "Found multiple definitions of programfile", data.sourceline
                 )
         elif key == "programhash":
-            if self.program_info is not None:
-                if (
-                    data.text.lower() != self.program_info["sha256_hash"]
-                    and data.text.lower() != self.program_info["sha1_hash"]
-                ):
-                    self.logger.warning(
-                        "Programhash does not match the hash specified in the witness",
-                        data.sourceline,
-                    )
+            if (
+                self.program_info is not None
+                and data.text.lower() != self.program_info.get("sha256_hash")
+                and data.text.lower() != self.program_info.get("sha1_hash")
+            ):
+                self.logger.warning(
+                    "Programhash does not match the hash specified in the witness",
+                    data.sourceline,
+                )
             if self.programhash is None:
                 self.programhash = data.text
             else:
@@ -623,28 +609,23 @@ class WitnessLint:
                     "Found multiple definitions of programhash", data.sourceline
                 )
         elif key == "architecture":
-            if self.architecture is None:
-                if data.text in ["32bit", "64bit"]:
-                    self.architecture = data.text
-                else:
-                    self.logger.warning(
-                        "Invalid architecture identifier", data.sourceline
-                    )
-            else:
+            if self.architecture is not None:
                 self.logger.warning(
                     "Found multiple definitions of architecture", data.sourceline
                 )
-        elif key == "creationtime":
-            if self.creationtime is None:
-                if not re.match(CREATIONTIME_PATTERN, data.text.strip()):
-                    self.logger.warning(
-                        "Invalid format for creationtime", data.sourceline
-                    )
-                self.creationtime = data.text
+            elif data.text in ["32bit", "64bit"]:
+                self.architecture = data.text
             else:
+                self.logger.warning("Invalid architecture identifier", data.sourceline)
+        elif key == "creationtime":
+            if self.creationtime is not None:
                 self.logger.warning(
                     "Found multiple definitions of creationtime", data.sourceline
                 )
+            elif re.match(CREATIONTIME_PATTERN, data.text.strip()):
+                self.creationtime = data.text
+            else:
+                self.logger.warning("Invalid format for creationtime", data.sourceline)
         elif key in self.defined_keys and self.defined_keys[key] == "graph":
             # Other, tool-specific keys are allowed as long as they have been defined
             pass
@@ -667,16 +648,8 @@ class WitnessLint:
         Key definitions in a witness may have a child element of type 'default' specifying
         the default value for this key, but are currently expected to have no other children.
         """
-        if "id" in key.attrib:
-            key_id = key.attrib["id"]
-        else:
-            self.logger.warning("Key is missing attribute 'id'", key.sourceline)
-            key_id = None
-        if "for" in key.attrib:
-            key_domain = key.attrib["for"]
-        else:
-            self.logger.warning("Key is missing attribute 'for'", key.sourceline)
-            key_domain = None
+        key_id = key.attrib.get("id")
+        key_domain = key.attrib.get("for")
         if key_id and key_domain:
             if key_id in self.defined_keys:
                 self.logger.warning(
@@ -693,6 +666,11 @@ class WitnessLint:
                         key.sourceline,
                     )
                 self.defined_keys[key_id] = key_domain
+        else:
+            if key_id is None:
+                self.logger.warning("Key is missing attribute 'id'", key.sourceline)
+            if key_domain is None:
+                self.logger.warning("Key is missing attribute 'for'", key.sourceline)
         if len(key) > 1:
             self.logger.warning(
                 "Expected key to have at most one child but has {}".format(len(key)),
@@ -734,18 +712,17 @@ class WitnessLint:
                 ),
                 node.sourceline,
             )
-        if "id" in node.attrib:
-            node_id = node.attrib["id"]
-            if node_id in self.node_ids:
-                self.logger.warning(
-                    "Found multiple nodes with id '{}'".format(node_id), node.sourceline
-                )
-            else:
-                self.node_ids.add(node_id)
-        else:
+        node_id = node.attrib.get("id")
+        if node_id is None:
             self.logger.warning(
                 "Expected node element to have attribute 'id'", node.sourceline
             )
+        elif node_id in self.node_ids:
+            self.logger.warning(
+                "Found multiple nodes with id '{}'".format(node_id), node.sourceline
+            )
+        else:
+            self.node_ids.add(node_id)
         for child in node:
             if child.tag.rpartition("}")[2] == "data":
                 self.handle_data(child, node)
@@ -766,8 +743,10 @@ class WitnessLint:
 
         Edges in a witness are currently not supposed to have any non-data children.
         """
-        if "source" in edge.attrib:
-            source = edge.attrib["source"]
+        source = edge.attrib.get("source")
+        if source is None:
+            self.logger.warning("Edge is missing attribute 'source'", edge.sourceline)
+        else:
             if source in self.sink_nodes:
                 self.logger.warning(
                     "Sink node should have no leaving edges", edge.sourceline
@@ -777,33 +756,26 @@ class WitnessLint:
                 self.transition_sources.add(source)
             if source not in self.node_ids:
                 self.check_existence_later.add(source)
+        target = edge.attrib.get("target")
+        if target is None:
+            self.logger.warning("Edge is missing attribute 'target'", edge.sourceline)
         else:
-            source = None
-            self.logger.warning("Edge is missing attribute 'source'", edge.sourceline)
-        if "target" in edge.attrib:
-            target = edge.attrib["target"]
             if source == target and not self.ignore_self_loops:
                 self.logger.warning(
                     "Node '{}' has self-loop".format(source), edge.sourceline
                 )
             if target not in self.node_ids:
                 self.check_existence_later.add(target)
-        else:
-            target = None
-            self.logger.warning("Edge is missing attribute 'target'", edge.sourceline)
         if self.check_callstack:
             enter, return_from = (None, None)
             for child in edge:
                 if child.tag.rpartition("}")[2] == "data":
                     self.handle_data(child, edge)
-                    if "key" in child.attrib:
-                        if child.attrib["key"] == "enterFunction":
-                            enter = child.text
-                        elif (
-                            child.attrib["key"] == "returnFromFunction"
-                            or child.attrib["key"] == "returnFrom"
-                        ):
-                            return_from = child.text
+                    key = child.attrib.get("key")
+                    if key == "enterFunction":
+                        enter = child.text
+                    elif key in ["returnFrom", "returnFromFunction"]:
+                        return_from = child.text
                 else:
                     self.logger.warning(
                         "Edge has unexpected child element of type '{}'".format(
@@ -841,15 +813,13 @@ class WitnessLint:
         Currently a witness graph is not supposed to have any children of types other than
         'node', 'edge' or 'data'.
         """
-        if "edgedefault" in graph.attrib:
-            if graph.attrib["edgedefault"] != "directed":
-                self.logger.warning(
-                    "Edgedefault should be 'directed'", graph.sourceline
-                )
-        else:
+        edge_default = graph.attrib.get("edgedefault")
+        if edge_default is None:
             self.logger.warning(
                 "Graph definition is missing attribute 'edgedefault'", graph.sourceline
             )
+        elif edge_default != "directed":
+            self.logger.warning("Edgedefault should be 'directed'", graph.sourceline)
         for child in graph:
             if child.tag.rpartition("}")[2] == "data":
                 self.handle_data(child, graph)
@@ -866,24 +836,22 @@ class WitnessLint:
                 "Expected graphml element to have no attributes",
                 graphml_elem.sourceline,
             )
-        if None in graphml_elem.nsmap:
-            if graphml_elem.nsmap[None] != "http://graphml.graphdrawing.org/xmlns":
-                self.logger.warning(
-                    "Unexpected default namespace: {}".format(graphml_elem.nsmap[None]),
-                    graphml_elem.sourceline,
-                )
-        else:
+        if None not in graphml_elem.nsmap:
             self.logger.warning("Missing default namespace", graphml_elem.sourceline)
-        if "xsi" in graphml_elem.nsmap:
-            if graphml_elem.nsmap["xsi"] != "http://www.w3.org/2001/XMLSchema-instance":
-                self.logger.warning(
-                    "Expected 'xsi' to be namespace prefix "
-                    "for 'http://www.w3.org/2001/XMLSchema-instance'",
-                    graphml_elem.sourceline,
-                )
-        else:
+        elif graphml_elem.nsmap[None] != "http://graphml.graphdrawing.org/xmlns":
+            self.logger.warning(
+                "Unexpected default namespace: {}".format(graphml_elem.nsmap[None]),
+                graphml_elem.sourceline,
+            )
+        if "xsi" not in graphml_elem.nsmap:
             self.logger.warning(
                 "Missing xml schema namespace or namespace prefix is not called 'xsi'",
+                graphml_elem.sourceline,
+            )
+        elif graphml_elem.nsmap["xsi"] != "http://www.w3.org/2001/XMLSchema-instance":
+            self.logger.warning(
+                "Expected 'xsi' to be namespace prefix "
+                "for 'http://www.w3.org/2001/XMLSchema-instance'",
                 graphml_elem.sourceline,
             )
         for child in graphml_elem:
@@ -898,13 +866,13 @@ class WitnessLint:
         Performs checks that cannot be done before the whole witness has been traversed
         because elements may appear in almost arbitrary order.
         """
-        for key in self.used_keys.difference(set(self.defined_keys)):
+        for key in self.used_keys - set(self.defined_keys):
             if key in COMMON_KEYS:
                 # Already handled for other keys
                 self.logger.warning(
                     "Key '{}' has been used but not defined".format(key)
                 )
-        for key in set(self.defined_keys).difference(self.used_keys):
+        for key in set(self.defined_keys) - self.used_keys:
             self.logger.info(
                 "Unnecessary definition of key '{}', key has never been used".format(
                     key
@@ -966,6 +934,10 @@ class WitnessLint:
                 else:
                     element_stack.pop()
                     _, _, tag = elem.tag.rpartition("}")
+                    if element_stack:
+                        parent_elem = element_stack[-1]
+                    else:
+                        assert tag == "graphml"
                     if tag == "data":
                         # Will be handled later
                         pass
@@ -974,13 +946,13 @@ class WitnessLint:
                         pass
                     elif tag == "key":
                         self.handle_key(elem)
-                        element_stack[-1].remove(elem)
+                        parent_elem.remove(elem)
                     elif tag == "node":
                         self.handle_node(elem)
-                        element_stack[-1].remove(elem)
+                        parent_elem.remove(elem)
                     elif tag == "edge":
                         self.handle_edge(elem)
-                        element_stack[-1].remove(elem)
+                        parent_elem.remove(elem)
                     elif tag == "graph":
                         if saw_graph:
                             self.logger.warning(
@@ -989,7 +961,7 @@ class WitnessLint:
                         else:
                             saw_graph = True
                             self.handle_graph(elem)
-                            element_stack[-1].remove(elem)
+                            parent_elem.remove(elem)
                     elif tag == "graphml":
                         if saw_graphml:
                             self.logger.warning(
