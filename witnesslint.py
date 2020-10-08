@@ -15,33 +15,68 @@ import sys
 import time
 from lxml import etree as ET
 
+DATA = "data"
+DEFAULT = "default"
+KEY = "key"
+NODE = "node"
+EDGE = "edge"
+GRAPH = "graph"
+GRAPHML = "graphml"
+
+WITNESS_TYPE = "witness-type"
+SOURCECODELANG = "sourcecodelang"
+PRODUCER = "producer"
+SPECIFICATION = "specification"
+PROGRAMFILE = "programfile"
+PROGRAMHASH = "programhash"
+ARCHITECTURE = "architecture"
+CREATIONTIME = "creationtime"
+ENTRY = "entry"
+SINK = "sink"
+VIOLATION = "violation"
+INVARIANT = "invariant"
+INVARIANT_SCOPE = "invariant.scope"
+ASSUMPTION = "assumption"
+ASSUMPTION_SCOPE = "assumption.scope"
+ASSUMPTION_RESULTFUNCTION = "assumption.resultfunction"
+CONTROL = "control"
+STARTLINE = "startline"
+ENDLINE = "endline"
+STARTOFFSET = "startoffset"
+ENDOFFSET = "endoffset"
+ENTERLOOPHEAD = "enterLoopHead"
+ENTERFUNCTION = "enterFunction"
+RETURNFROMFUNCTION = "returnFromFunction"
+THREADID = "threadId"
+CREATETHREAD = "createThread"
+
 COMMON_KEYS = {
-    "witness-type": "graph",
-    "sourcecodelang": "graph",
-    "producer": "graph",
-    "specification": "graph",
-    "programfile": "graph",
-    "programhash": "graph",
-    "architecture": "graph",
-    "creationtime": "graph",
-    "entry": "node",
-    "sink": "node",
-    "violation": "node",
-    "invariant": "node",
-    "invariant.scope": "node",
-    "assumption": "edge",
-    "assumption.scope": "edge",
-    "assumption.resultfunction": "edge",
-    "control": "edge",
-    "startline": "edge",
-    "endline": "edge",
-    "startoffset": "edge",
-    "endoffset": "edge",
-    "enterLoopHead": "edge",
-    "enterFunction": "edge",
-    "returnFromFunction": "edge",
-    "threadId": "edge",
-    "createThread": "edge",
+    WITNESS_TYPE: GRAPH,
+    SOURCECODELANG: GRAPH,
+    PRODUCER: GRAPH,
+    SPECIFICATION: GRAPH,
+    PROGRAMFILE: GRAPH,
+    PROGRAMHASH: GRAPH,
+    ARCHITECTURE: GRAPH,
+    CREATIONTIME: GRAPH,
+    ENTRY: NODE,
+    SINK: NODE,
+    VIOLATION: NODE,
+    INVARIANT: NODE,
+    INVARIANT_SCOPE: NODE,
+    ASSUMPTION: EDGE,
+    ASSUMPTION_SCOPE: EDGE,
+    ASSUMPTION_RESULTFUNCTION: EDGE,
+    CONTROL: EDGE,
+    STARTLINE: EDGE,
+    ENDLINE: EDGE,
+    STARTOFFSET: EDGE,
+    ENDOFFSET: EDGE,
+    ENTERLOOPHEAD: EDGE,
+    ENTERFUNCTION: EDGE,
+    RETURNFROMFUNCTION: EDGE,
+    THREADID: EDGE,
+    CREATETHREAD: EDGE,
 }
 
 LOGLEVELS = {
@@ -357,7 +392,7 @@ class WitnessLint:
                 ),
                 data.sourceline,
             )
-        key = data.attrib.get("key")
+        key = data.attrib.get(KEY)
         if key is None:
             self.logger.warning(
                 "Expected data element to have attribute 'key'", data.sourceline
@@ -365,11 +400,11 @@ class WitnessLint:
         else:
             self.used_keys.add(key)
             _, _, tag = parent.tag.rpartition("}")
-            if tag == "node":
+            if tag == NODE:
                 self.handle_node_data(data, key, parent)
-            elif tag == "edge":
+            elif tag == EDGE:
                 self.handle_edge_data(data, key, parent)
-            elif tag == "graph":
+            elif tag == GRAPH:
                 self.handle_graph_data(data, key)
             else:
                 raise AssertionError("Invalid parent element of type " + parent.tag)
@@ -378,7 +413,7 @@ class WitnessLint:
         """
         Performs checks for data elements that are direct children of a node element.
         """
-        if key == "entry":
+        if key == ENTRY:
             if data.text == "true":
                 if self.entry_node is None:
                     self.entry_node = parent.attrib.get("id", "")
@@ -394,7 +429,7 @@ class WitnessLint:
                     "Invalid value for key 'entry': {}".format(data.text),
                     data.sourceline,
                 )
-        elif key == "sink":
+        elif key == SINK:
             if data.text == "false":
                 self.logger.info(
                     "Specifying value 'false' for key 'sink' is unnecessary",
@@ -417,7 +452,7 @@ class WitnessLint:
                     data.sourceline,
                 )
             self.violation_witness_only.add(key)
-        elif key == "violation":
+        elif key == VIOLATION:
             if data.text == "false":
                 self.logger.info(
                     "Specifying value 'false' for key 'violation' is unnecessary",
@@ -429,13 +464,13 @@ class WitnessLint:
                     data.sourceline,
                 )
             self.violation_witness_only.add(key)
-        elif key == "invariant":
+        elif key == INVARIANT:
             self.correctness_witness_only.add(key)
             # TODO: Check whether data.text is a valid invariant
-        elif key == "invariant.scope":
+        elif key == INVARIANT_SCOPE:
             self.correctness_witness_only.add(key)
             self.check_functionname(data.text, data.sourceline)
-        elif key in self.defined_keys and self.defined_keys[key] == "node":
+        elif key in self.defined_keys and self.defined_keys[key] == NODE:
             # Other, tool-specific keys are allowed as long as they have been defined
             pass
         else:
@@ -447,15 +482,15 @@ class WitnessLint:
         """
         Performs checks for data elements that are direct children of an edge element.
         """
-        if key == "assumption":
+        if key == ASSUMPTION:
             self.violation_witness_only.add(key)
             # TODO: Check whether all expressions from data.text are valid assumptions
             if "\\result" in data.text:
                 resultfunction_present = False
                 for child in parent:
                     if (
-                        child.tag.rpartition("}")[2] == "data"
-                        and child.attrib.get("key") == "assumption.resultfunction"
+                        child.tag.rpartition("}")[2] == DATA
+                        and child.attrib.get(KEY) == ASSUMPTION_RESULTFUNCTION
                     ):
                         resultfunction_present = True
                         break
@@ -465,28 +500,28 @@ class WitnessLint:
                         "no resultfunction was specified",
                         data.sourceline,
                     )
-        elif key == "assumption.scope":
+        elif key == ASSUMPTION_SCOPE:
             self.violation_witness_only.add(key)
             self.check_functionname(data.text, data.sourceline)
-        elif key == "assumption.resultfunction":
+        elif key == ASSUMPTION_RESULTFUNCTION:
             self.violation_witness_only.add(key)
             self.check_functionname(data.text, data.sourceline)
-        elif key == "control":
+        elif key == CONTROL:
             if data.text not in ["condition-true", "condition-false"]:
                 self.logger.warning(
                     "Invalid value for key 'control': {}".format(data.text),
                     data.sourceline,
                 )
             self.violation_witness_only.add(key)
-        elif key == "startline":
+        elif key == STARTLINE:
             self.check_linenumber(data.text, data.sourceline)
-        elif key == "endline":
+        elif key == ENDLINE:
             self.check_linenumber(data.text, data.sourceline)
-        elif key == "startoffset":
+        elif key == STARTOFFSET:
             self.check_character_offset(data.text, data.sourceline)
-        elif key == "endoffset":
+        elif key == ENDOFFSET:
             self.check_character_offset(data.text, data.sourceline)
-        elif key == "enterLoopHead":
+        elif key == ENTERLOOPHEAD:
             if data.text == "false":
                 self.logger.info(
                     "Specifying value 'false' for key 'enterLoopHead' is unnecessary",
@@ -497,32 +532,32 @@ class WitnessLint:
                     "Invalid value for key 'enterLoopHead': {}".format(data.text),
                     data.sourceline,
                 )
-        elif key == "enterFunction":
+        elif key == ENTERFUNCTION:
             for child in parent:
                 if (
-                    child.tag.rpartition("}")[2] == "data"
-                    and child.attrib.get("key") == "threadId"
+                    child.tag.rpartition("}")[2] == DATA
+                    and child.attrib.get(KEY) == THREADID
                     and self.threads[child.text] is None
                 ):
                     self.threads[child.text] = data.text
                     break
             self.check_functionname(data.text, data.sourceline)
-        elif key in ["returnFrom", "returnFromFunction"]:
+        elif key in ["returnFrom", RETURNFROMFUNCTION]:
             for child in parent:
                 if (
-                    child.tag.rpartition("}")[2] == "data"
-                    and child.attrib.get("key") == "threadId"
+                    child.tag.rpartition("}")[2] == DATA
+                    and child.attrib.get(KEY) == THREADID
                     and self.threads[child.text] == data.text
                 ):
                     del self.threads[child.text]
                     break
             self.check_functionname(data.text, data.sourceline)
-        elif key == "threadId":
+        elif key == THREADID:
             if data.text not in self.threads:
                 self.logger.warning(
                     "Thread with id {} doesn't exist".format(data.text), data.sourceline
                 )
-        elif key == "createThread":
+        elif key == CREATETHREAD:
             if data.text in self.threads:
                 self.logger.warning(
                     "Thread with id {} has already been created".format(data.text),
@@ -530,7 +565,7 @@ class WitnessLint:
                 )
             else:
                 self.threads[data.text] = None
-        elif key in self.defined_keys and self.defined_keys[key] == "edge":
+        elif key in self.defined_keys and self.defined_keys[key] == EDGE:
             # Other, tool-specific keys are allowed as long as they have been defined
             pass
         else:
@@ -542,7 +577,7 @@ class WitnessLint:
         """
         Performs checks for data elements that are direct children of a graph element.
         """
-        if key == "witness-type":
+        if key == WITNESS_TYPE:
             if data.text not in ["correctness_witness", "violation_witness"]:
                 self.logger.warning(
                     "Invalid value for key 'witness-type': {}".format(data.text),
@@ -554,7 +589,7 @@ class WitnessLint:
                 self.logger.warning(
                     "Found multiple definitions of witness-type", data.sourceline
                 )
-        elif key == "sourcecodelang":
+        elif key == SOURCECODELANG:
             if data.text not in ["C", "Java"]:
                 self.logger.warning(
                     "Invalid value for key 'sourcecodelang': {}".format(data.text),
@@ -566,7 +601,7 @@ class WitnessLint:
                 self.logger.warning(
                     "Found multiple definitions of sourcecodelang", data.sourceline
                 )
-        elif key == "producer":
+        elif key == PRODUCER:
             if self.producer is None:
                 self.producer = data.text
             else:
@@ -575,7 +610,7 @@ class WitnessLint:
                 )
         elif key == "specification":
             self.specifications.add(data.text)
-        elif key == "programfile":
+        elif key == PROGRAMFILE:
             if self.programfile is None:
                 self.programfile = data.text
                 try:
@@ -592,7 +627,7 @@ class WitnessLint:
                 self.logger.warning(
                     "Found multiple definitions of programfile", data.sourceline
                 )
-        elif key == "programhash":
+        elif key == PROGRAMHASH:
             if (
                 self.program_info is not None
                 and data.text.lower() != self.program_info.get("sha256_hash")
@@ -608,7 +643,7 @@ class WitnessLint:
                 self.logger.warning(
                     "Found multiple definitions of programhash", data.sourceline
                 )
-        elif key == "architecture":
+        elif key == ARCHITECTURE:
             if self.architecture is not None:
                 self.logger.warning(
                     "Found multiple definitions of architecture", data.sourceline
@@ -617,7 +652,7 @@ class WitnessLint:
                 self.architecture = data.text
             else:
                 self.logger.warning("Invalid architecture identifier", data.sourceline)
-        elif key == "creationtime":
+        elif key == CREATIONTIME:
             if self.creationtime is not None:
                 self.logger.warning(
                     "Found multiple definitions of creationtime", data.sourceline
@@ -626,7 +661,7 @@ class WitnessLint:
                 self.creationtime = data.text
             else:
                 self.logger.warning("Invalid format for creationtime", data.sourceline)
-        elif key in self.defined_keys and self.defined_keys[key] == "graph":
+        elif key in self.defined_keys and self.defined_keys[key] == GRAPH:
             # Other, tool-specific keys are allowed as long as they have been defined
             pass
         else:
@@ -677,7 +712,7 @@ class WitnessLint:
                 key.sourceline,
             )
         for child in key:
-            if child.tag.rpartition("}")[2] == "default":
+            if child.tag.rpartition("}")[2] == DEFAULT:
                 if len(child.attrib) != 0:
                     self.logger.warning(
                         "Expected no attributes for 'default' element but found {0} ({1})".format(
@@ -685,7 +720,7 @@ class WitnessLint:
                         ),
                         key.sourceline,
                     )
-                if key_id in ["entry", "sink", "violation", "enterLoopHead"]:
+                if key_id in [ENTRY, SINK, VIOLATION, ENTERLOOPHEAD]:
                     if not child.text == "false":
                         self.logger.warning(
                             "Default value for {} should be 'false'".format(key_id),
@@ -724,7 +759,7 @@ class WitnessLint:
         else:
             self.node_ids.add(node_id)
         for child in node:
-            if child.tag.rpartition("}")[2] == "data":
+            if child.tag.rpartition("}")[2] == DATA:
                 self.handle_data(child, node)
             else:
                 self.logger.warning(
@@ -769,12 +804,12 @@ class WitnessLint:
         if self.check_callstack:
             enter, return_from = (None, None)
             for child in edge:
-                if child.tag.rpartition("}")[2] == "data":
+                if child.tag.rpartition("}")[2] == DATA:
                     self.handle_data(child, edge)
-                    key = child.attrib.get("key")
-                    if key == "enterFunction":
+                    key = child.attrib.get(KEY)
+                    if key == ENTERFUNCTION:
                         enter = child.text
-                    elif key in ["returnFrom", "returnFromFunction"]:
+                    elif key in ["returnFrom", RETURNFROMFUNCTION]:
                         return_from = child.text
                 else:
                     self.logger.warning(
@@ -790,7 +825,7 @@ class WitnessLint:
                     self.transitions[source] = [(target, enter, return_from)]
         else:
             for child in edge:
-                if child.tag.rpartition("}")[2] == "data":
+                if child.tag.rpartition("}")[2] == DATA:
                     self.handle_data(child, edge)
                 else:
                     self.logger.warning(
@@ -821,7 +856,7 @@ class WitnessLint:
         elif edge_default != "directed":
             self.logger.warning("Edgedefault should be 'directed'", graph.sourceline)
         for child in graph:
-            if child.tag.rpartition("}")[2] == "data":
+            if child.tag.rpartition("}")[2] == DATA:
                 self.handle_data(child, graph)
             else:
                 # All other expected children have already been handled and removed
@@ -937,23 +972,23 @@ class WitnessLint:
                     if element_stack:
                         parent_elem = element_stack[-1]
                     else:
-                        assert tag == "graphml"
-                    if tag == "data":
+                        assert tag == GRAPHML
+                    if tag == DATA:
                         # Will be handled later
                         pass
-                    elif tag == "default":
+                    elif tag == DEFAULT:
                         # Will be handled later
                         pass
-                    elif tag == "key":
+                    elif tag == KEY:
                         self.handle_key(elem)
                         parent_elem.remove(elem)
-                    elif tag == "node":
+                    elif tag == NODE:
                         self.handle_node(elem)
                         parent_elem.remove(elem)
-                    elif tag == "edge":
+                    elif tag == EDGE:
                         self.handle_edge(elem)
                         parent_elem.remove(elem)
-                    elif tag == "graph":
+                    elif tag == GRAPH:
                         if saw_graph:
                             self.logger.warning(
                                 "Found multiple graph definitions", elem.sourceline
@@ -962,7 +997,7 @@ class WitnessLint:
                             saw_graph = True
                             self.handle_graph(elem)
                             parent_elem.remove(elem)
-                    elif tag == "graphml":
+                    elif tag == GRAPHML:
                         if saw_graphml:
                             self.logger.warning(
                                 "Found multiple graphml elements", elem.sourceline
