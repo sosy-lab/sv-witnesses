@@ -1,9 +1,13 @@
+#!/usr/bin/env python3
+
 """
 This module contains a linter that can check witnesses for consistency
 with the witness format [1].
 
 [1]: github.com/sosy-lab/sv-witnesses/blob/master/README.md
 """
+
+__version__ = "1.0"
 
 import argparse
 import collections
@@ -23,6 +27,7 @@ CREATIONTIME_PATTERN = r"^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}([+-]\d{2}:\d{2})?$
 
 WITNESS_VALID = 0
 WITNESS_FAULTY = 1
+INTERNAL_ERROR = 7
 
 
 def create_linter(argv):
@@ -40,6 +45,11 @@ def create_linter(argv):
 
 def create_arg_parser():
     parser = argparse.ArgumentParser()
+    parser.add_argument(
+        "--version",
+        action="version",
+        version="This is version {} of the witness linter.".format(__version__),
+    )
     parser.add_argument(
         "witness",
         help="GraphML file containing a witness.",
@@ -860,13 +870,16 @@ class WitnessLinter:
 
 
 def main(argv):
-    linter = create_linter(argv[1:])
-    start = time.time()
-    exit_code = linter.lint()
-    end = time.time()
-    print("\ntook", end - start, "s")
-    print("Exit code:", exit_code)
-    sys.exit(exit_code)
+    try:
+        linter = create_linter(argv[1:])
+        start = time.time()
+        exit_code = linter.lint()
+        end = time.time()
+        print("\ntook", end - start, "s")
+        print("Exit code:", exit_code)
+        sys.exit(exit_code)
+    except Exception:
+        sys.exit(INTERNAL_ERROR)
 
 
 if __name__ == "__main__":

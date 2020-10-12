@@ -27,6 +27,7 @@ Currently supported options are:
 
 ```
   -h, --help           show this help message and exit
+  --version            show program's version number and exit
   --loglevel LOGLEVEL  Desired verbosity of logging output. Only log messages
                        at or above the specified level are displayed.
   --program PROGRAM    The program for which the witness was created.
