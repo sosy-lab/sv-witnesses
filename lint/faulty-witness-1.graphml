@@ -1,4 +1,13 @@
 <?xml version="1.0" encoding="UTF-8" standalone="no"?>
+
+<!--
+This file is part of sv-witnesses repository: https://github.com/sosy-lab/sv-witnesses
+
+SPDX-FileCopyrightText: 2020 Dirk Beyer <https://www.sosy-lab.org>
+
+SPDX-License-Identifier: Apache-2.0
+-->
+
 <graphml xmlns="http://graphml.graphdrawing.org/xmlns" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
  <key attr.name="originFileName" attr.type="string" for="edge" id="originfile">
   <default>/home/dangl/sv-witnesses/multivar_true-unreach-call1.i</default>

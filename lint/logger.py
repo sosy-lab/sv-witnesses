@@ -1,3 +1,9 @@
+# This file is part of sv-witnesses repository: https://github.com/sosy-lab/sv-witnesses
+#
+# SPDX-FileCopyrightText: 2020 Dirk Beyer <https://www.sosy-lab.org>
+#
+# SPDX-License-Identifier: Apache-2.0
+
 """
 This module contains the logging-related aspects of the linter.
 """
