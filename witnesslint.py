@@ -216,7 +216,8 @@ class WitnessLinter:
         Performs checks that are common to all data elements and invokes appropriate
         specialized checks.
 
-        A data element must have a 'key' attribute specifying the kind of data it holds.
+        A data element must have a 'key' attribute specifying
+        the kind of data it holds.
 
         Data elements in a witness are currently not supposed have any children.
         """
@@ -229,9 +230,8 @@ class WitnessLinter:
             )
         if len(data.attrib) > 1:
             logging.warning(
-                "Expected data element to have exactly one attribute but has {}".format(
-                    len(data.attrib)
-                ),
+                "Expected data element to have exactly one attribute "
+                "but has {}".format(len(data.attrib)),
                 data.sourceline,
             )
         key = data.attrib.get(witness.KEY)
@@ -517,15 +517,17 @@ class WitnessLinter:
         """
         Checks a key definition for validity.
 
-        Should the key definition contain the mandatory 'id' and 'for' attributes the defined key
-        may be used in the appropriate data elements of any following graph definitions, even if
+        Should the key definition contain the mandatory 'id' and 'for'
+        attributes the defined key may be used in the appropriate
+        data elements of any following graph definitions, even if
         the key definition is faulty for other reasons.
 
-        Appropriate are all data elements that are direct children of an element of type
-        key_domain, which is the value of the 'for' attribute.
+        Appropriate are all data elements that are direct children
+        of an element of type key_domain, which is the value of the 'for' attribute.
 
-        Key definitions in a witness may have a child element of type 'default' specifying
-        the default value for this key, but are currently expected to have no other children.
+        Key definitions in a witness may have a child element of type 'default'
+        specifying the default value for this key, but are currently expected
+        to have no other children.
         """
         key_id = key.attrib.get("id")
         key_domain = key.attrib.get("for")
@@ -592,9 +594,8 @@ class WitnessLinter:
         """
         if len(node.attrib) > 1:
             logging.warning(
-                "Expected node element to have exactly one attribute but has {}".format(
-                    len(node.attrib)
-                ),
+                "Expected node element to have exactly one attribute "
+                "but has {}".format(len(node.attrib)),
                 node.sourceline,
             )
         node_id = node.attrib.get("id")
@@ -621,8 +622,8 @@ class WitnessLinter:
         """
         Checks an edge element for validity.
 
-        Edges must have attributes 'source' and 'target', each referencing a different existing
-        node by its id.
+        Edges must have attributes 'source' and 'target', each referencing
+        a different existing node by its id.
 
         Other attributes are allowed but no checks are currently performed for them.
 
@@ -691,14 +692,15 @@ class WitnessLinter:
         """
         Checks a graph element for validity.
 
-        A graph may have an 'edgedefault' attribute specifying whether edges are directed
-        or undirected by default. As edges of witnesses should always be directed the value
-        of the 'edgedefault' attribute is checked to be 'directed'.
+        A graph may have an 'edgedefault' attribute specifying whether edges
+        are directed or undirected by default. As edges of witnesses
+        should always be directed the value of the 'edgedefault' attribute
+        is checked to be 'directed'.
 
         Other attributes are allowed but no checks are currently performed for them.
 
-        Currently a witness graph is not supposed to have any children of types other than
-        'node', 'edge' or 'data'.
+        Currently a witness graph is not supposed to have any children of types
+        other than 'node', 'edge' or 'data'.
         """
         edge_default = graph.attrib.get("edgedefault")
         if edge_default is None:
@@ -713,7 +715,8 @@ class WitnessLinter:
             else:
                 # All other expected children have already been handled and removed
                 logging.warning(
-                    "Graph element has unexpected child of type '{}'".format(child.tag),
+                    "Graph element has unexpected child "
+                    "of type '{}'".format(child.tag),
                     child.sourceline,
                 )
 
