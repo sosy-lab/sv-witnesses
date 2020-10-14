@@ -97,8 +97,8 @@ class Witness:
         self.entry_node = None
         self.node_ids = set()
         self.sink_nodes = set()
-        self.defined_keys = dict()
+        self.defined_keys = {}
         self.used_keys = set()
-        self.threads = dict()
+        self.threads = {}
         self.transition_sources = set()
-        self.transitions = dict()
+        self.transitions = {}

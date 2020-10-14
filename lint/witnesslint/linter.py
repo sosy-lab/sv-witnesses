@@ -20,7 +20,7 @@ import re
 import sys
 import time
 
-from lxml import etree as ET
+from lxml import etree  # noqa
 
 from . import logger as logging
 from . import witness
@@ -117,7 +117,7 @@ class WitnessLinter:
         self.violation_witness_only = set()
         self.correctness_witness_only = set()
         self.check_existence_later = set()
-        self.check_later = list()
+        self.check_later = []
 
     def collect_program_info(self, program):
         """
@@ -130,10 +130,10 @@ class WitnessLinter:
             num_chars = len(content)
             num_lines = len(content.split("\n"))
             # TODO: Collect all function names
-            function_names = list()
+            function_names = []
         with open(program, "rb") as source:
             content = source.read()
-            sha1_hash = hashlib.sha1(content).hexdigest()
+            sha1_hash = hashlib.sha1(content).hexdigest()  # noqa
             sha256_hash = hashlib.sha256(content).hexdigest()
         self.program_info = {
             "name": program,
@@ -187,7 +187,7 @@ class WitnessLinter:
                     "No leaving transition for node {} but not all "
                     "functions have been left".format(current_node)
                 )
-            for outgoing in transitions.get(current_node, list()):
+            for outgoing in transitions.get(current_node, []):
                 function_stack = current_stack[:]
                 if outgoing[2] is not None and outgoing[2] != outgoing[1]:
                     if not function_stack:
@@ -819,8 +819,8 @@ class WitnessLinter:
         try:
             saw_graph = False
             saw_graphml = False
-            element_stack = list()
-            for (event, elem) in ET.iterparse(
+            element_stack = []
+            for (event, elem) in etree.iterparse(
                 self.witness.witness_file, events=("start", "end")
             ):
                 if event == "start":
@@ -830,8 +830,8 @@ class WitnessLinter:
                     _, _, tag = elem.tag.rpartition("}")
                     if element_stack:
                         parent_elem = element_stack[-1]
-                    else:
-                        assert tag == witness.GRAPHML
+                    elif tag != witness.GRAPHML:
+                        logging.error("Document root is not a GraphML element")
                     if tag == witness.DATA:
                         # Will be handled later
                         pass
@@ -869,7 +869,7 @@ class WitnessLinter:
                             "Unknown tag: {}".format(elem.tag), elem.sourceline
                         )
             self.final_checks()
-        except ET.XMLSyntaxError as err:
+        except etree.XMLSyntaxError as err:
             logging.critical("Malformed witness:\n\t{}".format(err.msg), err.lineno)
         return determine_exit_code()
 

@@ -10,7 +10,7 @@ import sys
 
 sys.dont_write_bytecode = True  # prevent creation of .pyc files
 
-from witnesslint import linter
+from witnesslint import linter  # noqa
 
 if __name__ == "__main__":
     sys.exit(linter.main(sys.argv))
