@@ -8,10 +8,6 @@
 This module contains the logging-related aspects of the linter.
 """
 
-import sys
-
-sys.dont_write_bytecode = True  # prevent creation of .pyc files
-
 import logging
 
 LOGLEVELS = {

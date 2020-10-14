@@ -1,5 +1,3 @@
-#!/usr/bin/env python3
-
 # This file is part of sv-witnesses repository: https://github.com/sosy-lab/sv-witnesses
 #
 # SPDX-FileCopyrightText: 2020 Dirk Beyer <https://www.sosy-lab.org>
@@ -24,10 +22,8 @@ import time
 
 from lxml import etree as ET
 
-sys.dont_write_bytecode = True  # prevent creation of .pyc files
-
-import lint.logger as logging
-import lint.witness as witness
+from . import logger as logging
+from . import witness
 
 CREATIONTIME_PATTERN = r"^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}([+-]\d{2}:\d{2})?$"
 
@@ -889,7 +885,3 @@ def main(argv):
         sys.exit(exit_code)
     except Exception:
         sys.exit(INTERNAL_ERROR)
-
-
-if __name__ == "__main__":
-    main(sys.argv)

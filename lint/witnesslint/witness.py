@@ -8,10 +8,6 @@
 This module contains a class for representing witnesses for a linter.
 """
 
-import sys
-
-sys.dont_write_bytecode = True  # prevent creation of .pyc files
-
 import gzip
 
 DATA = "data"
