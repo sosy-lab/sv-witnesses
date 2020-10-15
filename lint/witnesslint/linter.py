@@ -20,7 +20,7 @@ import re
 import sys
 import time
 
-from lxml import etree  # noqa
+from lxml import etree  # noqa: not sure how to handle S410
 
 from . import logger as logging
 from . import witness
@@ -133,7 +133,7 @@ class WitnessLinter:
             function_names = []
         with open(program, "rb") as source:
             content = source.read()
-            sha1_hash = hashlib.sha1(content).hexdigest()  # noqa
+            sha1_hash = hashlib.sha1(content).hexdigest()  # noqa: S303 does not matter
             sha256_hash = hashlib.sha256(content).hexdigest()
         self.program_info = {
             "name": program,
