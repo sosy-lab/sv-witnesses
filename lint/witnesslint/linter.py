@@ -20,7 +20,7 @@ import re
 import sys
 import time
 
-from lxml import etree  # noqa: not sure how to handle S410
+from lxml import etree  # noqa: S410 does not matter
 
 from . import logger as logging
 from . import witness
