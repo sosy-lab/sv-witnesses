@@ -52,8 +52,9 @@ def create_arg_parser():
         version="This is version {} of the witness linter.".format(__version__),
     )
     parser.add_argument(
-        "witness",
-        help="GraphML file containing a witness.",
+        "--witness",
+        required=True,
+        help="GraphML file containing a witness. Mandatory argument.",
         type=argparse.FileType("r"),
         metavar="WITNESS",
     )
@@ -66,7 +67,9 @@ def create_arg_parser():
         metavar="LOGLEVEL",
     )
     parser.add_argument(
-        "--program",
+        "program",
+        nargs='?',
+        default=None,
         help="The program for which the witness was created.",
         type=argparse.FileType("r"),
         metavar="PROGRAM",
