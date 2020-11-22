@@ -39,7 +39,6 @@ def create_linter(argv):
     program = parsed_args.program
     if program is not None:
         program = program.name
-    parsed_args.checkProgram = parsed_args.checkProgram or program is not None
     return WitnessLinter(
         witness.Witness(parsed_args.witness.name), program, parsed_args
     )
@@ -73,17 +72,10 @@ def create_arg_parser():
         metavar="PROGRAM",
     )
     parser.add_argument(
-        "--checkProgram",
-        help="Perform some additional checks involving the program file. "
-        "Better left disabled for big witnesses. This option is "
-        "implicitly used when a program is given via the --program option.",
-        action="store_true",
-    )
-    parser.add_argument(
-        "--checkCallstack",
-        help="Check whether transitions specified via enterFunction "
-        "and returnFromFunction are consistent. "
-        "Better left disabled for big witnesses.",
+        "--strictChecking",
+        help="Also check smaller details, like line numbers from startline tags, "
+        "or whether values of enterFunction and returnFromFunction are consistent. "
+        "This option is better left disabled for big witnesses.",
         action="store_true",
     )
     parser.add_argument(
@@ -145,7 +137,7 @@ class WitnessLinter:
         }
 
     def check_functionname(self, name, pos):
-        if not self.options.checkProgram:
+        if not self.options.strictChecking:
             return
         if self.program_info is None:
             self.check_later.append(lambda: self.check_functionname(name, pos))
@@ -155,7 +147,7 @@ class WitnessLinter:
             )
 
     def check_linenumber(self, line, pos):
-        if not self.options.checkProgram:
+        if not self.options.strictChecking:
             return
         if self.program_info is None:
             self.check_later.append(lambda: self.check_linenumber(line, pos))
@@ -163,7 +155,7 @@ class WitnessLinter:
             logging.warning("{} is not a valid linenumber".format(line), pos)
 
     def check_character_offset(self, offset, pos):
-        if not self.options.checkProgram:
+        if not self.options.strictChecking:
             return
         if self.program_info is None:
             self.check_later.append(lambda: self.check_character_offset(offset, pos))
@@ -639,7 +631,7 @@ class WitnessLinter:
                 logging.warning(
                     "Sink node should have no leaving edges", edge.sourceline
                 )
-            if not self.options.checkCallstack:
+            if not self.options.strictChecking:
                 # Otherwise this information is stored in self.witness.transitions
                 self.witness.transition_sources.add(source)
             if source not in self.witness.node_ids:
@@ -654,7 +646,7 @@ class WitnessLinter:
                 )
             if target not in self.witness.node_ids:
                 self.check_existence_later.add(target)
-        if self.options.checkCallstack:
+        if self.options.strictChecking:
             enter, return_from = (None, None)
             for child in edge:
                 if child.tag.rpartition("}")[2] == witness.DATA:
@@ -801,12 +793,12 @@ class WitnessLinter:
         for node_id in self.check_existence_later:
             if node_id not in self.witness.node_ids:
                 logging.warning("Node {} has not been declared".format(node_id))
-        if self.options.checkCallstack:
+        if self.options.strictChecking:
             self.check_function_stack(
                 collections.OrderedDict(sorted(self.witness.transitions.items())),
                 self.witness.entry_node,
             )
-        if self.options.checkProgram and self.program_info is not None:
+        if self.program_info is not None:
             for check in self.check_later:
                 check()
 
