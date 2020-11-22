@@ -19,10 +19,10 @@ The following modules are necessary to use the witness linter:
 
 ### Usage
 
-In order to use the witness linter you can run
+In order to use the witness linter run
 
 ```
-python3 witnesslint.py [<options>] <path_to_witness>
+python3 witnesslint.py [<options>] --witness <path_to_witness> [<path_to_program>]
 ```
 
 For information on available options use
@@ -36,16 +36,13 @@ Currently supported options are:
 ```
   -h, --help           show this help message and exit
   --version            show program's version number and exit
+  --witness WITNESS    GraphML file containing a witness. Mandatory argument.
   --loglevel LOGLEVEL  Desired verbosity of logging output. Only log messages
                        at or above the specified level are displayed.
-  --program PROGRAM    The program for which the witness was created.
-  --checkProgram       Perform some additional checks involving the program
-                       file. Better left disabled for big witnesses. This
-                       option is implicitly used when a program is given via
-                       the --program option.
-  --checkCallstack     Check whether transitions specified via enterFunction
-                       and returnFromFunction are consistent. Better left
-                       disabled for big witnesses.
+  --strictChecking     Also check smaller details, like line numbers from
+                       startline tags, or whether values of enterFunction and
+                       returnFromFunction are consistent. This option is
+                       better left disabled for big witnesses.
   --ignoreSelfLoops    Produce no warnings when encountering edges that
                        represent a self-loop.
 ```
