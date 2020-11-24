@@ -1,0 +1,103 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<graphml xmlns="http://graphml.graphdrawing.org/xmlns" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+ <key attr.name="isEntryNode" attr.type="boolean" for="node" id="entry">
+  <default>false</default>
+ </key>
+ <key attr.name="enterLoopHead" attr.type="boolean" for="edge" id="enterLoopHead">
+  <default>false</default>
+ </key>
+ <key attr.name="sourcecodeLanguage" attr.type="string" for="graph" id="sourcecodelang"/>
+ <key attr.name="programFile" attr.type="string" for="graph" id="programfile"/>
+ <key attr.name="programHash" attr.type="string" for="graph" id="programhash"/>
+ <key attr.name="specification" attr.type="string" for="graph" id="specification"/>
+ <key attr.name="architecture" attr.type="string" for="graph" id="architecture"/>
+ <key attr.name="producer" attr.type="string" for="graph" id="producer"/>
+ <key attr.name="creationTime" attr.type="string" for="graph" id="creationtime"/>
+ <key attr.name="startline" attr.type="int" for="edge" id="startline"/>
+ <key attr.name="endline" attr.type="int" for="edge" id="endline"/>
+ <key attr.name="startoffset" attr.type="int" for="edge" id="startoffset"/>
+ <key attr.name="endoffset" attr.type="int" for="edge" id="endoffset"/>
+ <key attr.name="originFileName" attr.type="string" for="edge" id="originfile">
+  <default>/home/stephen/src/sv-witnesses/lint/test/program/simple/simple_correct.c</default>
+ </key>
+ <key attr.name="control" attr.type="string" for="edge" id="control"/>
+ <key attr.name="enterFunction" attr.type="string" for="edge" id="enterFunction"/>
+ <key attr.name="returnFromFunction" attr.type="string" for="edge" id="returnFrom"/>
+ <key attr.name="witness-type" attr.type="string" for="graph" id="witness-type"/>
+ <key attr.name="inputWitnessHash" attr.type="string" for="graph" id="inputwitnesshash"/>
+ <graph edgedefault="directed">
+  <data key="witness-type">correctness_witness</data>
+  <data key="sourcecodelang">C</data>
+  <data key="producer">CPAchecker 1.9.2-svn-36051 / predicateAnalysis</data>
+  <data key="specification">CHECK( init(main()), LTL(G ! call(reach_error())) )</data>
+  <data key="programfile">/home/user/sv-witnesses/lint/test/program/simple/simple_correct.c</data>
+  <data key="programhash">6cdd5de91d235e299713c37e9923d9f915462f180efbd0de6463b3ca98dbee73</data>
+  <data key="architecture">32bit</data>
+  <data key="creationtime">2020-11-23T15:03:32+01:00</data>
+  <node id="N4">
+   <data key="entry">true</data>
+  </node>
+  <node id="N5"/>
+  <edge source="N4" target="N5">
+   <data key="startline">2</data>
+   <data key="endline">2</data>
+   <data key="startoffset">21</data>
+   <data key="endoffset">31</data>
+   <data key="enterFunction">main</data>
+  </edge>
+  <node id="N6"/>
+  <edge source="N5" target="N6">
+   <data key="enterLoopHead">true</data>
+   <data key="startline">3</data>
+   <data key="endline">3</data>
+   <data key="startoffset">36</data>
+   <data key="endoffset">44</data>
+  </edge>
+  <node id="N8"/>
+  <edge source="N6" target="N8">
+   <data key="startline">4</data>
+   <data key="endline">4</data>
+   <data key="startoffset">56</data>
+   <data key="endoffset">59</data>
+   <data key="control">condition-true</data>
+  </edge>
+  <node id="N9"/>
+  <edge source="N6" target="N9">
+   <data key="startline">4</data>
+   <data key="endline">4</data>
+   <data key="startoffset">56</data>
+   <data key="endoffset">59</data>
+   <data key="control">condition-false</data>
+  </edge>
+  <node id="N14"/>
+  <edge source="N9" target="N14">
+   <data key="startline">7</data>
+   <data key="endline">7</data>
+   <data key="startoffset">83</data>
+   <data key="endoffset">86</data>
+   <data key="control">condition-true</data>
+  </edge>
+  <edge source="N9" target="N14">
+   <data key="startline">7</data>
+   <data key="endline">7</data>
+   <data key="startoffset">83</data>
+   <data key="endoffset">86</data>
+   <data key="control">condition-false</data>
+  </edge>
+  <node id="N3"/>
+  <edge source="N14" target="N3">
+   <data key="startline">10</data>
+   <data key="endline">10</data>
+   <data key="startoffset">116</data>
+   <data key="endoffset">123</data>
+   <data key="returnFrom">main</data>
+  </edge>
+  <edge source="N8" target="N6">
+   <data key="enterLoopHead">true</data>
+   <data key="startline">5</data>
+   <data key="endline">5</data>
+   <data key="startoffset">68</data>
+   <data key="endoffset">70</data>
+  </edge>
+ </graph>
+</graphml>

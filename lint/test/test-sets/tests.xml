@@ -1,0 +1,19 @@
+<?xml version="1.0"?>
+<!DOCTYPE benchmark PUBLIC "+//IDN sosy-lab.org//DTD BenchExec benchmark 1.0//EN" "http://www.sosy-lab.org/benchexec/benchmark-1.0.dtd">
+<benchmark tool="witnesslint" hardtimelimit="20 s" memlimit="3 GB" cpuCores="1">
+
+  <!--<option name="-noout"/>
+  <option name="-heap">2000M</option>-->
+
+  <requiredfiles>test/program/simple/.*.graphml</requiredfiles>
+  <option name="--witness">test/program/simple/simple_correct.graphml</option>
+
+  <rundefinition name="testwitness">
+    <propertyfile>../properties/unreach-call.prp</propertyfile>
+  </rundefinition>
+
+  <tasks>
+    <includesfile>../program/simple/tests.set</includesfile>
+  </tasks>
+
+</benchmark>
