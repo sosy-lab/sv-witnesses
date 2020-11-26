@@ -68,7 +68,7 @@ def create_arg_parser():
     )
     parser.add_argument(
         "program",
-        nargs='?',
+        nargs="?",
         default=None,
         help="The program for which the witness was created.",
         type=argparse.FileType("r"),
@@ -377,6 +377,7 @@ class WitnessLinter:
                 if (
                     child.tag.rpartition("}")[2] == witness.DATA
                     and child.attrib.get(witness.KEY) == witness.THREADID
+                    and child.text in self.witness.threads
                     and self.witness.threads[child.text] is None
                 ):
                     self.witness.threads[child.text] = data.text
@@ -387,6 +388,7 @@ class WitnessLinter:
                 if (
                     child.tag.rpartition("}")[2] == witness.DATA
                     and child.attrib.get(witness.KEY) == witness.THREADID
+                    and child.text in self.witness.threads
                     and self.witness.threads[child.text] == data.text
                 ):
                     del self.witness.threads[child.text]
@@ -878,5 +880,6 @@ def main(argv):
         print("\ntook", end - start, "s")
         print("Exit code:", exit_code)
         sys.exit(exit_code)
-    except Exception:
+    except Exception as e:
+        print(type(e).__name__, ":", e)
         sys.exit(INTERNAL_ERROR)
