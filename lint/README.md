@@ -22,13 +22,13 @@ The following modules are necessary to use the witness linter:
 In order to use the witness linter run
 
 ```
-python3 witnesslint.py [<options>] --witness <path_to_witness> [<path_to_program>]
+python3 witnesslinter.py [<options>] --witness <path_to_witness> [<path_to_program>]
 ```
 
 For information on available options use
 
 ```
-python3 witnesslint.py -h
+python3 witnesslinter.py -h
 ```
 
 Currently supported options are:
@@ -63,29 +63,13 @@ In addition to these messages, the linter provides a machine-readable pass-fail-
 
 #### Example
 
-Consider the following witness ``faulty-witness-2.graphml``:
+Consider the following flawed witness (found in ``examples/faulty-witness-2.graphml``):
 
 ```xml
 <?xml version="1.0" encoding="UTF-8" standalone="no"?>
+[...]
 <graphml>
- <key attr.name="isViolationNode" attr.type="boolean" for="node" id="violation">
-  <default>false</default>
- </key>
- <key attr.name="isEntryNode" attr.type="boolean" for="node" id="entry">
-  <default>false</default>
- </key>
- <key attr.name="witness-type" attr.type="string" for="graph" id="witness-type"/>
- <key attr.name="sourcecodeLanguage" attr.type="string" for="graph" id="sourcecodelang"/>
- <key attr.name="producer" attr.type="string" for="graph" id="producer"/>
- <key attr.name="specification" attr.type="string" for="graph" id="specification"/>
- <key attr.name="programFile" attr.type="string" for="graph" id="programfile"/>
- <key attr.name="programHash" attr.type="string" for="graph" id="programhash"/>
- <key attr.name="memoryModel" attr.type="string" for="graph" id="memorymodel"/>
- <key attr.name="architecture" attr.type="string" for="graph" id="architecture"/>
- <key attr.name="startline" attr.type="int" for="edge" id="startline"/>
- <key attr.name="assumption" attr.type="string" for="edge" id="assumption"/>
- <key attr.name="assumption.scope" attr.type="string" for="edge" id="assumption.scope"/>
- <key attr.name="assumption.resultfunction" attr.type="string" for="edge" id="assumption.resultfunction"/>
+[...]
  <graph edgedefault="directed">
   <data key="witness-type">violation_witness</data>
   <data key="sourcecodelang">C</data>
@@ -132,14 +116,14 @@ Consider the following witness ``faulty-witness-2.graphml``:
 Running the linter with this witness as input produces the following output:
 
 ```
-WARNING : line 35: Invalid value for key 'sink': maybe
-WARNING : line 37: Expected node element to have attribute 'id'
-WARNING : line 41: Edge is missing attribute 'source'
-WARNING : line 2: Missing default namespace
-WARNING : line 2: Missing xml schema namespace or namespace prefix is not called 'xsi'
-WARNING : Key 'sink' has been used but not defined
+WARNING : line 44: Invalid value for key 'sink': maybe
+WARNING : line 46: Expected node element to have attribute 'id'
+WARNING : line 50: Edge is missing attribute 'source'
+WARNING : line 11: Missing default namespace
+WARNING : line 11: Missing xml schema namespace or namespace prefix is not called 'xsi'
 WARNING : Key 'invariant' has been used but not defined
-WARNING : Creationtime has not been specified
+WARNING : Key 'sink' has been used but not defined
 WARNING : Key 'invariant' is not allowed in violation witness
+WARNING : Creationtime has not been specified
 WARNING : Node q3 has not been declared
 ```
