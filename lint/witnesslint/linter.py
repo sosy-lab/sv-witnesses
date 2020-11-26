@@ -252,6 +252,7 @@ class WitnessLinter:
         """
         Performs checks for data elements that are direct children of a node element.
         """
+        data.text = data.text.strip()
         if key == witness.ENTRY:
             if data.text == "true":
                 if self.witness.entry_node is None:
@@ -321,6 +322,7 @@ class WitnessLinter:
         """
         Performs checks for data elements that are direct children of an edge element.
         """
+        data.text = data.text.strip()
         if key == witness.ASSUMPTION:
             self.violation_witness_only.add(key)
             # TODO: Check whether all expressions from data.text are valid assumptions
@@ -374,6 +376,7 @@ class WitnessLinter:
                 )
         elif key == witness.ENTERFUNCTION:
             for child in parent:
+                child.text = child.text.strip()
                 if (
                     child.tag.rpartition("}")[2] == witness.DATA
                     and child.attrib.get(witness.KEY) == witness.THREADID
@@ -385,6 +388,7 @@ class WitnessLinter:
             self.check_functionname(data.text, data.sourceline)
         elif key in ["returnFrom", witness.RETURNFROMFUNCTION]:
             for child in parent:
+                child.text = child.text.strip()
                 if (
                     child.tag.rpartition("}")[2] == witness.DATA
                     and child.attrib.get(witness.KEY) == witness.THREADID
@@ -420,6 +424,7 @@ class WitnessLinter:
         """
         Performs checks for data elements that are direct children of a graph element.
         """
+        data.text = data.text.strip()
         if key == witness.WITNESS_TYPE:
             if data.text not in ["correctness_witness", "violation_witness"]:
                 logging.warning(
@@ -500,7 +505,7 @@ class WitnessLinter:
                 logging.warning(
                     "Found multiple definitions of creationtime", data.sourceline
                 )
-            elif re.match(CREATIONTIME_PATTERN, data.text.strip()):
+            elif re.match(CREATIONTIME_PATTERN, data.text):
                 self.witness.creationtime = data.text
             else:
                 logging.warning("Invalid format for creationtime", data.sourceline)
@@ -557,6 +562,7 @@ class WitnessLinter:
                 key.sourceline,
             )
         for child in key:
+            child.text = child.text.strip()
             if child.tag.rpartition("}")[2] == witness.DEFAULT:
                 if len(child.attrib) != 0:
                     logging.warning(
@@ -654,6 +660,7 @@ class WitnessLinter:
         if self.options.strictChecking:
             enter, return_from = (None, None)
             for child in edge:
+                child.text = child.text.strip()
                 if child.tag.rpartition("}")[2] == witness.DATA:
                     self.handle_data(child, edge)
                     key = child.attrib.get(witness.KEY)
