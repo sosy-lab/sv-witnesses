@@ -748,7 +748,7 @@ class WitnessLinter:
         for attr in graphml_elem.attrib.items():
             if attr[0] != "{http://www.w3.org/2001/XMLSchema-instance}schemaLocation":
                 logging.warning(
-                    "Unexpected attribute on graphml element: {}".format(attr[0]),
+                    "Unexpected attribute on graphml element: {}".format(attr[0].rpartition("}")[2]),
                     graphml_elem.sourceline,
                 )
         for child in graphml_elem:
