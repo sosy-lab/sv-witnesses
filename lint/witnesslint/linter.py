@@ -310,6 +310,36 @@ class WitnessLinter:
         elif key == witness.INVARIANT_SCOPE:
             self.correctness_witness_only.add(key)
             self.check_functionname(data.text, data.sourceline)
+        elif key == witness.CYCLEHEAD:
+            if data.text == "true":
+                if self.witness.cyclehead is None:
+                    self.witness.cyclehead = parent.attrib.get("id", "")
+                else:
+                    logging.warning("Found multiple cycleheads", data.sourceline)
+                invariant_present = False
+                for child in parent:
+                    if (
+                        child.tag.rpartition("}")[2] == witness.DATA
+                        and child.attrib.get(witness.KEY) == witness.INVARIANT
+                    ):
+                        invariant_present = True
+                        break
+                if not invariant_present:
+                    logging.warning(
+                        "Cyclehead does not contain an invariant",
+                        data.sourceline,
+                    )
+            elif data.text == "false":
+                logging.info(
+                    "Specifying value 'false' for key 'cyclehead' is unnecessary",
+                    data.sourceline,
+                )
+            else:
+                logging.warning(
+                    "Invalid value for key 'cyclehead': {}".format(data.text),
+                    data.sourceline,
+                )
+
         elif self.witness.defined_keys.get(key) == witness.NODE:
             # Other, tool-specific keys are allowed as long as they have been defined
             pass
@@ -748,7 +778,9 @@ class WitnessLinter:
         for attr in graphml_elem.attrib.items():
             if attr[0] != "{http://www.w3.org/2001/XMLSchema-instance}schemaLocation":
                 logging.warning(
-                    "Unexpected attribute on graphml element: {}".format(attr[0].rpartition("}")[2]),
+                    "Unexpected attribute on graphml element{}".format(
+                        attr[0].rpartition("}")[2]
+                    ),
                     graphml_elem.sourceline,
                 )
         for child in graphml_elem:
@@ -782,6 +814,8 @@ class WitnessLinter:
                 )
         elif self.witness.witness_type == "violation_witness":
             for key in self.correctness_witness_only:
+                if key == witness.INVARIANT and self.witness.is_termination_witness():
+                    continue
                 logging.warning(
                     "Key '{}' is not allowed in violation witness".format(key)
                 )

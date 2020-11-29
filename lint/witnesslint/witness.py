@@ -9,6 +9,7 @@ This module contains a class for representing witnesses for a linter.
 """
 
 import gzip
+import re
 
 DATA = "data"
 DEFAULT = "default"
@@ -31,6 +32,7 @@ SINK = "sink"
 VIOLATION = "violation"
 INVARIANT = "invariant"
 INVARIANT_SCOPE = "invariant.scope"
+CYCLEHEAD = "cyclehead"
 ASSUMPTION = "assumption"
 ASSUMPTION_SCOPE = "assumption.scope"
 ASSUMPTION_RESULTFUNCTION = "assumption.resultfunction"
@@ -59,6 +61,7 @@ COMMON_KEYS = {
     VIOLATION: NODE,
     INVARIANT: NODE,
     INVARIANT_SCOPE: NODE,
+    CYCLEHEAD: NODE,
     ASSUMPTION: EDGE,
     ASSUMPTION_SCOPE: EDGE,
     ASSUMPTION_RESULTFUNCTION: EDGE,
@@ -73,6 +76,10 @@ COMMON_KEYS = {
     THREADID: EDGE,
     CREATETHREAD: EDGE,
 }
+
+TERMINATION_PROPERTY_PATTERN = (
+    r"CHECK[(]\s*init[(]\s*\w+[(][)]\s*[)]\s*,\s*LTL[(]\s*F\s+end\s*[)]\s*[)]"
+)
 
 
 class Witness:
@@ -95,6 +102,7 @@ class Witness:
         self.architecture = None
         self.creationtime = None
         self.entry_node = None
+        self.cyclehead = None
         self.node_ids = set()
         self.sink_nodes = set()
         self.defined_keys = {}
@@ -102,3 +110,12 @@ class Witness:
         self.threads = {}
         self.transition_sources = set()
         self.transitions = {}
+
+    def is_termination_witness(self):
+        if self.cyclehead is not None:
+            return True
+        termination_pattern = re.compile(TERMINATION_PROPERTY_PATTERN)
+        for spec in self.specifications:
+            if re.match(termination_pattern, spec):
+                return True
+        return False
