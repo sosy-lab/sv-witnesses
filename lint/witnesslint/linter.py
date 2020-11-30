@@ -384,7 +384,6 @@ class WitnessLinter:
                     "Invalid value for key 'control': {}".format(data.text),
                     data.sourceline,
                 )
-            self.violation_witness_only.add(key)
         elif key == witness.STARTLINE:
             self.check_linenumber(data.text, data.sourceline)
         elif key == witness.ENDLINE:
