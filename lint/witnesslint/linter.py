@@ -18,7 +18,6 @@ import collections
 import hashlib
 import re
 import sys
-import time
 
 from lxml import etree  # noqa: S410 does not matter
 
@@ -29,6 +28,8 @@ CREATIONTIME_PATTERN = r"^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}([+-]\d{2}:\d{2})?$
 
 WITNESS_VALID = 0
 WITNESS_FAULTY = 1
+NO_WITNESS = 5
+NO_PROGRAM = 6
 INTERNAL_ERROR = 7
 
 
@@ -44,6 +45,22 @@ def create_linter(argv):
     )
 
 
+def witness_file(path):
+    try:
+        return open(path, "r")
+    except FileNotFoundError as e:
+        print(e)
+        _exit(NO_WITNESS)
+
+
+def program_file(path):
+    try:
+        return open(path, "r")
+    except FileNotFoundError as e:
+        print(e)
+        _exit(NO_PROGRAM)
+
+
 def create_arg_parser():
     parser = argparse.ArgumentParser()
     parser.add_argument(
@@ -55,7 +72,7 @@ def create_arg_parser():
         "--witness",
         required=True,
         help="GraphML file containing a witness. Mandatory argument.",
-        type=argparse.FileType("r"),
+        type=witness_file,
         metavar="WITNESS",
     )
     parser.add_argument(
@@ -71,7 +88,7 @@ def create_arg_parser():
         nargs="?",
         default=None,
         help="The program for which the witness was created.",
-        type=argparse.FileType("r"),
+        type=program_file,
         metavar="PROGRAM",
     )
     parser.add_argument(
@@ -88,12 +105,6 @@ def create_arg_parser():
         action="store_true",
     )
     return parser
-
-
-def determine_exit_code():
-    if logging.critical.counter or logging.error.counter or logging.warning.counter:
-        return WITNESS_FAULTY
-    return WITNESS_VALID
 
 
 class WitnessLinter:
@@ -910,18 +921,23 @@ class WitnessLinter:
             self.final_checks()
         except etree.XMLSyntaxError as err:
             logging.critical("Malformed witness:\n\t{}".format(err.msg), err.lineno)
-        return determine_exit_code()
+
+
+def _exit(exit_code=None):
+    if exit_code is None:
+        if logging.critical.counter or logging.error.counter or logging.warning.counter:
+            exit_code = WITNESS_FAULTY
+        else:
+            exit_code = WITNESS_VALID
+    print("\nwitnesslint finished with exit code {}".format(exit_code))
+    sys.exit(exit_code)
 
 
 def main(argv):
     try:
         linter = create_linter(argv[1:])
-        start = time.time()
-        exit_code = linter.lint()
-        end = time.time()
-        print("\ntook", end - start, "s")
-        print("Exit code:", exit_code)
-        sys.exit(exit_code)
+        linter.lint()
+        _exit()
     except Exception as e:
         print(type(e).__name__, ":", e)
-        sys.exit(INTERNAL_ERROR)
+        _exit(INTERNAL_ERROR)
