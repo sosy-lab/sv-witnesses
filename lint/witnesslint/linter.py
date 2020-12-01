@@ -124,6 +124,7 @@ class WitnessLinter:
         self.correctness_witness_only = set()
         self.check_existence_later = set()
         self.check_later = []
+        self.witness.threads['0'] = None
 
     def collect_program_info(self, program):
         """
@@ -439,15 +440,11 @@ class WitnessLinter:
                     break
             self.check_functionname(data.text, data.sourceline)
         elif key == witness.THREADID:
-            # Check disabled for SV-COMP'21 as questions about the specification
-            # need to be resolved first, see
-            # https://gitlab.com/sosy-lab/sv-comp/archives-2021/-/issues/30
-            # if data.text not in self.witness.threads:
-            #     logging.warning(
-            #         "Thread with id {} doesn't exist".format(data.text),
-            #         data.sourceline,
-            #     )
-            pass
+            if data.text not in self.witness.threads:
+                logging.warning(
+                    "Thread with id {} doesn't exist".format(data.text),
+                    data.sourceline,
+                )
         elif key == witness.CREATETHREAD:
             if data.text in self.witness.threads:
                 logging.warning(
