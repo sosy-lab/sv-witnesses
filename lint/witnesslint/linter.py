@@ -328,11 +328,14 @@ class WitnessLinter:
                     self.witness.cyclehead = parent.attrib.get("id", "")
                 else:
                     logging.warning("Found multiple cycleheads", data.sourceline)
-                if not self.invariant_present(parent):
-                    logging.warning(
-                        "Cyclehead does not contain an invariant",
-                        data.sourceline,
-                    )
+                # Check disabled for SV-COMP'21 as questions about the specification
+                # need to be resolved first, see
+                # https://github.com/sosy-lab/sv-witnesses/issues/32
+                # if not self.invariant_present(parent):
+                #     logging.warning(
+                #         "Cyclehead does not contain an invariant",
+                #         data.sourceline,
+                #     )
             elif data.text == "false":
                 logging.info(
                     "Specifying value 'false' for key 'cyclehead' is unnecessary",
