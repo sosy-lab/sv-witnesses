@@ -36,11 +36,11 @@
 <key id="tokens" attr.name="tokens" for="edge"/>
 <key id="control" attr.name="control" for="edge"/>
 <key id="originfile" attr.name="originfile" for="edge">
-<default>/home/dominik/Work/witnesses/sv-witnesses/lint/test/program/termination/nontermination.c</default>
+<default>/home/user/sv-witnesses/lint/test/program/termination/nontermination.c</default>
 </key>
 <key id="sourcecode" attr.name="sourcecode" for="edge"/>
 <graph edgedefault="directed">
-<data key="programfile">/home/dominik/Work/witnesses/sv-witnesses/lint/test/program/termination/nontermination.c</data>
+<data key="programfile">/home/user/sv-witnesses/lint/test/program/termination/nontermination.c</data>
 <data key="programhash">0b9671b024fd590a4436b67d5cf0c06a37adcee4</data>
 <data key="sourcecodelang">C</data>
 <data key="producer">Automizer</data>
@@ -61,21 +61,21 @@
 <data key="endline">2</data>
 <data key="enterLoopHead">true</data>
 <data key="startline">2</data>
-<data key="originfile">/home/dominik/Work/witnesses/sv-witnesses/lint/test/program/termination/nontermination.c</data>
+<data key="originfile">/home/user/sv-witnesses/lint/test/program/termination/nontermination.c</data>
 <data key="sourcecode">int x = 0;</data>
 </edge>
 <edge id="E1" source="N0" target="N2">
 <data key="endline">3</data>
 <data key="startline">3</data>
 <data key="control">condition-true</data>
-<data key="originfile">/home/dominik/Work/witnesses/sv-witnesses/lint/test/program/termination/nontermination.c</data>
+<data key="originfile">/home/user/sv-witnesses/lint/test/program/termination/nontermination.c</data>
 <data key="sourcecode">[1]</data>
 </edge>
 <edge id="E2" source="N2" target="N0">
 <data key="endline">4</data>
 <data key="enterLoopHead">true</data>
 <data key="startline">4</data>
-<data key="originfile">/home/dominik/Work/witnesses/sv-witnesses/lint/test/program/termination/nontermination.c</data>
+<data key="originfile">/home/user/sv-witnesses/lint/test/program/termination/nontermination.c</data>
 <data key="sourcecode">x++</data>
 </edge>
 </graph>
