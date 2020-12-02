@@ -124,6 +124,7 @@ class WitnessLinter:
         self.correctness_witness_only = set()
         self.check_existence_later = set()
         self.check_later = []
+        self.key_defaults = {}
 
     def collect_program_info(self, program):
         """
@@ -327,19 +328,14 @@ class WitnessLinter:
                     self.witness.cyclehead = parent.attrib.get("id", "")
                 else:
                     logging.warning("Found multiple cycleheads", data.sourceline)
-                invariant_present = False
-                for child in parent:
-                    if (
-                        child.tag.rpartition("}")[2] == witness.DATA
-                        and child.attrib.get(witness.KEY) == witness.INVARIANT
-                    ):
-                        invariant_present = True
-                        break
-                if not invariant_present:
-                    logging.warning(
-                        "Cyclehead does not contain an invariant",
-                        data.sourceline,
-                    )
+                # Check disabled for SV-COMP'21 as questions about the specification
+                # need to be resolved first, see
+                # https://github.com/sosy-lab/sv-witnesses/issues/32
+                # if not self.invariant_present(parent):
+                #     logging.warning(
+                #         "Cyclehead does not contain an invariant",
+                #         data.sourceline,
+                #     )
             elif data.text == "false":
                 logging.info(
                     "Specifying value 'false' for key 'cyclehead' is unnecessary",
@@ -358,6 +354,17 @@ class WitnessLinter:
             logging.warning(
                 "Unknown key for node data element: {}".format(key), data.sourceline
             )
+
+    def invariant_present(self, elem):
+        if witness.INVARIANT in self.key_defaults:
+            return True
+        for child in elem:
+            if (
+                child.tag.rpartition("}")[2] == witness.DATA
+                and child.attrib.get(witness.KEY) == witness.INVARIANT
+            ):
+                return True
+        False
 
     def handle_edge_data(self, data, key, parent):
         """
@@ -627,6 +634,7 @@ class WitnessLinter:
                             "Default value for {} should be 'false'".format(key_id),
                             key.sourceline,
                         )
+                self.key_defaults[key_id] = child.text
             else:
                 logging.warning(
                     "Invalid child for key element: {}".format(child.tag),
