@@ -355,7 +355,7 @@ class WitnessLinter:
     def invariant_present(self, elem):
         if witness.INVARIANT in self.key_defaults:
             return True
-        for child in parent:
+        for child in elem:
             if (
                 child.tag.rpartition("}")[2] == witness.DATA
                 and child.attrib.get(witness.KEY) == witness.INVARIANT
