@@ -76,7 +76,7 @@ The following information should additionally be available in the witness:
 
 | key | Meaning | Allowed in Violation Witnesses | Allowed in Correctness Witnesses |
 | --- | --- | ---- | ---- |
-| threadId | Represents the currently active thread for the transition. If no ``threadId`` is given, any thread can be active. The value should be a unique identififer for a thread. | Yes | Yes |
+| threadId | Represents the currently active thread for the transition. If no ``threadId`` is given, any thread can be active. The value should be a unique identifer for a thread. | Yes | Yes |
 | createThread | The currently active thread (value of ``threadId``) creates a new thread (value of ``createThread``) . In general, using a ``threadId`` is only allowed after creating a matching thread. The new thread's function can be entered on a second transition following this transition, such that the transition with the ``enterFunction`` key has the ``threadId`` of the created thread. When the function of the thread is exited, the thread is assumed to be terminated and its ``threadId`` should no longer be used. | Yes | Yes |
 
 CPAchecker partially supports the validation of violation witnesses for concurrent programs.
