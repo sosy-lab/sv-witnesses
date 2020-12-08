@@ -457,10 +457,11 @@ class WitnessLinter:
             pass
         elif key == witness.CREATETHREAD:
             if data.text in self.witness.threads:
-                logging.warning(
-                    "Thread with id {} has already been created".format(data.text),
-                    data.sourceline,
-                )
+                # logging.warning(
+                #     "Thread with id {} has already been created".format(data.text),
+                #     data.sourceline,
+                # )
+                pass
             else:
                 self.witness.threads[data.text] = None
         elif self.witness.defined_keys.get(key) == witness.EDGE:
