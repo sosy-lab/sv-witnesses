@@ -108,6 +108,8 @@ class Witness:
         self.defined_keys = {}
         self.used_keys = set()
         self.threads = {}
+        self.thread_creations = set()
+        self.thread_ids = set()
         self.transition_sources = set()
         self.transitions = {}
 
