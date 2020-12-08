@@ -59,7 +59,7 @@ In witness automata, the GraphML edges represent state transitions.
 | endline | *Valid values:* Valid line number of the program <br /> A statement, or expression, can be written across multiple lines. The value of ``endline`` represents the line number on that the statement, or expression, of a matching control-flow edge ends. | Yes | Yes |
 | startoffset | *Valid values:* Offset of a specific character in the program from the program start. <br /> Matches the character offset on that the expression or statement represented by the control-flow edge starts. It is important that witness consumer (validator) and witness producer agree on the encoding of the C program. | Yes | Yes |
 | endoffset | *Valid values:* Offset of a specific character in the program from the program start. <br /> Matches the character offset on that the expression or statement represented by the control-flow edge ends. It is important that witness checker and witness producer agree on the encoding of the C program. | Yes | Yes |
-| enterLoopHead | *Valid values:* ``false`` (default) or ``true`` <br /> Signifies that an witness-automaton transition annotated with this guard only matches if the observed analysis takes a control-flow edge into a loop head. | Yes | Yes | 
+| enterLoopHead | *Valid values:* ``false`` (default) or ``true`` <br /> Signifies that an witness-automaton transition annotated with this guard only matches if the observed analysis takes a control-flow edge into a loop head. | Yes | Yes |
 | enterFunction | *Valid values:* Function name <br /> The name of the function that is entered via this transition. Assuming a function stack, this pushes the function onto the stack. If you use this data node type, you also must use the type ``returnFromFunction``. When ``assumption.scope`` is not given, the witness validator may use this information to qualify  variable names used in ``assumption`` data tags. The path is considered to stay in the specified function until another transition is annotated with this data node for another function or a transition annotated with ``returnFromFunction``, telling the validator that the path continues in the previous function on the stack.  | Yes | Yes |
 | returnFromFunction | *Valid values:* Function name <br /> The name of the function is exited via this transition. Assuming a function stack, this name must match the name of the function popped from the function stack. If you use this data node type, you also must use the type ``enterFunction``. See ``enterFunction`` for more information. | Yes | Yes |
 
@@ -84,13 +84,13 @@ This witness specification and the validator are a work in progress and will be 
 
 
 ### Witnessing Program Termination
-Termination is a liveness property and, in contrast to safety properties, its violation cannot be witnessed by a finite number of program execution steps. 
-The witness format proposed so far is designed for witnessing safety properties. 
+Termination is a liveness property and, in contrast to safety properties, its violation cannot be witnessed by a finite number of program execution steps.
+The witness format proposed so far is designed for witnessing safety properties.
 Due to the conceputal differences, some termination witness validators may require additional elements.
 
 The description of the termination witness format required by CPAchecker and how to validate and construct termination witnesses with CPAchecker can be found [here](termination/README.md). Currently, only violation witnesses are supported.
 
-Ultimate Automizer supports termination witnesses as specified by this document. No additional information is necessary. The extensions specified in [the termination witness format required by CPAchecker](termination/README.md) will not lead to rejections, but are currently not used. Currently, Ultimate Automizer supports only violation witnesses. 
+Ultimate Automizer supports termination witnesses as specified by this document. No additional information is necessary. The extensions specified in [the termination witness format required by CPAchecker](termination/README.md) will not lead to rejections, but are currently not used. Currently, Ultimate Automizer supports only violation witnesses.
 
 ## Validating Violation Witnesses
 
@@ -200,7 +200,7 @@ The following command will start Ultimate Automizer to validate an violation wit
 </pre>
 
 For tasks where a 64 bit linux machine model is assumed, you also need to use the parameter ``--architecture 64bit`` instead of ``--architecture 32bit``.
-You can use the additional parameter ``--full-output`` to get the complete log of the validation run. 
+You can use the additional parameter ``--full-output`` to get the complete log of the validation run.
 
 The output of the command should look similar to the following:
 
@@ -221,7 +221,7 @@ FALSE
 
 The verification result *"FALSE"* means that the violation witness was successfully validated, i.e., one of the paths that is described by the witness automaton leads to a violation of the specification. The result *"TRUE"* would mean that none of the paths described by the witness automaton lead to a violation of the specification, in other words, the witness was rejected. A witness is also rejected if the witness validation does not terminate normally.
 
-If you are having trouble using the witness validation, contact the Ultimate team by [creating an issue on GitHub](https://github.com/ultimate-pa/ultimate). 
+If you are having trouble using the witness validation, contact the Ultimate team by [creating an issue on GitHub](https://github.com/ultimate-pa/ultimate).
 
 ### Writing a Violation Witness with CPAchecker
 
@@ -287,7 +287,7 @@ From the Ultimate Automizer directory, the following command will start Ultimate
 </pre>
 
 For tasks where a 64 bit linux machine model is assumed, you also need to use the parameter ``--architecture 64bit`` instead of ``--architecture 32bit``.
-You can use the additional parameter ``--full-output`` to get the complete log of the verification run. 
+You can use the additional parameter ``--full-output`` to get the complete log of the verification run.
 
 The output of the command should look similar to the following:
 
@@ -330,7 +330,7 @@ Running CPAchecker with default stack size (1024k). Specify a larger value with 
 CPAchecker 1.6.1-svn 22870M (Java HotSpot(TM) 64-Bit Server VM 1.8.0_101) started (CPAchecker.run, INFO)
 
 The following configuration options were specified but are not used:
-properties 
+properties
 (CPAchecker.printConfigurationWarnings, WARNING)
 
 Starting analysis ... (CPAchecker.runAlgorithm, INFO)
@@ -353,11 +353,11 @@ More details about the verification run can be found in the directory "./output"
 Run scripts/report-generator.py to show graphical report.
 </pre>
 
-You will find the correctness witness produced by CPAchecker for the example task  
+You will find the correctness witness produced by CPAchecker for the example task
 at ``output/correctness-witness.graphml``.
 
 ### Producing Correctness Witnesses with Ultimate Automizer
-The procedure for producing a correctness witness with Ultimate Automizer does not differ from producing a violation witness. 
+The procedure for producing a correctness witness with Ultimate Automizer does not differ from producing a violation witness.
 To produce a witness for the example task, simply execute the following commands:
 
 <pre>./Ultimate.py \
@@ -369,7 +369,7 @@ To produce a witness for the example task, simply execute the following commands
 The output of Ultimate Automizer should look similar to the following listing:
 
 For tasks where a 64 bit linux machine model is assumed, you also need to use the parameter ``--architecture 64bit`` instead of ``--architecture 32bit``.
-You can use the additional parameter ``--full-output`` to get the complete log of the verification run. 
+You can use the additional parameter ``--full-output`` to get the complete log of the verification run.
 
 The output of the command should look similar to the following:
 
@@ -386,7 +386,7 @@ Result:
 TRUE
 </pre>
 
-You will find the correctness witness produced by Ultimate Automizer for the example task  
+You will find the correctness witness produced by Ultimate Automizer for the example task
 at ``witness.graphml``.
 
 ### Validating Correctness Witnesses with CPAchecker
@@ -408,11 +408,11 @@ Verification result: TRUE. No property violation found by chosen configuration.
 More details about the verification run can be found in the directory "./output".
 </pre>
 
-Because the CPAchecker-based validator is actually even a correctness-witness testifier, the validation will produce another (usually more abstract) correctness witness  
+Because the CPAchecker-based validator is actually even a correctness-witness testifier, the validation will produce another (usually more abstract) correctness witness
 in ``output/correctness-witness.graphml``.
 
 ### Validating Correctness Witnesses with Ultimate Automizer
-Again, the procedure for validating a correctness witness with Ultimate Automizer does not differ from validating a violation witness. 
+Again, the procedure for validating a correctness witness with Ultimate Automizer does not differ from validating a violation witness.
 For the validation example, we assume that one of the previously obtained witnesses for the example task has been named ``correctness-witness.graphml`` and placed in the desired tool directory. To validate the correctness witness with Ultimate Automizer, simply execute the following commands:
 
 <pre>./Ultimate.py \
@@ -445,27 +445,27 @@ TRUE
 In Catherine Dubois and Burkhart Wolff, editors,
 *Proceedings of the 12th International Conference on Tests and Proofs (TAP 2018, Toulouse, France, June 27-29)*,
 pages 3-23, 2018. Springer.
-[DOI: 10.1007/978-3-319-92994-1_1](https://doi.org/10.1007/978-3-319-92994-1_1), 
+[DOI: 10.1007/978-3-319-92994-1_1](https://doi.org/10.1007/978-3-319-92994-1_1),
 [Preprint](https://www.sosy-lab.org/research/pub/2018-TAP.Tests_from_Witnesses_Execution-Based_Validation_of_Verification_Results.pdf)
 
 2. Dirk Beyer, Matthias Dangl, Daniel Dietsch, and Matthias Heizmann. **Correctness Witnesses: Exchanging Verification Results between Verifiers**. In J. Cleland-Huang and Z. Su, editors, *Proceedings of the 24th ACM SIGSOFT International Symposium on the Foundations of Software Engineering (FSE 2016, Seattle, WA, USA, November 13-18)*, pages 326-337, 2016. ACM, New York.
-[DOI: 10.1145/2950290.2950351](https://doi.org/10.1145/2950290.2950351), 
+[DOI: 10.1145/2950290.2950351](https://doi.org/10.1145/2950290.2950351),
 [Preprint](https://www.sosy-lab.org/research/pub/2016-FSE.Correctness_Witnesses_Exchanging_Verification_Results_between_Verifiers.pdf)
 
 3. Dirk Beyer and Matthias Dangl. **Verification-Aided Debugging: An Interactive Web-Service for Exploring Error Witnesses**. In S. Chaudhuri and A. Farzan, editors, *Proceedings of the 28th International Conference on Computer Aided Verification (CAV 2016, Toronto, ON, Canada, July 17-23), Part II*, LNCS 9780, pages 502-509, 2016. Springer-Verlag, Heidelberg.
-[DOI: 10.1007/978-3-319-41540-6_28](https://doi.org/10.1007/978-3-319-41540-6_28), 
+[DOI: 10.1007/978-3-319-41540-6_28](https://doi.org/10.1007/978-3-319-41540-6_28),
 [Preprint](https://www.sosy-lab.org/research/pub/2016-CAV.Verification-Aided_Debugging_An_Interactive_Web-Service_for_Exploring_Error_Witnesses.pdf)
 
 4. Dirk Beyer. **Reliable and Reproducible Competition Results with BenchExec and Witnesses (Report on SV-COMP 2016)**. In M. Chechik and J.-F. Raskin, editors, *Proceedings of the 22nd International Conference on Tools and Algorithms for the Construction and Analysis of Systems (TACAS 2016, Eindhoven, The Netherlands, April 2-8)*, pages 887-904, 2016. Springer-Verlag, Heidelberg.
-[DOI: 10.1007/978-3-662-49674-9_55](https://doi.org/10.1007/978-3-662-49674-9_55), 
+[DOI: 10.1007/978-3-662-49674-9_55](https://doi.org/10.1007/978-3-662-49674-9_55),
 [Preprint](https://www.sosy-lab.org/research/pub/2016-TACAS.Reliable_and_Reproducible_Competition_Results_with_BenchExec_and_Witnesses.pdf)
 
 5. Dirk Beyer, Matthias Dangl, Daniel Dietsch, Matthias Heizmann, and Andreas Stahlbauer. **Witness Validation and Stepwise Testification across Software Verifiers**. In E. Di Nitto, M. Harman, and P. Heymans, editors, *Proceedings of the 2015 10th Joint Meeting of the European Software Engineering Conference and the ACM SIGSOFT Symposium on Foundations of Software Engineering (ESEC/FSE 2015, Bergamo, Italy, August 31 - September 4)*, pages 721-733, 2015. ACM, New York.
-[DOI: 10.1145/2786805.2786867](https://doi.org/10.1145/2786805.2786867), 
+[DOI: 10.1145/2786805.2786867](https://doi.org/10.1145/2786805.2786867),
 [Preprint](https://www.sosy-lab.org/research/pub/2015-FSE15.Witness_Validation_and_Stepwise_Testification_across_Software_Verifiers.pdf)
 
 6. Dirk Beyer. **Software Verification and Verifiable Witnesses (Report on SV-COMP 2015)**. In C. Baier and C. Tinelli, editors, *Proceedings of the 21st International Conference on Tools and Algorithms for the Construction and of Analysis Systems (TACAS 2015, London, UK, April 13-17)*, LNCS 9035, pages 401-416, 2015. Springer-Verlag, Heidelberg.
-[DOI: 10.1007/978-3-662-46681-0_31](https://doi.org/10.1007/978-3-662-46681-0_31), 
+[DOI: 10.1007/978-3-662-46681-0_31](https://doi.org/10.1007/978-3-662-46681-0_31),
 [Preprint](https://www.sosy-lab.org/research/pub/2015-TACAS.Software_Verification_and_Verifiable_Witnesses.pdf)
 
 7. Dirk Beyer, Karlheinz Friedberger. **Violation Witnesses and Result Validation for Multi-Threaded Programs - Implementation and Evaluation with CPAchecker**.
