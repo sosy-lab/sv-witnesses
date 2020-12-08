@@ -467,3 +467,9 @@ pages 3-23, 2018. Springer.
 6. Dirk Beyer. **Software Verification and Verifiable Witnesses (Report on SV-COMP 2015)**. In C. Baier and C. Tinelli, editors, *Proceedings of the 21st International Conference on Tools and Algorithms for the Construction and of Analysis Systems (TACAS 2015, London, UK, April 13-17)*, LNCS 9035, pages 401-416, 2015. Springer-Verlag, Heidelberg.
 [DOI: 10.1007/978-3-662-46681-0_31](https://doi.org/10.1007/978-3-662-46681-0_31), 
 [Preprint](https://www.sosy-lab.org/research/pub/2015-TACAS.Software_Verification_and_Verifiable_Witnesses.pdf)
+
+7. Dirk Beyer, Karlheinz Friedberger. **Violation Witnesses and Result Validation for Multi-Threaded Programs - Implementation and Evaluation with CPAchecker**.
+In T. Margaria and B. Steffen, editors, *Proceedings of the 9th International Symposium on Leveraging Applications of Formal Methods
+(ISoLA 2020, Rhodes, Greece, October 20-30)*, LNCS 12476, pages 449-470, 2020. Springer-Verlag, Heidelberg.
+[DOI: 10.1007/978-3-030-61362-4_26](https://doi.org/10.1007/978-3-030-61362-4_26),
+[Print (OpenAccess)](https://link.springer.com/content/pdf/10.1007%2F978-3-030-61362-4_26.pdf)
