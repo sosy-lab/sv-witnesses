@@ -5,15 +5,18 @@
   <!--<option name="-noout"/>
   <option name="-heap">2000M</option>-->
 
-  <requiredfiles>test/program/simple/.*.graphml</requiredfiles>
-  <option name="--witness">test/program/simple/simple_correct.graphml</option>
-
   <rundefinition name="testwitness">
-    <propertyfile>../properties/unreach-call.prp</propertyfile>
-  </rundefinition>
+    <requiredfiles>${taskdef_path}/${taskdef_name}.graphml</requiredfiles>
+    <option name="--witness">${taskdef_path}/${taskdef_name}.graphml</option>
 
-  <tasks>
-    <includesfile>../program/simple/tests.set</includesfile>
-  </tasks>
+    <tasks name="simple">
+      <includesfile>../program/simple/tests.set</includesfile>
+      <propertyfile>../properties/unreach-call.prp</propertyfile>
+    </tasks>
+    <tasks name="termination">
+      <includesfile>../program/termination/tests.set</includesfile>
+      <propertyfile>../properties/termination.prp</propertyfile>
+    </tasks>
+  </rundefinition>
 
 </benchmark>
