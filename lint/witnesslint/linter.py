@@ -32,6 +32,8 @@ NO_WITNESS = 5
 NO_PROGRAM = 6
 INTERNAL_ERROR = 7
 
+MAIN_THREAD_ID = '0'
+
 
 def create_linter(argv):
     arg_parser = create_arg_parser()
@@ -446,6 +448,7 @@ class WitnessLinter:
                     break
             self.check_functionname(data.text, data.sourceline)
         elif key == witness.THREADID:
+            self.witness.thread_ids.add(data.text)
             # Check disabled for SV-COMP'21 as questions about the specification
             # need to be resolved first, see
             # https://gitlab.com/sosy-lab/sv-comp/archives-2021/-/issues/30
@@ -456,6 +459,7 @@ class WitnessLinter:
             #     )
             pass
         elif key == witness.CREATETHREAD:
+            self.witness.thread_creations.add(data.text)
             if data.text in self.witness.threads:
                 # logging.warning(
                 #     "Thread with id {} has already been created".format(data.text),
@@ -868,6 +872,9 @@ class WitnessLinter:
                 collections.OrderedDict(sorted(self.witness.transitions.items())),
                 self.witness.entry_node,
             )
+        spare_thread_ids = self.witness.thread_ids - self.witness.thread_creations - set(MAIN_THREAD_ID)
+        if spare_thread_ids:
+            logging.warning("Threads were executed, but never created: {}".format(spare_thread_ids))
         if self.program_info is not None:
             for check in self.check_later:
                 check()
