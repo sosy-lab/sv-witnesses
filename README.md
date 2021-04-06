@@ -20,6 +20,7 @@ i.e. for ``data`` tags that are direct children of the ``graph`` tag.
 
 | key | Meaning | Required |
 | --- | --- | --- |
+| witness-format-version | *Valid values*: ``1.0``. When missing, the format version ``1.0`` is assumed | No |
 | witness-type | *Valid values:* ``correctness_witness`` or ``violation_witness`` <br /> Specifies the witness type. A correctness witness is identified by the value ``correctness_witness``, a violation witness is identified by the value ``violation_witness``. | Yes |
 | sourcecodelang | *Valid values:* Currently, only ``C`` and ``Java`` are supported. <br /> The name of the programming language. | Yes |
 | producer | *Valid values:* Any <br /> The name of the tool that produced the witness automaton, e.g., ``CPAchecker 1.6.8`` | Yes |
