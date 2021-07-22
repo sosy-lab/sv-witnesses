@@ -11,8 +11,6 @@ with the witness format [1].
 [1]: github.com/sosy-lab/sv-witnesses/blob/master/README.md
 """
 
-__version__ = "DEV"
-
 import argparse
 import collections
 import hashlib
@@ -21,8 +19,7 @@ import sys
 
 from lxml import etree  # noqa: S410 does not matter
 
-from . import logger as logging
-from . import witness
+from witnesslint import witness, __version__, logger as logging
 
 CREATIONTIME_PATTERN = r"^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}([+-]\d{2}:\d{2})?$"
 
@@ -945,9 +942,9 @@ def _exit(exit_code=None):
     sys.exit(exit_code)
 
 
-def main(argv):
+def main():
     try:
-        linter = create_linter(argv[1:])
+        linter = create_linter(sys.argv[1:])
         linter.lint()
         _exit()
     except Exception as e:

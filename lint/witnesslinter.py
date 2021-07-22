@@ -13,4 +13,4 @@ sys.dont_write_bytecode = True  # prevent creation of .pyc files
 from witnesslint import linter  # noqa: E402 raises, but prevents bytecode generation
 
 if __name__ == "__main__":
-    sys.exit(linter.main(sys.argv))
+    linter.main()
