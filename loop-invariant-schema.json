@@ -3,7 +3,7 @@
   "title": "Loop Invariant Entry",
   "description": "An loop invariant entry",
   "type": "object",
-  "reuquired": [
+  "required": [
     "entry_type",
     "metadata",
     "location",
@@ -15,7 +15,7 @@
     },
     "metadata": {
       "type": "object",
-      "reuquired": [
+      "required": [
         "format_version",
         "uuid",
         "creation_time",
@@ -36,7 +36,7 @@
         },
         "producer": {
           "type": "object",
-          "reuquired": [
+          "required": [
             "name",
             "version"
           ],
