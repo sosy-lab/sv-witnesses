@@ -29,7 +29,7 @@ Each file of verification entries contains an array of entries.
 The format of an entry depends on its entry type.
 Currently, we have the following entry types:
 - `loop_invariant`
-- `loop-invariant_certification`
+- `loop-invariant_certificate`
 
 Entry types are use-case specific and independent.
 Each producer and consumer of entries can filter those entry types that it supports.
@@ -42,6 +42,9 @@ The following sections describe the format of a verification entry for each entr
 Loop invariants are important building blocks in software verification.
 There are many verification approaches that use loop invariants as lemmata
 to construct a proof of correctness.
+
+Verification entries of entry type loop invariant
+can be used as verification witness, more specifically, correctness witnesses.
 
 In the following, we provide an example, and then a detailed description of the various components.
 
@@ -154,8 +157,56 @@ A [json-schema](http://json-schema.org/) of the format can be found in file
 This schema can be used for validation and for code generation.
 
 
-### Loop-Invariant Certification
+### Loop-Invariant Certificate
+
+Verification entries of entry type loop-invariant certificate
+can be used to document the outcome of validation attempts.
+That is, a validation of the verification result took place,
+in which a tool used the referenced loop invariant
+in its attempt to construct a proof of correctness,
+and its findings are documented in the entry of type loop-invariant certificate.
+
+This entry type helps to document trust in an invariant
+(if an invariant has many confirmed certificates then it is likely to hold)
+and scoring decisions in competitions that assign scores only after confirmation from
+a results validation.
+
+#### Example
+
+The file of verification entries [multivar_1-1.c.invariant_witness.yaml](multivar_1-1.c.invariant_witness.yaml)
+also contains an entry of type `loop-invariant_certificate`,
+which has also four parts:
+the entry type,
+the metadata to describe the provenance of the entry,
+the target that identifies what is certified, and
+the certification result.
+
+
+```yaml
+- entry_type: loop-invariant_certificate
+  metadata:
+    format_version: 0.1
+    uuid: 954affa9-32e4-4b35-85ae-888da3a6a53b
+    creation_time: 2021-05-05T15:18:43+02:00
+    producer:
+      name: CPAchecker
+      version: 2.0.1-svn
+      configuration: (Optional) svcomp21--04-kInduction
+      description: (Optional)
+      command_line: (Optional)
+  target:
+    uuid: 91023a0f-9f45-4385-88c4-1152ade45537
+    type: loop-invariant
+    file_hash: XXXf45a8d763ef520f6d92e4135c8572805994a66531c6216b17157d0dde2f9c
+  certification:
+    string: confirmed
+    type: verdict
+    format: confirmed | rejected
+```
+
+#### Description
+
+The following tables describe the format in more detail.
 
 TODO
-
 

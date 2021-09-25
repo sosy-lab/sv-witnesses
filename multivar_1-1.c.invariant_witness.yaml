@@ -1,6 +1,3 @@
-Hier das Ergebnis von heute.
-Einziger dummy-Wert ist noch loop_invariant_certification.target.file_hash und die (Optional)s
-
 - entry_type: loop_invariant
   metadata:
     format_version: 0.1
@@ -30,7 +27,7 @@ Einziger dummy-Wert ist noch loop_invariant_certification.target.file_hash und d
     type: assertion
     format: C
 
-- entry_type: loop_invariant_certification
+- entry_type: loop-invariant_certificate
   metadata:
     format_version: 0.1
     uuid: 954affa9-32e4-4b35-85ae-888da3a6a53b
@@ -43,7 +40,7 @@ Einziger dummy-Wert ist noch loop_invariant_certification.target.file_hash und d
       command_line: (Optional)
   target: 
     uuid: 91023a0f-9f45-4385-88c4-1152ade45537
-    type: loop-invariant
+    type: loop_invariant
     file_hash: XXXf45a8d763ef520f6d92e4135c8572805994a66531c6216b17157d0dde2f9c
   certification:
     string: confirmed
