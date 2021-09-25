@@ -1,4 +1,4 @@
-## GraphML-Based Exchange Format for Violation Witnesses and Correctness Witnesses
+# GraphML-Based Exchange Format for Violation Witnesses and Correctness Witnesses
 
 ### Basics
 
