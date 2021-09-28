@@ -77,11 +77,12 @@ the invariant at that location.
       description: (Optional)
       command_line: (Optional)
     task:
-      input_files: multivar_1-1.c
+      input_files:
+        - multivar_1-1.c
       input_file_hashes:
         multivar_1-1.c: 511f45a8d763ef520f6d92e4135c8572805994a66531c6216b17157d0dde2f9c
       specification: CHECK( init(main()), LTL(G ! call(reach_error())) )
-      data_model: 32bit
+      data_model: ILP32
       language: C
   location:
     file_name: multivar_1-1.c
@@ -128,19 +129,19 @@ The following tables describe the format in more detail.
 ##### task
 | Property            | Data Type             | Format                                                        | Description  |
 |---                  | ---                   | ---                                                           | ---          |
-| `input_files`       | string *or* string[]  | Bash-compliant file-name pattern                              | File(s) that were given as input to the verfier. Each file pattern must represent exactly one input file. |
+| `input_files`       | string[]              | Bash-compliant file-name pattern                              | File(s) that were given as input to the verfier. Each file pattern must represent exactly one input file. |
 | `input_file_hashes` | assoc. array          |`<file-pattern> : <file-hash>`                                 | Mapping of each input file to its SHA-256 hash. Every file-name pattern listed in `input_files` must appear in this property. |
 | `specification`     | string                | [SV-COMP format](https://sv-comp.sosy-lab.org/2021/rules.php) | Specification against which the program was analyzed for producing the entry. |
-| `data_model`        | string                | "32bit" *or* "64bit"                                          | Data model that was assumed for the input program. |
-| `language`          | string                | "C"                                                           | Source language of the input files. |
+| `data_model`        | string                | "ILP32" *or* "LP64"                                           | Data model that was assumed for the input program. |
+| `language`          | string                | Any                                                           | Source language of the input files. |
 
 ##### location
 | Property    | Data Type     | Format                            | Description  |
 |---          | ---           | ---                               | ---          |
-| `file_name` | string        | Bash-compliant file-name pattern  | Name of the file containing the loop where the invariant holds. Must be present in `task.input_files` |
+| `file_name` | string        | Bash-compliant file-name pattern  | Name of the file containing the loop where the invariant holds. Must be present in `task.input_files`. |
 | `file_hash` | string        | SHA-256 hash                      | Hash of the file containing the loop where the invariant holds. |
 | `line`      | integer       | natural number > 1                | Line where the invariant holds (starting with 1). |
-| `column`    | integer       | natural number >= 0               | Column where the invariant holds in that line. For example, if `column` has value `0` then the invariant holds *before* the first source-code token of the line. |
+| `column`    | integer       | natural number >= 0               | Column where the invariant holds in that line (starting with 0). For example, if `column` has value `0` then the invariant holds *before* the first source-code token of the line. |
 | `function`  | string        | func. name in the source language | Name of the function in which the invariant holds. |
 
 ##### loop_invariant
@@ -183,7 +184,7 @@ the certification result.
 
 
 ```yaml
-- entry_type: loop-invariant_certificate
+- entry_type: loop_invariant_certificate
   metadata:
     format_version: 0.1
     uuid: 954affa9-32e4-4b35-85ae-888da3a6a53b
