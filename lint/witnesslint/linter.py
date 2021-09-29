@@ -11,7 +11,7 @@ with the witness format [1].
 [1]: github.com/sosy-lab/sv-witnesses/blob/master/README.md
 """
 
-__version__ = "DEV"
+__version__ = "1.0"
 
 import argparse
 import collections
