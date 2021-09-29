@@ -140,13 +140,11 @@ class WitnessLinter:
             function_names = []
         with open(program, "rb") as source:
             content = source.read()
-            sha1_hash = hashlib.sha1(content).hexdigest()  # noqa: S303 does not matter
             sha256_hash = hashlib.sha256(content).hexdigest()
         self.program_info = {
             "name": program,
             "num_chars": num_chars,
             "num_lines": num_lines,
-            "sha1_hash": sha1_hash,
             "sha256_hash": sha256_hash,
             "function_names": function_names,
         }
@@ -531,7 +529,6 @@ class WitnessLinter:
             if (
                 self.program_info is not None
                 and data.text.lower() != self.program_info.get("sha256_hash")
-                and data.text.lower() != self.program_info.get("sha1_hash")
             ):
                 logging.warning(
                     "Programhash does not match the hash specified in the witness",
