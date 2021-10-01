@@ -42,7 +42,7 @@ In witness automata, the GraphML nodes represent states.
 | sink | *Valid values:* ``false`` (default) or ``true`` <br /> ``sink`` is used to mark a ``node`` as a sink node. A sink node represents a sink control state in the automaton. Sink states are not allowed in correctness-witness automata. The ``attr.type`` attribute of this key is ``boolean``. If no default value is specified in the GraphML header, the default value is ``false``. | Yes | No |
 | violation | *Valid values:* ``false`` (default) or ``true`` <br /> ``violation`` is used to mark a control state as a violation state, i.e., as a state that represents a specification violation. Violation control states are not allowed in the syntax for correctness witnesses, because all control states are implicitly accepting states. The ``attr.type`` attribute of this key is ``boolean``. If no default value is specified in the GraphML header, the default value is ``false``.| Yes | No |
 | invariant | *Valid values:* A C expression that (1) must evaluate to the C type ``int`` (used as boolean) and (2) **may** consist of conjunctions or disjunctions, but not function calls. <br /> ``invariant`` is used to specify an invariant for a control state. The value of a ``data`` element with this key must be an expression that evaluates to a value of the equivalent of a boolean type in the programming language of the verification task, e.g., for C programs a C expression that evaluates to a value of the C type ``int`` (used as boolean). The expression may consist of conjunctions or disjunctions, but not function calls. Local variables that have the same name as global variables or local variables of other functions can be qualified by using a ``data`` element with the ``invariant.scope`` key. The ``attr.type`` attribute of this key is ``string``. All variables used in the expression must appear in the program source code. If a control state does not have a ``data`` element with this key, a consumer shall consider the state invariant to be ``true``. | No | Yes |
-| invariant.scope | *Valid values:* Function name <br /> ``invariant.scope`` is used to qualify variables with ambiguous names in a state invariant by specifying a function name: The witness consumer must map the variables in the given invariant to the variables in the source code. Due to scopes in many programming languages, such as C, there may ambiguously named variables in different scopes. The consumer first has to look for a variable with a matching name in the scope of the function with the name specified via a ``data`` element with the ``invariant.scope`` key before checking the global scope. This key always applies to the invariant as a whole, i.e., it is not possible to specify an invariant over local variables of different functions. In existing implementations, there is currently no support for different variables with the same name within different scopes of the same function. The ``attr.type`` attribute of this key is ``string``. | No | Yes |
+| invariant.scope | *Valid values:* Function name <br /> ``invariant.scope`` is used to qualify variables with ambiguous names in a state invariant by specifying a function name: The witness consumer must map the variables in the given invariant to the variables in the source code. Due to scopes in many programming languages, such as C, there may be ambiguously named variables in different scopes. The consumer first has to look for a variable with a matching name in the scope of the function with the name specified via a ``data`` element with the ``invariant.scope`` key before checking the global scope. This key always applies to the invariant as a whole, i.e., it is not possible to specify an invariant over local variables of different functions. In existing implementations, there is currently no support for different variables with the same name within different scopes of the same function. The ``attr.type`` attribute of this key is ``string``. | No | Yes |
 
 #### Edge Data for Automata Transitions
 
@@ -52,7 +52,7 @@ In witness automata, the GraphML edges represent state transitions.
 
 | key | Meaning | Allowed in Violation Witnesses | Allowed in Correctness Witnesses |
 | --- | --- | ---- | ---- |
-| assumption | *Valid values:* Expression that (1) evaluates to a value of the equivalent of a boolean type in the programming language of the verification task and (2) **may** consist of conjunctions or disjunctions, but not function calls <br /> ``assumption`` is used to specify a state-space guard for a transition. The value of a ``data`` element with this key must be an expression that evaluates to a value of the equivalent of a boolean type in the programming language of the verification task, e.g. for C programs a C expression that evaluates to a value of the C type ``int`` (used as boolean). The expression may consist of conjunctions or disjunctions, but not function calls. Local variables that have the same name as global variables or local variables of other functions can be qualified by using a ``data`` element with the ``assumption.scope`` key. All variables used in the expression must appear in the program source code, with the exception of the variable ``\result``, which represents the return value of a function identified by the ``data`` element with the key ``assumption.resultfunction`` after a function-return operation on a CFA edge matched by this transition. If the ``\result`` variable is used, the name of the corresponding function must be provided using a ``data`` element with the ``assumption.resultfunction`` key. If a transition does not have a ``data`` element with this key, a consumer shall assume that the state-space guard of this transition is ``true``. In correctness witnesses, for each state and each source-code guard, the disjunction of all state-space guards leaving that state via a transition matched by that source-code guard must be ``true``, i.e., while state-space guards can be used to split the state space in correctness witnesses, they may not be used to restrict it. The ``attr.type`` attribute of this key is ``string``. | Yes | Yes
+| assumption | *Valid values:* Expression that (1) evaluates to a value of the equivalent of a Boolean type in the programming language of the verification task and (2) **may** consist of conjunctions or disjunctions, but not function calls <br /> ``assumption`` is used to specify a state-space guard for a transition. The value of a ``data`` element with this key must be an expression that evaluates to a value of the equivalent of a boolean type in the programming language of the verification task, e.g. for C programs a C expression that evaluates to a value of the C type ``int`` (used as boolean). The expression may consist of conjunctions or disjunctions, but not function calls. Local variables that have the same name as global variables or local variables of other functions can be qualified by using a ``data`` element with the ``assumption.scope`` key. All variables used in the expression must appear in the program source code, except for the variable ``\result``, which represents the return value of a function identified by the ``data`` element with the key ``assumption.resultfunction`` after a function-return operation on a CFA edge matched by this transition. If the ``\result`` variable is used, the name of the corresponding function must be provided using a ``data`` element with the ``assumption.resultfunction`` key. If a transition does not have a ``data`` element with this key, a consumer shall assume that the state-space guard of this transition is ``true``. In correctness witnesses, for each state and each source-code guard, the disjunction of all state-space guards leaving that state via a transition matched by that source-code guard must be ``true``, i.e., while state-space guards can be used to split the state space in correctness witnesses, they may not be used to restrict it. The ``attr.type`` attribute of this key is ``string``. | Yes | Yes
 | assumption.scope | *Valid values:* Function name <br /> ``assumption.scope`` is used to qualify variables with ambiguous names in a state-space guard by specifying a function name: The consumer first has to look for a variable with a matching name in the scope of the function with the name specified via a ``data`` element with the ``assumption.scope`` key before checking the global scope. This key always applies to the state-space guard as a whole, i.e., it is not possible to specify a state-space guard over local variables of different functions. In existing implementations, there is currently no support for different variables with the same name within different scopes of the same function. This key is not allowed in correctness witnesses. The ``attr.type`` attribute of this key is ``string.`` | Yes | Yes |
 | assumption.resultfunction | *Valid values:* Function name <br /> ``assumption.resultfunction`` is used to specify the function of the ``\result`` variable used in a state-space guard of the same transition, meaning that ``\result`` represents the return value of the given function. This key applies to the state-space guard as a whole, it is therefore not possible to refer to multiple function-return values within the same transition. If the ``\result`` variable is used, a ``data`` element with this key must be used in the same transition, otherwise it is superfluous. This key is not allowed in correctness witnesses. The ``attr.type`` attribute of this key is ``string``. | Yes | Yes |
 | control | *Valid values:* ``condition-true`` or ``condition-false`` <br /> ``control`` is used as part of the source-code guard of a transition and restricts the set of CFA edges matched by the source-code guard to assume operations of the CFA. Valid values for ``data`` elements with this key are ``condition-true`` and ``condition-false``, where ``condition-true`` specifies the branch where the assume condition evaluates to ``true``, i.e., the ``then`` branch, and ``condition-false`` specifies the branch where the assume condition evaluates to ``false``, i.e., the ``else`` branch. The ``attr.type`` attribute of this key is ``string``. | Yes | Yes |
@@ -87,7 +87,7 @@ This witness specification and the validator are a work in progress and will be 
 ### Witnessing Program Termination
 Termination is a liveness property and, in contrast to safety properties, its violation cannot be witnessed by a finite number of program execution steps.
 The witness format proposed so far is designed for witnessing safety properties.
-Due to the conceputal differences, some termination witness validators may require additional elements.
+Due to the conceptual differences, some termination witness validators may require additional elements.
 
 The description of the termination witness format required by CPAchecker and how to validate and construct termination witnesses with CPAchecker can be found [here](termination/README.md). Currently, only violation witnesses are supported.
 
@@ -101,7 +101,7 @@ In the following, we present the violation-witness validation service followed b
 
 ## Validating Witnesses using a Witness Validation Service
 
-The witness-validation service is designed to be as simple to use as possible. Therefore you will not not need to manually select the specification and architecture the witness was produced for, but may instead include this information within the witness file itself. See the XML ``data`` tags with the keys ``specification`` and ``architecture`` in the [example violation witness](minepump_spec1_product33_false-unreach-call_false-termination.cil.graphml) the assumed [specification](PropertyUnreachCall.prp) and [buggy program](minepump_spec1_product33_false-unreach-call_false-termination.cil.c). Accepted values for the architecture are ``32bit`` (default) and ``64bit``. If you would rather keep the original specification separate, you can still use the witness validators manually, as described further down.
+The witness-validation service is designed to be as simple to use as possible. Therefore, you will not need to manually select the specification and architecture the witness was produced for, but may instead include this information within the witness file itself. See the XML ``data`` tags with the keys ``specification`` and ``architecture`` in the [example violation witness](minepump_spec1_product33_false-unreach-call_false-termination.cil.graphml) the assumed [specification](PropertyUnreachCall.prp) and [buggy program](minepump_spec1_product33_false-unreach-call_false-termination.cil.c). Accepted values for the architecture are ``32bit`` (default) and ``64bit``. If you would rather keep the original specification separate, you can still use the witness validators manually, as described further down.
 In addition to the [example violation witness](minepump_spec1_product33_false-unreach-call_false-termination.cil.graphml) above, we also provide an [example correctness witness](multivar_true-unreach-call1.graphml) corresponding to a [correct program](multivar_true-unreach-call1.i) for the same [specification](PropertyUnreachCall.prp).
 
 Submit the witness validation job here: [http://vcloud.sosy-lab.org/webclient/runs/witness_validation](http://vcloud.sosy-lab.org/webclient/runs/witness_validation)
@@ -118,9 +118,9 @@ using the [provided python script](witness_validation_web_cloud.py).
 
 ### Validating a Violation Witness with CPAchecker
 
-The following command will start CPAchecker to validate an violation witness for ``test.c``. We assume that the violation witnesses is stored in the file ``witness-to-validate.graphml``.
+The following command will start CPAchecker to validate a violation witness for ``test.c``. We assume that the violation witnesses is stored in the file ``witness-to-validate.graphml``.
 
-An easy way to validate violation witnesses with CPAchecker that should be able to handle most scenarios is provided by a predifined configuration:
+An easy way to validate violation witnesses with CPAchecker that should be able to handle most scenarios is provided by a predefined configuration:
 
 <pre>./scripts/cpa.sh -witnessValidation \
 -witness witness-to-validate.graphml \
@@ -151,7 +151,7 @@ The following example shows how to configure CPAchecker to use linear-arithmetic
 test.c
 </pre>
 
-For tasks where a 64 bit linux machine model is assumed, you also need to add the parameter ``-64`` to the command line.
+For tasks where a 64-bit Linux machine model is assumed, you also need to add the parameter ``-64`` to the command line.
 
 The output of the command should look similar to the following:
 
@@ -200,7 +200,7 @@ The following command will start Ultimate Automizer to validate an violation wit
 --validate witness-to-validate.graphml
 </pre>
 
-For tasks where a 64 bit linux machine model is assumed, you also need to use the parameter ``--architecture 64bit`` instead of ``--architecture 32bit``.
+For tasks where a 64-bit Linux machine model is assumed, you also need to use the parameter ``--architecture 64bit`` instead of ``--architecture 32bit``.
 You can use the additional parameter ``--full-output`` to get the complete log of the validation run.
 
 The output of the command should look similar to the following:
@@ -241,7 +241,7 @@ In the following example, we assume that the current directory is the CPAchecker
 test.c
 </pre>
 
-For tasks where a 64 bit linux machine model is assumed, you also need to add the parameter ``-64`` to the command line.
+For tasks where a 64-bit Linux machine model is assumed, you also need to add the parameter ``-64`` to the command line.
 
 The output of the command should look similar to the following:
 
@@ -287,7 +287,7 @@ From the Ultimate Automizer directory, the following command will start Ultimate
 --architecture 32bit
 </pre>
 
-For tasks where a 64 bit linux machine model is assumed, you also need to use the parameter ``--architecture 64bit`` instead of ``--architecture 32bit``.
+For tasks where a 64-bit Linux machine model is assumed, you also need to use the parameter ``--architecture 64bit`` instead of ``--architecture 32bit``.
 You can use the additional parameter ``--full-output`` to get the complete log of the verification run.
 
 The output of the command should look similar to the following:
@@ -369,7 +369,7 @@ To produce a witness for the example task, simply execute the following commands
 
 The output of Ultimate Automizer should look similar to the following listing:
 
-For tasks where a 64 bit linux machine model is assumed, you also need to use the parameter ``--architecture 64bit`` instead of ``--architecture 32bit``.
+For tasks where a 64-bit Linux machine model is assumed, you also need to use the parameter ``--architecture 64bit`` instead of ``--architecture 32bit``.
 You can use the additional parameter ``--full-output`` to get the complete log of the verification run.
 
 The output of the command should look similar to the following:
