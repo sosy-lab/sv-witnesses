@@ -99,7 +99,7 @@ Witnesses can be validated by CPAchecker or Ultimate Automizer. To validate a wi
 
 In the following, we present the violation-witness validation service followed by listing examples of available witness checkers (in alphabetic order).
 
-## Validating Witnesses using a Witness Validation Service
+### Validating Witnesses using a Witness Validation Service
 
 The witness-validation service is designed to be as simple to use as possible. Therefore, you will not need to manually select the specification and architecture the witness was produced for, but may instead include this information within the witness file itself. See the XML ``data`` tags with the keys ``specification`` and ``architecture`` in the [example violation witness](minepump_spec1_product33_false-unreach-call_false-termination.cil.graphml) the assumed [specification](PropertyUnreachCall.prp) and [buggy program](minepump_spec1_product33_false-unreach-call_false-termination.cil.c). Accepted values for the architecture are ``32bit`` (default) and ``64bit``. If you would rather keep the original specification separate, you can still use the witness validators manually, as described further down.
 In addition to the [example violation witness](minepump_spec1_product33_false-unreach-call_false-termination.cil.graphml) above, we also provide an [example correctness witness](multivar_true-unreach-call1.graphml) corresponding to a [correct program](multivar_true-unreach-call1.i) for the same [specification](PropertyUnreachCall.prp).
@@ -189,30 +189,28 @@ More details about the verification run can be found in the directory "./output"
 The verification result *"FALSE"* means that the violation witness was successfully validated, i.e., one of the paths that is described by the witness automaton leads to a violation of the specification. The result *"TRUE"* would mean that none of the paths described by the witness automaton lead to a violation of the specification, or in other words, that the witness was rejected. A witness is also rejected if the witness validation does not terminate normally.
 
 ### Validating a Violation Witness with Ultimate Automizer
-Download a current version of Ultimate Automizer from [Ultimate Automizer's GitHub page](https://github.com/ultimate-pa/ultimate/releases) or use the [latest SVCOMP release](http://ultimate.informatik.uni-freiburg.de/downloads/svcomp2018/UltimateAutomizer-linux.zip) (supports only Linux platforms).
+Download a release version of Ultimate Automizer from [Ultimate Automizer's GitHub page](https://github.com/ultimate-pa/ultimate/releases) or a current version from [Ultimate's nightly builds](https://monteverdi.informatik.uni-freiburg.de/ultimate-nightly/).
 
-The following command will start Ultimate Automizer to validate an violation witness for ``test.c``. We assume that the violation witnesses is stored in the file ``witness-to-validate.graphml``.
+The following command will start Ultimate Automizer to validate a violation witness for ``test.c``. We assume that the violation witnesses is stored in the file ``witness.graphml``.
 
 <pre>./Ultimate.py \
+--architecture 32bit \
 --spec PropertyUnreachCall.prp \
 --file test.c \
---architecture 32bit \
---validate witness-to-validate.graphml
+--validate witness.graphml
 </pre>
-
 For tasks where a 64-bit Linux machine model is assumed, you also need to use the parameter ``--architecture 64bit`` instead of ``--architecture 32bit``.
-You can use the additional parameter ``--full-output`` to get the complete log of the validation run.
+You can use the additional parameter ``--full-output`` to get the complete log of the validation run (a complete help is shown with ``--help``).
 
 The output of the command should look similar to the following:
 
 <pre>
-# ./Ultimate.py --spec PropertyUnreachCall.prp --file test.c --architecture 32bit --validate witness-to-validate.graphml
-
+$ ./Ultimate.py --architecture 32bit --spec PropertyUnreachCall.prp --file test.c --validate witness.graphml
 Checking for ERROR reachability
 Using default analysis
-Version 2f4433ab
-Calling Ultimate with: java -Xmx12G -Xms1G -jar [...] -data [...] -tc [...] -i test.c witness-to-validate.graphml -s [...] --cacsl2boogietranslator.entry.function main
-.......
+Version 8c2bbc92
+Calling Ultimate with: /usr/bin/java [...]
+... [...]
 Execution finished normally
 Writing output log to file Ultimate.log
 Writing human readable error path to file UltimateCounterExample.errorpath
@@ -222,7 +220,7 @@ FALSE
 
 The verification result *"FALSE"* means that the violation witness was successfully validated, i.e., one of the paths that is described by the witness automaton leads to a violation of the specification. The result *"TRUE"* would mean that none of the paths described by the witness automaton lead to a violation of the specification, in other words, the witness was rejected. A witness is also rejected if the witness validation does not terminate normally.
 
-If you are having trouble using the witness validation, contact the Ultimate team by [creating an issue on GitHub](https://github.com/ultimate-pa/ultimate).
+If you are having trouble using the witness validation, contact the Ultimate team by [creating an issue on GitHub](https://github.com/ultimate-pa/ultimate/issues/new).
 
 ### Writing a Violation Witness with CPAchecker
 
@@ -279,32 +277,15 @@ Using refinement for predicate analysis with PredicateAbstractionRefinementStrat
 The violation-witness automaton is written to ``output/witness.graphml``. If the verification is applied an [example program](minepump_spec1_product33_false-unreach-call_false-termination.cil.c) and [specification](PropertyUnreachCall.prp) from the SV-COMP'17 benchmark set, the witness should look similar to [this witness](minepump_spec1_product33_false-unreach-call_false-termination.cil.graphml).
 
 ### Writing a Violation Witness with Ultimate Automizer
-From the Ultimate Automizer directory, the following command will start Ultimate Automizer to verify a task for which it will come up with a feasible counterexample:
+Similar to validating witnesses, the following command will start Ultimate Automizer to verify a task for which it will come up with a feasible counterexample:
 
 <pre>./Ultimate.py \
+--architecture 32bit \
 --spec PropertyUnreachCall.prp \
---file test.c \
---architecture 32bit
+--file test.c
 </pre>
 
-For tasks where a 64-bit Linux machine model is assumed, you also need to use the parameter ``--architecture 64bit`` instead of ``--architecture 32bit``.
-You can use the additional parameter ``--full-output`` to get the complete log of the verification run.
-
-The output of the command should look similar to the following:
-
-<pre>
-# ./Ultimate.py --spec PropertyUnreachCall.prp --file test.c --architecture 32bit
-Checking for ERROR reachability
-Using default analysis
-Version 2f4433ab
-Calling Ultimate with: java -Xmx12G -Xms1G -jar [...] -data [...] -tc [...] -i test.c -s [...] --cacsl2boogietranslator.entry.function main --witnessprinter.witness.directory [...] --witnessprinter.witness.filename witness.graphml --witnessprinter.write.witness.besides.input.file false --witnessprinter.graph.data.specification [...] --witnessprinter.graph.data.producer Automizer --witnessprinter.graph.data.architecture 32bit --witnessprinter.graph.data.programhash [...]
-.............
-Execution finished normally
-Writing output log to file Ultimate.log
-Writing human readable error path to file UltimateCounterExample.errorpath
-Result:
-FALSE
-</pre>
+You can, as before, change the architecture (``--architecture 64bit``), request the full Ultimate log output (``--full-output``), or show additional options (``--help``).
 
 The violation-witness automaton is written to ``witness.graphml``. If the verification is applied an [example program](minepump_spec1_product33_false-unreach-call_false-termination.cil.c) and [specification](PropertyUnreachCall.prp) from the SV-COMP'17 benchmark set, the witness should look similar to [this witness](minepump_spec1_product33_false-unreach-call_false-termination.cil.ultimateautomizer.graphml).
 
@@ -367,20 +348,15 @@ To produce a witness for the example task, simply execute the following commands
 --architecture 32bit
 </pre>
 
-The output of Ultimate Automizer should look similar to the following listing:
-
-For tasks where a 64-bit Linux machine model is assumed, you also need to use the parameter ``--architecture 64bit`` instead of ``--architecture 32bit``.
-You can use the additional parameter ``--full-output`` to get the complete log of the verification run.
-
 The output of the command should look similar to the following:
 
 <pre>
-# ./Ultimate.py --spec PropertyUnreachCall.prp --file multivar_true-unreach-call1.i --architecture 32bit
+$ ./Ultimate.py --architecture 32bit --spec PropertyUnreachCall.prp --file multivar_true-unreach-call1.i
 Checking for ERROR reachability
 Using default analysis
-Version 2f4433ab
-Calling Ultimate with: java -Xmx12G -Xms1G -jar [...] -data [...] -tc [...] -i multivar_true-unreach-call1.i -s [...] --cacsl2boogietranslator.entry.function main --witnessprinter.witness.directory [...] --witnessprinter.witness.filename witness.graphml --witnessprinter.write.witness.besides.input.file false --witnessprinter.graph.data.specification [...] --witnessprinter.graph.data.producer Automizer --witnessprinter.graph.data.architecture 32bit --witnessprinter.graph.data.programhash [...]
-.............
+Version 8c2bbc92
+Calling Ultimate with: /usr/bin/java [...]
+......[...]
 Execution finished normally
 Writing output log to file Ultimate.log
 Result:
@@ -388,7 +364,7 @@ TRUE
 </pre>
 
 You will find the correctness witness produced by Ultimate Automizer for the example task 
-at ``witness.graphml``.
+at ``witness.graphml``, which should look similar to [this witness](multivar_true-unreach-call1.ultimateautomizer.graphml).
 
 ### Validating Correctness Witnesses with CPAchecker
 
@@ -414,29 +390,26 @@ in ``output/correctness-witness.graphml``.
 
 ### Validating Correctness Witnesses with Ultimate Automizer
 Again, the procedure for validating a correctness witness with Ultimate Automizer does not differ from validating a violation witness.
-For the validation example, we assume that one of the previously obtained witnesses for the example task has been named ``correctness-witness.graphml`` and placed in the desired tool directory. To validate the correctness witness with Ultimate Automizer, simply execute the following commands:
+For the validation example, we assume that one of the previously obtained witnesses for the example task has been named ``witness.graphml`` and placed in the desired tool directory. To validate the correctness witness with Ultimate Automizer, simply execute the following commands:
 
 <pre>./Ultimate.py \
 --spec PropertyUnreachCall.prp \
 --file multivar_true-unreach-call1.i \
 --architecture 32bit \
---validate correctness-witness.graphml
+--validate witness.graphml
 </pre>
 
 A successful validation will result in an output similar to the following:
 
 <pre>
-# ./Ultimate.py --spec PropertyUnreachCall.prp --file multivar_true-unreach-call1.i --architecture 32bit --validate correctness-witness.graphml
+$ ./Ultimate.py --architecture 32bit --spec PropertyUnreachCall.prp --file multivar_true-unreach-call1.i --validate witness.graphml
 Checking for ERROR reachability
 Using default analysis
-Version 2f4433ab
-Calling Ultimate with: java -Xmx12G -Xms1G -jar [...] -data [...] -tc [...] -i multivar_true-unreach-call1.i correctness-witness.graphml -s [...] --cacsl2boogietranslator.entry.function main
-.......
+Version 8c2bbc92
+Calling Ultimate with: /usr/bin/java [...]
+....[...]
 Execution finished normally
 Writing output log to file Ultimate.log
-Writing human readable error path to file UltimateCounterExample.errorpath
 Result:
 TRUE
 </pre>
-
-
