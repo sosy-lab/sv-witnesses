@@ -91,7 +91,7 @@ Due to the conceptual differences, some termination witness validators may requi
 
 The description of the termination witness format required by CPAchecker and how to validate and construct termination witnesses with CPAchecker can be found [here](termination/README.md). Currently, only violation witnesses are supported.
 
-Ultimate Automizer supports termination witnesses as specified by this document. No additional information is necessary. The extensions specified in [the termination witness format required by CPAchecker](termination/README.md) will not lead to rejections, but are currently not used. Currently, Ultimate Automizer supports only violation witnesses.
+Ultimate Automizer supports termination witnesses as specified by this document. No additional information is necessary. The extensions specified in [the termination witness format required by CPAchecker](termination/README.md) will not lead to rejections, but are currently not used. Ultimate Automizer supports correctness and violation witnesses for termination, although there is currently no way to specify ranking functions.
 
 ## Validating Violation Witnesses
 
