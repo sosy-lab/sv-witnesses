@@ -26,6 +26,17 @@ from . import witness
 
 CREATIONTIME_PATTERN = r"^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(Z|[+-]\d{2}:\d{2})$"
 
+SV_COMP_SPECIFICATIONS = [
+    "CHECK( init(main()), LTL(G ! call(reach_error())) )",
+    "CHECK( init(main()), LTL(G valid-free) )",
+    "CHECK( init(main()), LTL(G valid-deref) )",
+    "CHECK( init(main()), LTL(G valid-memtrack) )",
+    "CHECK( init(main()), LTL(G valid-memcleanup) )",
+    "CHECK( init(main()), LTL(G ! overflow) )",
+    "CHECK( init(main()), LTL(G ! data-race) )",
+    "CHECK( init(main()), LTL(F end) )",
+]
+
 WITNESS_VALID = 0
 WITNESS_FAULTY = 1
 NO_WITNESS = 5
@@ -102,6 +113,11 @@ def create_arg_parser():
         "--ignoreSelfLoops",
         help="Produce no warnings when encountering "
         "edges that represent a self-loop.",
+        action="store_true",
+    )
+    parser.add_argument(
+        "--svcomp",
+        help="Run some additional checks specific to SV-COMP.",
         action="store_true",
     )
     return parser
@@ -362,7 +378,7 @@ class WitnessLinter:
                 and child.attrib.get(witness.KEY) == witness.INVARIANT
             ):
                 return True
-        False
+        return False
 
     def handle_edge_data(self, data, key, parent):
         """
@@ -506,8 +522,10 @@ class WitnessLinter:
                 logging.warning(
                     "Found multiple definitions of producer", data.sourceline
                 )
-        elif key == "specification":
+        elif key == witness.SPECIFICATION:
             self.witness.specifications.add(data.text)
+            if self.options.svcomp and data.text not in SV_COMP_SPECIFICATIONS:
+                logging.warning("Invalid specification for SV-COMP", data.sourceline)
         elif key == witness.PROGRAMFILE:
             if self.witness.programfile is None:
                 self.witness.programfile = data.text
