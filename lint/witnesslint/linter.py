@@ -24,7 +24,7 @@ from lxml import etree  # noqa: S410 does not matter
 from . import logger as logging
 from . import witness
 
-CREATIONTIME_PATTERN = r"^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}([+-]\d{2}:\d{2})?$"
+CREATIONTIME_PATTERN = r"^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(Z|[+-]\d{2}:\d{2})$"
 
 WITNESS_VALID = 0
 WITNESS_FAULTY = 1
