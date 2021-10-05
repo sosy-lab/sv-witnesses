@@ -784,10 +784,10 @@ class WitnessLinter:
         elif edge_default != "directed":
             logging.warning("Edgedefault should be 'directed'", graph.sourceline)
         for child in graph:
-            if child.tag.rpartition("}")[2] == witness.DATA:
+            child_tag = child.tag.rpartition("}")[2]
+            if child_tag == witness.DATA:
                 self.handle_data(child, graph)
-            else:
-                # All other expected children have already been handled and removed
+            elif child_tag not in [witness.NODE, witness.EDGE]:
                 logging.warning(
                     "Graph element has unexpected child "
                     "of type '{}'".format(child.tag),
@@ -822,11 +822,13 @@ class WitnessLinter:
                     graphml_elem.sourceline,
                 )
         for child in graphml_elem:
-            # All expected children have already been handled and removed
-            logging.warning(
-                "Graphml element has unexpected child of type '{}'".format(child.tag),
-                graphml_elem.sourceline,
-            )
+            if child.tag.rpartition("}")[2] not in [witness.GRAPH, witness.KEY]:
+                logging.warning(
+                    "Graphml element has unexpected child of type '{}'".format(
+                        child.tag
+                    ),
+                    graphml_elem.sourceline,
+                )
 
     def final_checks(self):
         """
@@ -905,9 +907,7 @@ class WitnessLinter:
                 else:
                     element_stack.pop()
                     _, _, tag = elem.tag.rpartition("}")
-                    if element_stack:
-                        parent_elem = element_stack[-1]
-                    elif tag != witness.GRAPHML:
+                    if not element_stack and tag != witness.GRAPHML:
                         logging.error("Document root is not a GraphML element")
                     if tag == witness.DATA:
                         # Will be handled later
@@ -917,13 +917,13 @@ class WitnessLinter:
                         pass
                     elif tag == witness.KEY:
                         self.handle_key(elem)
-                        parent_elem.remove(elem)
+                        elem.clear()
                     elif tag == witness.NODE:
                         self.handle_node(elem)
-                        parent_elem.remove(elem)
+                        elem.clear()
                     elif tag == witness.EDGE:
                         self.handle_edge(elem)
-                        parent_elem.remove(elem)
+                        elem.clear()
                     elif tag == witness.GRAPH:
                         if saw_graph:
                             logging.warning(
@@ -932,7 +932,7 @@ class WitnessLinter:
                         else:
                             saw_graph = True
                             self.handle_graph(elem)
-                            parent_elem.remove(elem)
+                            elem.clear()
                     elif tag == witness.GRAPHML:
                         if saw_graphml:
                             logging.warning(
