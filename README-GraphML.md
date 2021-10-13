@@ -128,29 +128,6 @@ An easy way to validate violation witnesses with CPAchecker that should be able 
 test.c
 </pre>
 
-There may be cases where you want to use different analyses. It is therefore possible to derive a custom configuration.
-Because choosing an analysis yourself requires some basic knowledge of CPAchecker anyway, we assume for this section of the paragraph that you are familiar with CPAchecker's configuration mechanism.
-
-The easiest way to obtain a new witness-validation configuration is by creating a new configuration file.
-As an example, we recommend looking at the configuration file for CPAchecker's default witness-validation analysis used above in ``config/witnessValidation.properties`` and the subconfigurations included from there.
-
-Configuring a new witness-validation analysis directly on the command-line prompt is a bit more involved, because you first need to find the ``.spc`` file corresponding to the ``.prp`` specification file you want to use. For ``PropertyUnreachCall.prp``, this would be ``config/specification/sv-comp-reachability.spc``.
-The following example shows how to configure CPAchecker to use linear-arithmetic predicate analysis to consume a witness:
-
-<pre>./scripts/cpa.sh -noout -heap 10000M -predicateAnalysis-linear \
--setprop cpa.composite.aggregateBasicBlocks=false \
--setprop cfa.simplifyCfa=false \
--setprop cpa.predicate.ignoreIrrelevantVariables=false \
--setprop counterexample.export.assumptions.assumeLinearArithmetics=true \
--setprop analysis.traversal.byAutomatonVariable=__DISTANCE_TO_VIOLATION \
--setprop cpa.automaton.treatErrorsAsTargets=false \
--setprop WitnessAutomaton.cpa.automaton.treatErrorsAsTargets=true \
--setprop parser.transformTokensToLines=false \
--skipRecursion \
--setprop specification=witness-to-validate.graphml,config/specification/sv-comp-reachability.spc \
-test.c
-</pre>
-
 For tasks where a 64 bit linux machine model is assumed, you also need to add the parameter ``-64`` to the command line.
 
 The output of the command should look similar to the following:
