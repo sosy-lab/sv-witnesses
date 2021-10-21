@@ -11,10 +11,9 @@ with the witness format [1].
 [1]: github.com/sosy-lab/sv-witnesses/blob/master/README.md
 """
 
-__version__ = "1.0"
+__version__ = "1.1"
 
 import argparse
-import collections
 import hashlib
 import re
 import sys
@@ -36,6 +35,8 @@ SV_COMP_SPECIFICATIONS = [
     "CHECK( init(main()), LTL(G ! data-race) )",
     "CHECK( init(main()), LTL(F end) )",
 ]
+
+MAIN_THREAD_ID = "0"
 
 WITNESS_VALID = 0
 WITNESS_FAULTY = 1
@@ -191,48 +192,58 @@ class WitnessLinter:
         elif int(offset) < 0 or int(offset) >= self.program_info["num_chars"]:
             logging.warning("{} is not a valid character offset".format(offset), pos)
 
-    def check_function_stack(self, transitions, start_node):
+    def check_function_stack(self):
         """
-        Performs DFS on the given transitions to make sure that all
+        Performs DFS on the transitions of the witness automaton to make sure that all
         possible paths have a consistent order of function entries and exits.
         """
-        to_visit = [(start_node, [])]
+        to_visit = [(self.witness.entry_node, MAIN_THREAD_ID, [])]
+        for thread in self.witness.threads:
+            start_node = self.witness.threads[thread]
+            if start_node:
+                to_visit.append((start_node, thread, []))
         visited = set()
         while to_visit:
-            current_node, current_stack = to_visit.pop()
-            if current_node in visited:
+            current_node, current_thread, current_stack = to_visit.pop()
+            if (current_node, current_thread) in visited:
                 continue
-            visited.add(current_node)
-            if current_node not in transitions and current_stack:
+            visited.add((current_node, current_thread))
+            if (
+                current_node,
+                current_thread,
+            ) not in self.witness.transitions and current_stack:
                 logging.warning(
-                    "No leaving transition for node {} but not all "
-                    "functions have been left".format(current_node)
+                    "No leaving transition for thread {0} at node {1} but not all "
+                    "functions have been left".format(current_thread, current_node)
                 )
-            for outgoing in transitions.get(current_node, []):
+            for outgoing in self.witness.transitions.get(
+                (current_node, current_thread), []
+            ):
                 function_stack = current_stack[:]
                 if outgoing[2] is not None and outgoing[2] != outgoing[1]:
                     if not function_stack:
                         logging.warning(
                             "Trying to return from function '{0}' in transition "
-                            "{1} -> {2} but currently not in a function".format(
-                                outgoing[2], current_node, outgoing[0]
+                            "{1} -> {2} for thread {3} but currently not in a function".format(
+                                outgoing[2], current_node, outgoing[0], current_thread
                             )
                         )
-                    elif outgoing[2] == current_stack[-1]:
+                    elif outgoing[2] == function_stack[-1]:
                         function_stack.pop()
                     else:
                         logging.warning(
                             "Trying to return from function '{0}' in transition "
-                            "{1} -> {2} but currently in function {3}".format(
+                            "{1} -> {2} for thread {3} but currently in function {4}".format(
                                 outgoing[2],
                                 current_node,
                                 outgoing[0],
+                                current_thread,
                                 function_stack[-1],
                             )
                         )
                 if outgoing[1] is not None and outgoing[1] != outgoing[2]:
                     function_stack.append(outgoing[1])
-                to_visit.append((outgoing[0], function_stack))
+                to_visit.append((outgoing[0], current_thread, function_stack))
 
     def handle_data(self, data, parent):
         """
@@ -304,10 +315,7 @@ class WitnessLinter:
             elif data.text == "true":
                 node_id = parent.attrib.get("id")
                 if node_id is not None:
-                    if (
-                        node_id in self.witness.transition_sources
-                        or node_id in self.witness.transitions
-                    ):
+                    if node_id in self.witness.transition_sources:
                         logging.warning(
                             "Sink node should have no leaving edges", data.sourceline
                         )
@@ -436,39 +444,15 @@ class WitnessLinter:
                     data.sourceline,
                 )
         elif key == witness.ENTERFUNCTION:
-            for child in parent:
-                child.text = child.text.strip()
-                if (
-                    child.tag.rpartition("}")[2] == witness.DATA
-                    and child.attrib.get(witness.KEY) == witness.THREADID
-                    and child.text in self.witness.threads
-                    and self.witness.threads[child.text] is None
-                ):
-                    self.witness.threads[child.text] = data.text
-                    break
             self.check_functionname(data.text, data.sourceline)
         elif key in ["returnFrom", witness.RETURNFROMFUNCTION]:
-            for child in parent:
-                child.text = child.text.strip()
-                if (
-                    child.tag.rpartition("}")[2] == witness.DATA
-                    and child.attrib.get(witness.KEY) == witness.THREADID
-                    and child.text in self.witness.threads
-                    and self.witness.threads[child.text] == data.text
-                ):
-                    del self.witness.threads[child.text]
-                    break
             self.check_functionname(data.text, data.sourceline)
         elif key == witness.THREADID:
-            # Check disabled for SV-COMP'21 as questions about the specification
-            # need to be resolved first, see
-            # https://gitlab.com/sosy-lab/sv-comp/archives-2021/-/issues/30
-            # if data.text not in self.witness.threads:
-            #     logging.warning(
-            #         "Thread with id {} doesn't exist".format(data.text),
-            #         data.sourceline,
-            #     )
-            pass
+            if data.text not in self.witness.threads and data.text != MAIN_THREAD_ID:
+                logging.warning(
+                    "Thread with id {} doesn't exist".format(data.text),
+                    data.sourceline,
+                )
         elif key == witness.CREATETHREAD:
             if data.text in self.witness.threads:
                 # logging.warning(
@@ -477,7 +461,7 @@ class WitnessLinter:
                 # )
                 pass
             else:
-                self.witness.threads[data.text] = None
+                self.witness.threads[data.text] = parent.attrib.get("target")
         elif self.witness.defined_keys.get(key) == witness.EDGE:
             # Other, tool-specific keys are allowed as long as they have been defined
             pass
@@ -710,9 +694,7 @@ class WitnessLinter:
                 logging.warning(
                     "Sink node should have no leaving edges", edge.sourceline
                 )
-            if not self.options.strictChecking:
-                # Otherwise this information is stored in self.witness.transitions
-                self.witness.transition_sources.add(source)
+            self.witness.transition_sources.add(source)
             if source not in self.witness.node_ids:
                 self.check_existence_later.add(source)
         target = edge.attrib.get("target")
@@ -726,7 +708,7 @@ class WitnessLinter:
             if target not in self.witness.node_ids:
                 self.check_existence_later.add(target)
         if self.options.strictChecking:
-            enter, return_from = (None, None)
+            enter, return_from, thread_id = (None, None, MAIN_THREAD_ID)
             for child in edge:
                 child.text = child.text.strip()
                 if child.tag.rpartition("}")[2] == witness.DATA:
@@ -736,6 +718,8 @@ class WitnessLinter:
                         enter = child.text
                     elif key in ["returnFrom", witness.RETURNFROMFUNCTION]:
                         return_from = child.text
+                    elif key == witness.THREADID:
+                        thread_id = child.text
                 else:
                     logging.warning(
                         "Edge has unexpected child element of type '{}'".format(
@@ -744,12 +728,14 @@ class WitnessLinter:
                         child.sourceline,
                     )
             if source and target:
-                if source in self.witness.transitions:
-                    self.witness.transitions[source].append(
+                if (source, thread_id) in self.witness.transitions:
+                    self.witness.transitions[(source, thread_id)].append(
                         (target, enter, return_from)
                     )
                 else:
-                    self.witness.transitions[source] = [(target, enter, return_from)]
+                    self.witness.transitions[(source, thread_id)] = [
+                        (target, enter, return_from)
+                    ]
         else:
             for child in edge:
                 if child.tag.rpartition("}")[2] == witness.DATA:
@@ -881,10 +867,7 @@ class WitnessLinter:
             if node_id not in self.witness.node_ids:
                 logging.warning("Node {} has not been declared".format(node_id))
         if self.options.strictChecking:
-            self.check_function_stack(
-                collections.OrderedDict(sorted(self.witness.transitions.items())),
-                self.witness.entry_node,
-            )
+            self.check_function_stack()
         if self.program_info is not None:
             for check in self.check_later:
                 check()
