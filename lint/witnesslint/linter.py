@@ -448,15 +448,11 @@ class WitnessLinter:
         elif key in ["returnFrom", witness.RETURNFROMFUNCTION]:
             self.check_functionname(data.text, data.sourceline)
         elif key == witness.THREADID:
-            # Check disabled for SV-COMP'21 as questions about the specification
-            # need to be resolved first, see
-            # https://gitlab.com/sosy-lab/sv-comp/archives-2021/-/issues/30
-            # if data.text not in self.witness.threads:
-            #     logging.warning(
-            #         "Thread with id {} doesn't exist".format(data.text),
-            #         data.sourceline,
-            #     )
-            pass
+            if data.text not in self.witness.threads and data.text != MAIN_THREAD_ID:
+                logging.warning(
+                    "Thread with id {} doesn't exist".format(data.text),
+                    data.sourceline,
+                )
         elif key == witness.CREATETHREAD:
             if data.text in self.witness.threads:
                 # logging.warning(
