@@ -708,7 +708,7 @@ class WitnessLinter:
             if target not in self.witness.node_ids:
                 self.check_existence_later.add(target)
         if self.options.strictChecking:
-            enter, return_from, thread_id = (None, None, None)
+            enter, return_from, thread_id = (None, None, MAIN_THREAD_ID)
             for child in edge:
                 child.text = child.text.strip()
                 if child.tag.rpartition("}")[2] == witness.DATA:
