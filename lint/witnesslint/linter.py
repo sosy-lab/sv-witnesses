@@ -18,6 +18,7 @@ import hashlib
 import re
 import sys
 
+from copy import deepcopy
 from lxml import etree  # noqa: S410 does not matter
 
 from . import logger as logging
@@ -124,6 +125,32 @@ def create_arg_parser():
     return parser
 
 
+class Callstack:
+
+    def __init__(self):
+        self.function_stack = []
+        self.touched = False
+
+    def enter(self, function):
+        self.touched = True
+        self.function_stack.append(function)
+
+    def return_from(self, function):
+        if self.function_stack and self.function_stack[-1] == function:
+            self.function_stack.pop()
+            return True
+        return False
+
+
+class State:
+
+    def __init__(self, node, thread_ids, callstacks, visited):
+        self.node = node
+        self.thread_ids = thread_ids
+        self.callstacks = callstacks
+        self.visited = visited
+
+
 class WitnessLinter:
     """
     Contains methods that check different parts of a witness for consistency
@@ -192,58 +219,44 @@ class WitnessLinter:
         elif int(offset) < 0 or int(offset) >= self.program_info["num_chars"]:
             logging.warning("{} is not a valid character offset".format(offset), pos)
 
-    def check_function_stack(self):
-        """
-        Performs DFS on the transitions of the witness automaton to make sure that all
-        possible paths have a consistent order of function entries and exits.
-        """
-        to_visit = [(self.witness.entry_node, MAIN_THREAD_ID, [])]
-        for thread in self.witness.threads:
-            start_node = self.witness.threads[thread]
-            if start_node:
-                to_visit.append((start_node, thread, []))
-        visited = set()
+    def check_transitions(self):
+        to_visit = [State(self.witness.entry_node, {MAIN_THREAD_ID}, {MAIN_THREAD_ID: Callstack()}, {})]
         while to_visit:
-            current_node, current_thread, current_stack = to_visit.pop()
-            if (current_node, current_thread) in visited:
-                continue
-            visited.add((current_node, current_thread))
-            if (
-                current_node,
-                current_thread,
-            ) not in self.witness.transitions and current_stack:
-                logging.warning(
-                    "No leaving transition for thread {0} at node {1} but not all "
-                    "functions have been left".format(current_thread, current_node)
-                )
-            for outgoing in self.witness.transitions.get(
-                (current_node, current_thread), []
-            ):
-                function_stack = current_stack[:]
-                if outgoing[2] is not None and outgoing[2] != outgoing[1]:
-                    if not function_stack:
-                        logging.warning(
-                            "Trying to return from function '{0}' in transition "
-                            "{1} -> {2} for thread {3} but currently not in a function".format(
-                                outgoing[2], current_node, outgoing[0], current_thread
-                            )
-                        )
-                    elif outgoing[2] == function_stack[-1]:
-                        function_stack.pop()
-                    else:
-                        logging.warning(
-                            "Trying to return from function '{0}' in transition "
-                            "{1} -> {2} for thread {3} but currently in function {4}".format(
-                                outgoing[2],
-                                current_node,
-                                outgoing[0],
-                                current_thread,
-                                function_stack[-1],
-                            )
-                        )
-                if outgoing[1] is not None and outgoing[1] != outgoing[2]:
-                    function_stack.append(outgoing[1])
-                to_visit.append((outgoing[0], current_thread, function_stack))
+            state = to_visit.pop()
+            for transition in self.witness.transitions.get(state.node, []):
+                if transition.target in state.visited and state.node in state.visited and state.visited[state.node] > state.visited[transition.target]:
+                    # TODO: For now we ignore backwards edges if they have been taken before
+                    continue
+                assert transition.thread_id is not None
+                if transition.thread_id not in state.thread_ids:
+                    logging.warning("Thread {0} does not exist at transition {1} -> {2}".format(transition.thread_id, state.node, transition.target))
+                else:
+                    callstacks = deepcopy(state.callstacks)
+                    current_callstack = callstacks[transition.thread_id]
+                    if transition.return_from:
+                        if not current_callstack.return_from(transition.return_from):
+                            logging.warning("Trying to return from function '{0}' in transition "
+                                            "{1} -> {2} for thread {3} but not currently in that function".format(
+                                transition.return_from, state.node, transition.target, transition.thread_id))
+                    if transition.enter:
+                        # TODO: Should this be illegal if the return_from cleared the function stack?
+                        current_callstack.enter(transition.enter)
+
+                    new_thread_ids = state.thread_ids.copy()
+                    if not current_callstack.function_stack and current_callstack.touched:
+                        new_thread_ids.remove(transition.thread_id)
+                        del callstacks[transition.thread_id]
+                    if transition.create_thread:
+                        if transition.create_thread in state.thread_ids:
+                            logging.warning("Creating thread {0} in transition {1} -> {2}, but thread "
+                                            "with id {0} already exists".format(transition.create_thread, state.node, transition.target))
+                        else:
+                            new_thread_ids.add(transition.create_thread)
+                            callstacks[transition.create_thread] = Callstack()
+                    new_visited = state.visited.copy()
+                    if state.node not in state.visited:
+                        new_visited[state.node] = len(state.visited)
+                    to_visit.append(State(transition.target, new_thread_ids, callstacks, new_visited))
 
     def handle_data(self, data, parent):
         """
@@ -708,7 +721,10 @@ class WitnessLinter:
             if target not in self.witness.node_ids:
                 self.check_existence_later.add(target)
         if self.options.strictChecking:
-            enter, return_from, thread_id = (None, None, MAIN_THREAD_ID)
+            enter = None
+            return_from = None
+            thread_id = MAIN_THREAD_ID
+            create_thread = None
             for child in edge:
                 child.text = child.text.strip()
                 if child.tag.rpartition("}")[2] == witness.DATA:
@@ -720,6 +736,8 @@ class WitnessLinter:
                         return_from = child.text
                     elif key == witness.THREADID:
                         thread_id = child.text
+                    elif key == witness.CREATETHREAD:
+                        create_thread = child.text
                 else:
                     logging.warning(
                         "Edge has unexpected child element of type '{}'".format(
@@ -728,14 +746,11 @@ class WitnessLinter:
                         child.sourceline,
                     )
             if source and target:
-                if (source, thread_id) in self.witness.transitions:
-                    self.witness.transitions[(source, thread_id)].append(
-                        (target, enter, return_from)
-                    )
+                transition = witness.Transition(target, enter, return_from, thread_id, create_thread)
+                if source in self.witness.transitions:
+                    self.witness.transitions[source].append(transition)
                 else:
-                    self.witness.transitions[(source, thread_id)] = [
-                        (target, enter, return_from)
-                    ]
+                    self.witness.transitions[source] = [transition]
         else:
             for child in edge:
                 if child.tag.rpartition("}")[2] == witness.DATA:
@@ -867,7 +882,7 @@ class WitnessLinter:
             if node_id not in self.witness.node_ids:
                 logging.warning("Node {} has not been declared".format(node_id))
         if self.options.strictChecking:
-            self.check_function_stack()
+            self.check_transitions()
         if self.program_info is not None:
             for check in self.check_later:
                 check()

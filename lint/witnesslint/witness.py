@@ -82,6 +82,15 @@ TERMINATION_PROPERTY_PATTERN = (
 )
 
 
+class Transition:
+    def __init__(self, target, enter, return_from, thread_id, create_thread):
+        self.target = target
+        self.enter = enter
+        self.return_from = return_from
+        self.thread_id = thread_id
+        self.create_thread = create_thread
+
+
 class Witness:
     def __init__(self, witness_file):
         self.witness_file = witness_file
