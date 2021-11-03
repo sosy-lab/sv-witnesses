@@ -144,9 +144,8 @@ class Callstack:
 
 class State:
 
-    def __init__(self, node, thread_ids, callstacks, visited):
+    def __init__(self, node, callstacks, visited):
         self.node = node
-        self.thread_ids = thread_ids
         self.callstacks = callstacks
         self.visited = visited
 
@@ -220,7 +219,7 @@ class WitnessLinter:
             logging.warning("{} is not a valid character offset".format(offset), pos)
 
     def check_transitions(self):
-        to_visit = [State(self.witness.entry_node, {MAIN_THREAD_ID}, {MAIN_THREAD_ID: Callstack()}, {})]
+        to_visit = [State(self.witness.entry_node, {MAIN_THREAD_ID: Callstack()}, {})]
         while to_visit:
             state = to_visit.pop()
             for transition in self.witness.transitions.get(state.node, []):
@@ -228,7 +227,7 @@ class WitnessLinter:
                     # TODO: For now we ignore backwards edges if they have been taken before
                     continue
                 assert transition.thread_id is not None
-                if transition.thread_id not in state.thread_ids:
+                if transition.thread_id not in state.callstacks:
                     logging.warning("Thread {0} does not exist at transition {1} -> {2}".format(transition.thread_id, state.node, transition.target))
                 else:
                     callstacks = deepcopy(state.callstacks)
@@ -242,21 +241,18 @@ class WitnessLinter:
                         # TODO: Should this be illegal if the return_from cleared the function stack?
                         current_callstack.enter(transition.enter)
 
-                    new_thread_ids = state.thread_ids.copy()
                     if not current_callstack.function_stack and current_callstack.touched:
-                        new_thread_ids.remove(transition.thread_id)
                         del callstacks[transition.thread_id]
                     if transition.create_thread:
-                        if transition.create_thread in state.thread_ids:
+                        if transition.create_thread in state.callstacks:
                             logging.warning("Creating thread {0} in transition {1} -> {2}, but thread "
                                             "with id {0} already exists".format(transition.create_thread, state.node, transition.target))
                         else:
-                            new_thread_ids.add(transition.create_thread)
                             callstacks[transition.create_thread] = Callstack()
                     new_visited = state.visited.copy()
                     if state.node not in state.visited:
                         new_visited[state.node] = len(state.visited)
-                    to_visit.append(State(transition.target, new_thread_ids, callstacks, new_visited))
+                    to_visit.append(State(transition.target, callstacks, new_visited))
 
     def handle_data(self, data, parent):
         """
