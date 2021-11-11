@@ -37,9 +37,6 @@ SV_COMP_SPECIFICATIONS = [
     "CHECK( init(main()), LTL(F end) )",
 ]
 
-# Used to specify recency levels of checks that older witnesses are allowed to fail
-SV_COMP_22 = 0
-
 WITNESS_VALID = 0
 WITNESS_FAULTY = 1
 NO_WITNESS = 5
@@ -124,13 +121,9 @@ def create_arg_parser():
         action="store_true",
     )
     parser.add_argument(
-        "--ancient",
-        nargs=2,
-        action="append",
-        metavar=("PRODUCER_NAME", "RECENCY_LEVEL"),
-        help="Allow witnesses created by the specified producer to fail on "
-        "more recently added checks. The lower the recency level the more "
-        "checks are ignored.",
+        "--excludeRecentChecks",
+        action="store_true",
+        help="Allow failing recently introduced checks.",
     )
     return parser
 
@@ -153,13 +146,6 @@ class WitnessLinter:
         self.check_existence_later = set()
         self.check_later = []
         self.key_defaults = {}
-        self.allow_list = {}
-        if self.options.ancient is not None:
-            self.allow_list = {
-                producer: int(recency_level)
-                for [producer, recency_level] in options.ancient
-            }
-        self.potential_warnings = []
 
     def collect_program_info(self, program):
         """
@@ -565,14 +551,12 @@ class WitnessLinter:
         elif key == witness.PROGRAMHASH:
             if (
                 self.program_info is not None
+                and not self.options.excludeRecentChecks
                 and data.text.lower() != self.program_info.get("sha256_hash")
             ):
-                self.potential_warnings.append(
-                    (
-                        "Programhash does not match the hash specified in the witness",
-                        data.sourceline,
-                        SV_COMP_22,
-                    )
+                logging.warning(
+                    "Programhash does not match the hash specified in the witness",
+                    data.sourceline,
                 )
             if self.witness.programhash is None:
                 self.witness.programhash = data.text
@@ -596,10 +580,10 @@ class WitnessLinter:
                 )
             else:
                 self.witness.creationtime = data.text
-                if not re.match(CREATIONTIME_PATTERN, data.text):
-                    self.potential_warnings.append(
-                        ("Invalid format for creationtime", data.sourceline, SV_COMP_22)
-                    )
+                if not self.options.excludeRecentChecks and not re.match(
+                    CREATIONTIME_PATTERN, data.text
+                ):
+                    logging.warning("Invalid format for creationtime", data.sourceline)
         elif self.witness.defined_keys.get(key) == witness.GRAPH:
             # Other, tool-specific keys are allowed as long as they have been defined
             pass
@@ -904,16 +888,6 @@ class WitnessLinter:
         for node_id in self.check_existence_later:
             if node_id not in self.witness.node_ids:
                 logging.warning("Node {} has not been declared".format(node_id))
-        for msg, line, check_recency in self.potential_warnings:
-            if (
-                self.witness.producer is None
-                or self.witness.producer not in self.allow_list
-                or self.allow_list.get(self.witness.producer) > check_recency
-            ):
-                if line is not None:
-                    logging.warning(msg, line)
-                else:
-                    logging.warning(msg)
         if self.options.strictChecking:
             self.check_function_stack(
                 collections.OrderedDict(sorted(self.witness.transitions.items())),
