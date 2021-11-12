@@ -11,7 +11,7 @@ with the witness format [1].
 [1]: github.com/sosy-lab/sv-witnesses/blob/master/README.md
 """
 
-__version__ = "1.0"
+__version__ = "1.1"
 
 import argparse
 import collections
@@ -119,6 +119,11 @@ def create_arg_parser():
         "--svcomp",
         help="Run some additional checks specific to SV-COMP.",
         action="store_true",
+    )
+    parser.add_argument(
+        "--excludeRecentChecks",
+        action="store_true",
+        help="Allow failing recently introduced checks.",
     )
     return parser
 
@@ -546,6 +551,7 @@ class WitnessLinter:
         elif key == witness.PROGRAMHASH:
             if (
                 self.program_info is not None
+                and not self.options.excludeRecentChecks
                 and data.text.lower() != self.program_info.get("sha256_hash")
             ):
                 logging.warning(
@@ -572,10 +578,12 @@ class WitnessLinter:
                 logging.warning(
                     "Found multiple definitions of creationtime", data.sourceline
                 )
-            elif re.match(CREATIONTIME_PATTERN, data.text):
-                self.witness.creationtime = data.text
             else:
-                logging.warning("Invalid format for creationtime", data.sourceline)
+                self.witness.creationtime = data.text
+                if not self.options.excludeRecentChecks and not re.match(
+                    CREATIONTIME_PATTERN, data.text
+                ):
+                    logging.warning("Invalid format for creationtime", data.sourceline)
         elif self.witness.defined_keys.get(key) == witness.GRAPH:
             # Other, tool-specific keys are allowed as long as they have been defined
             pass
