@@ -122,8 +122,13 @@ def create_arg_parser():
     )
     parser.add_argument(
         "--excludeRecentChecks",
-        action="store_true",
-        help="Allow failing recently introduced checks.",
+        type=int,
+        nargs="?",
+        metavar="RECENCY_LEVEL",
+        const=1,
+        default=1024,
+        help="Allow failing recently introduced checks."
+        "An optional recency level can be given to specify how recent checks have to be in order to get excluded.",
     )
     return parser
 
@@ -551,7 +556,7 @@ class WitnessLinter:
         elif key == witness.PROGRAMHASH:
             if (
                 self.program_info is not None
-                and not self.options.excludeRecentChecks
+                and self.options.excludeRecentChecks > 1
                 and data.text.lower() != self.program_info.get("sha256_hash")
             ):
                 logging.warning(
@@ -580,7 +585,7 @@ class WitnessLinter:
                 )
             else:
                 self.witness.creationtime = data.text
-                if not self.options.excludeRecentChecks and not re.match(
+                if self.options.excludeRecentChecks > 1 and not re.match(
                     CREATIONTIME_PATTERN, data.text
                 ):
                     logging.warning("Invalid format for creationtime", data.sourceline)
@@ -881,7 +886,7 @@ class WitnessLinter:
             logging.warning("Programhash has not been specified")
         if self.witness.architecture is None:
             logging.warning("Architecture has not been specified")
-        if self.witness.creationtime is None:
+        if self.witness.creationtime is None and self.options.excludeRecentChecks > 0:
             logging.warning("Creationtime has not been specified")
         if self.witness.entry_node is None and self.witness.node_ids:
             logging.warning("No entry node has been specified")
