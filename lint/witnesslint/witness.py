@@ -119,3 +119,15 @@ class Witness:
             if re.match(termination_pattern, spec):
                 return True
         return False
+
+    def show_witness_data(self):
+        info = "Overview of checked witness:\n"
+        info += "Witness File: {}\n".format(self.witness_file)
+        info += "Witness Type: {}\n".format(self.witness_type)
+        info += "Producer: {}\n".format(self.producer)
+        info += "Creation Time: {}\n".format(self.creationtime)
+        info += "Architecture: {}\n".format(self.architecture)
+        info += "Program File: {}\n".format(self.programfile)
+        info += "Program Hash: {}\n".format(self.programhash)
+        info += "Source Code Language: {}\n".format(self.sourcecodelang)
+        print(info)
