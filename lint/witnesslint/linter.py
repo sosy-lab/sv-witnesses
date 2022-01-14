@@ -901,6 +901,7 @@ class WitnessLinter:
         if self.program_info is not None:
             for check in self.check_later:
                 check()
+        self.witness.show_witness_data()
 
     def lint(self):
         """
