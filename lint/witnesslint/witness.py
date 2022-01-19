@@ -129,5 +129,5 @@ class Witness:
         info += "Architecture: {}\n".format(self.architecture)
         info += "Program File: {}\n".format(self.programfile)
         info += "Program Hash: {}\n".format(self.programhash)
-        info += "Source Code Language: {}\n".format(self.sourcecodelang)
+        info += "Source-Code Language: {}\n".format(self.sourcecodelang)
         print(info)
