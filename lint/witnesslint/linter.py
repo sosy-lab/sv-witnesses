@@ -6,9 +6,9 @@
 
 """
 This module contains a linter that can check witnesses for consistency
-with the witness format [1].
+with the GraphML-based witness format [1].
 
-[1]: github.com/sosy-lab/sv-witnesses/blob/master/README.md
+[1]: github.com/sosy-lab/sv-witnesses/blob/main/README-GraphML.md
 """
 
 __version__ = "1.2"
@@ -90,8 +90,8 @@ def create_arg_parser():
         "--loglevel",
         default="warning",
         choices=["critical", "error", "warning", "info", "debug"],
-        help="Desired verbosity of logging output. Only log messages at or above "
-        "the specified level are displayed.",
+        help="Desired verbosity of logging output. "
+        "Only log messages at or above the specified level are displayed.",
         metavar="LOGLEVEL",
     )
     parser.add_argument(
@@ -127,8 +127,9 @@ def create_arg_parser():
         metavar="RECENCY_LEVEL",
         const=1,
         default=1024,
-        help="Allow failing recently introduced checks."
-        "An optional recency level can be given to specify how recent checks have to be in order to get excluded.",
+        help="Allow failing recently introduced checks. "
+        "An optional recency level can be given to specify "
+        "how recent checks have to be in order to get excluded.",
     )
     return parser
 
@@ -250,7 +251,7 @@ class WitnessLinter:
         specialized checks.
 
         A data element must have a 'key' attribute specifying
-        the kind of data it holds.
+        the kind of data it holds, but must not have any other attributes.
 
         Data elements in a witness are currently not supposed have any children.
         """
@@ -373,7 +374,6 @@ class WitnessLinter:
                     "Invalid value for key 'cyclehead': {}".format(data.text),
                     data.sourceline,
                 )
-
         elif self.witness.defined_keys.get(key) == witness.NODE:
             # Other, tool-specific keys are allowed as long as they have been defined
             pass
@@ -692,9 +692,9 @@ class WitnessLinter:
         """
         Checks a node element for validity.
 
-        Nodes must have an unique id but should not have any other attributes.
+        Nodes must have a unique id but should not have any other attributes.
 
-        Nodes in a witness are currently not supposed have any non-data children.
+        Nodes in a witness are currently not supposed to have any non-data children.
         """
         if len(node.attrib) > 1:
             logging.warning(
