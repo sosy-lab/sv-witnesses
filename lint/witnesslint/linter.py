@@ -17,7 +17,6 @@ import argparse
 import collections
 import hashlib
 import re
-import subprocess
 import sys
 
 from lxml import etree  # noqa: S410 does not matter
@@ -995,8 +994,18 @@ def _exit(exit_code=None):
 def main(argv):
     try:
         linter = create_linter(argv[1:])
-        revision = subprocess.run(["git", "describe", "--dirty"], capture_output=True, text=True).stdout
-        print("Running witnesslint version {0}, Git-Revision {1}\n".format(__version__, revision))
+        try:
+            import subprocess
+
+            revision = subprocess.run(
+                ["git", "describe", "--dirty"], capture_output=True, text=True
+            ).stdout
+            print(
+                "Running witnesslint version {0}, "
+                "Git-Revision {1}\n".format(__version__, revision)
+            )
+        except FileNotFoundError:
+            print("Running witnesslint version {}\n".format(__version__))
         linter.lint()
         _exit()
     except Exception as e:
