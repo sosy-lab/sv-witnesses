@@ -272,7 +272,11 @@ class WitnessLinter:
             logging.warning(
                 "Expected data element to have attribute 'key'", data.sourceline
             )
+        if data.text is None:
+            logging.warning("Paired tag 'data' used as single tag", data.sourceline)
         else:
+            data.text = data.text.strip()
+        if key is not None and data.text is not None:
             self.witness.used_keys.add(key)
             _, _, tag = parent.tag.rpartition("}")
             if tag == witness.NODE:
@@ -288,7 +292,6 @@ class WitnessLinter:
         """
         Performs checks for data elements that are direct children of a node element.
         """
-        data.text = data.text.strip()
         if key == witness.ENTRY:
             if data.text == "true":
                 if self.witness.entry_node is None:
@@ -394,7 +397,6 @@ class WitnessLinter:
         """
         Performs checks for data elements that are direct children of an edge element.
         """
-        data.text = data.text.strip()
         if key == witness.ASSUMPTION:
             self.violation_witness_only.add(key)
             # TODO: Check whether all expressions from data.text are valid assumptions
@@ -447,27 +449,39 @@ class WitnessLinter:
                 )
         elif key == witness.ENTERFUNCTION:
             for child in parent:
-                child.text = child.text.strip()
                 if (
                     child.tag.rpartition("}")[2] == witness.DATA
                     and child.attrib.get(witness.KEY) == witness.THREADID
-                    and child.text in self.witness.threads
-                    and self.witness.threads[child.text] is None
                 ):
-                    self.witness.threads[child.text] = data.text
-                    break
+                    thread_id = child.text
+                    if thread_id is None:
+                        # Handled when child is processed, so nothing to do here
+                        continue
+                    thread_id = thread_id.strip()
+                    if (
+                        thread_id in self.witness.threads
+                        and self.witness.threads[thread_id] is None
+                    ):
+                        self.witness.threads[thread_id] = data.text
+                        break
             self.check_functionname(data.text, data.sourceline)
         elif key in ["returnFrom", witness.RETURNFROMFUNCTION]:
             for child in parent:
-                child.text = child.text.strip()
                 if (
                     child.tag.rpartition("}")[2] == witness.DATA
                     and child.attrib.get(witness.KEY) == witness.THREADID
-                    and child.text in self.witness.threads
-                    and self.witness.threads[child.text] == data.text
                 ):
-                    del self.witness.threads[child.text]
-                    break
+                    thread_id = child.text
+                    if thread_id is None:
+                        # Handled when child is processed, so nothing to do here
+                        continue
+                    thread_id = thread_id.strip()
+                    if (
+                        thread_id in self.witness.threads
+                        and self.witness.threads[thread_id] == data.text
+                    ):
+                        del self.witness.threads[child.text]
+                        break
             self.check_functionname(data.text, data.sourceline)
         elif key == witness.THREADID:
             # Check disabled for SV-COMP'21 as questions about the specification
@@ -500,7 +514,6 @@ class WitnessLinter:
         """
         Performs checks for data elements that are direct children of a graph element.
         """
-        data.text = data.text.strip()
         if key == witness.WITNESS_TYPE:
             if data.text not in ["correctness_witness", "violation_witness"]:
                 logging.warning(
@@ -642,7 +655,6 @@ class WitnessLinter:
                 key.sourceline,
             )
         for child in key:
-            child.text = child.text.strip()
             if child.tag.rpartition("}")[2] == witness.DEFAULT:
                 if len(child.attrib) != 0:
                     logging.warning(
@@ -652,18 +664,24 @@ class WitnessLinter:
                         ),
                         key.sourceline,
                     )
-                if key_id in [
-                    witness.ENTRY,
-                    witness.SINK,
-                    witness.VIOLATION,
-                    witness.ENTERLOOPHEAD,
-                ]:
-                    if not child.text == "false":
-                        logging.warning(
-                            "Default value for {} should be 'false'".format(key_id),
-                            key.sourceline,
-                        )
-                self.key_defaults[key_id] = child.text
+                if child.text is None:
+                    logging.warning(
+                        "Paired tag 'default' used as single tag", child.sourceline
+                    )
+                else:
+                    child.text = child.text.strip()
+                    if key_id in [
+                        witness.ENTRY,
+                        witness.SINK,
+                        witness.VIOLATION,
+                        witness.ENTERLOOPHEAD,
+                    ]:
+                        if not child.text == "false":
+                            logging.warning(
+                                "Default value for {} should be 'false'".format(key_id),
+                                key.sourceline,
+                            )
+                    self.key_defaults[key_id] = child.text
             else:
                 logging.warning(
                     "Invalid child for key element: {}".format(child.tag),
@@ -741,7 +759,6 @@ class WitnessLinter:
         if self.options.strictChecking:
             enter, return_from = (None, None)
             for child in edge:
-                child.text = child.text.strip()
                 if child.tag.rpartition("}")[2] == witness.DATA:
                     self.handle_data(child, edge)
                     key = child.attrib.get(witness.KEY)
