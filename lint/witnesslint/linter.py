@@ -994,6 +994,7 @@ def _exit(exit_code=None):
 def main(argv):
     try:
         linter = create_linter(argv[1:])
+        print("Running witnesslint version {}\n".format(__version__))
         linter.lint()
         _exit()
     except Exception as e:
