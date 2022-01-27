@@ -110,11 +110,12 @@ Once the job finishes, a result page will appear.
 
 This page provides data like the CPU time, also the log file, a zip file with all output files, and, in case you successfully validated a violation-witness, a link to an error-path report that makes it easy to inspect and understand the confirmed error paths.
 
-This service can also be used via the command line:
+This service can also be used via the command line using the following script from CPAchecker: [scripts/witness_validation_web_cloud.py](https://gitlab.com/sosy-lab/software/cpachecker/-/blob/trunk/scripts/witness_validation_web_cloud.py)
 
-<pre>./witness_validation_web_cloud.py --program source.i --witness witness.graphml</pre>
+<pre>scripts/witness_validation_web_cloud.py --program source.i --witness witness.graphml</pre>
 
-using the [provided python script](witness_validation_web_cloud.py).
+Please note that this script needs some dependencies from [scripts/benchmark](https://gitlab.com/sosy-lab/software/cpachecker/-/tree/trunk/scripts/benchmark)
+in order to work properly, so best use it from inside a working CPAchecker copy.
 
 ### Validating a Violation Witness with CPAchecker
 
