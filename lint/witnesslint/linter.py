@@ -11,7 +11,7 @@ with the GraphML-based witness format [1].
 [1]: github.com/sosy-lab/sv-witnesses/blob/main/README-GraphML.md
 """
 
-__version__ = "1.2"
+__version__ = "1.2-dev"
 
 import argparse
 import collections
@@ -994,6 +994,7 @@ def _exit(exit_code=None):
 def main(argv):
     try:
         linter = create_linter(argv[1:])
+        print("Running witnesslint version {}\n".format(__version__))
         linter.lint()
         _exit()
     except Exception as e:
