@@ -6,9 +6,9 @@
 
 """
 This module contains a linter that can check witnesses for consistency
-with the witness format [1].
+with the GraphML-based witness format [1].
 
-[1]: github.com/sosy-lab/sv-witnesses/blob/master/README.md
+[1]: github.com/sosy-lab/sv-witnesses/blob/main/README-GraphML.md
 """
 
 import argparse
@@ -19,9 +19,20 @@ import sys
 
 from lxml import etree  # noqa: S410 does not matter
 
-from witnesslint import witness, __version__, logger as logging
+from . import witness, __version__, logger as logging
 
-CREATIONTIME_PATTERN = r"^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}([+-]\d{2}:\d{2})?$"
+CREATIONTIME_PATTERN = r"^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(Z|[+-]\d{2}:\d{2})$"
+
+SV_COMP_SPECIFICATIONS = [
+    "CHECK( init(main()), LTL(G ! call(reach_error())) )",
+    "CHECK( init(main()), LTL(G valid-free) )",
+    "CHECK( init(main()), LTL(G valid-deref) )",
+    "CHECK( init(main()), LTL(G valid-memtrack) )",
+    "CHECK( init(main()), LTL(G valid-memcleanup) )",
+    "CHECK( init(main()), LTL(G ! overflow) )",
+    "CHECK( init(main()), LTL(G ! data-race) )",
+    "CHECK( init(main()), LTL(F end) )",
+]
 
 WITNESS_VALID = 0
 WITNESS_FAULTY = 1
@@ -76,8 +87,8 @@ def create_arg_parser():
         "--loglevel",
         default="warning",
         choices=["critical", "error", "warning", "info", "debug"],
-        help="Desired verbosity of logging output. Only log messages at or above "
-        "the specified level are displayed.",
+        help="Desired verbosity of logging output. "
+        "Only log messages at or above the specified level are displayed.",
         metavar="LOGLEVEL",
     )
     parser.add_argument(
@@ -100,6 +111,22 @@ def create_arg_parser():
         help="Produce no warnings when encountering "
         "edges that represent a self-loop.",
         action="store_true",
+    )
+    parser.add_argument(
+        "--svcomp",
+        help="Run some additional checks specific to SV-COMP.",
+        action="store_true",
+    )
+    parser.add_argument(
+        "--excludeRecentChecks",
+        type=int,
+        nargs="?",
+        metavar="RECENCY_LEVEL",
+        const=1,
+        default=1024,
+        help="Allow failing recently introduced checks. "
+        "An optional recency level can be given to specify "
+        "how recent checks have to be in order to get excluded.",
     )
     return parser
 
@@ -137,13 +164,11 @@ class WitnessLinter:
             function_names = []
         with open(program, "rb") as source:
             content = source.read()
-            sha1_hash = hashlib.sha1(content).hexdigest()  # noqa: S303 does not matter
             sha256_hash = hashlib.sha256(content).hexdigest()
         self.program_info = {
             "name": program,
             "num_chars": num_chars,
             "num_lines": num_lines,
-            "sha1_hash": sha1_hash,
             "sha256_hash": sha256_hash,
             "function_names": function_names,
         }
@@ -223,7 +248,7 @@ class WitnessLinter:
         specialized checks.
 
         A data element must have a 'key' attribute specifying
-        the kind of data it holds.
+        the kind of data it holds, but must not have any other attributes.
 
         Data elements in a witness are currently not supposed have any children.
         """
@@ -245,7 +270,11 @@ class WitnessLinter:
             logging.warning(
                 "Expected data element to have attribute 'key'", data.sourceline
             )
+        if data.text is None:
+            logging.warning("Paired tag 'data' used as single tag", data.sourceline)
         else:
+            data.text = data.text.strip()
+        if key is not None and data.text is not None:
             self.witness.used_keys.add(key)
             _, _, tag = parent.tag.rpartition("}")
             if tag == witness.NODE:
@@ -261,7 +290,6 @@ class WitnessLinter:
         """
         Performs checks for data elements that are direct children of a node element.
         """
-        data.text = data.text.strip()
         if key == witness.ENTRY:
             if data.text == "true":
                 if self.witness.entry_node is None:
@@ -343,7 +371,6 @@ class WitnessLinter:
                     "Invalid value for key 'cyclehead': {}".format(data.text),
                     data.sourceline,
                 )
-
         elif self.witness.defined_keys.get(key) == witness.NODE:
             # Other, tool-specific keys are allowed as long as they have been defined
             pass
@@ -361,13 +388,12 @@ class WitnessLinter:
                 and child.attrib.get(witness.KEY) == witness.INVARIANT
             ):
                 return True
-        False
+        return False
 
     def handle_edge_data(self, data, key, parent):
         """
         Performs checks for data elements that are direct children of an edge element.
         """
-        data.text = data.text.strip()
         if key == witness.ASSUMPTION:
             self.violation_witness_only.add(key)
             # TODO: Check whether all expressions from data.text are valid assumptions
@@ -420,27 +446,39 @@ class WitnessLinter:
                 )
         elif key == witness.ENTERFUNCTION:
             for child in parent:
-                child.text = child.text.strip()
                 if (
                     child.tag.rpartition("}")[2] == witness.DATA
                     and child.attrib.get(witness.KEY) == witness.THREADID
-                    and child.text in self.witness.threads
-                    and self.witness.threads[child.text] is None
                 ):
-                    self.witness.threads[child.text] = data.text
-                    break
+                    thread_id = child.text
+                    if thread_id is None:
+                        # Handled when child is processed, so nothing to do here
+                        continue
+                    thread_id = thread_id.strip()
+                    if (
+                        thread_id in self.witness.threads
+                        and self.witness.threads[thread_id] is None
+                    ):
+                        self.witness.threads[thread_id] = data.text
+                        break
             self.check_functionname(data.text, data.sourceline)
         elif key in ["returnFrom", witness.RETURNFROMFUNCTION]:
             for child in parent:
-                child.text = child.text.strip()
                 if (
                     child.tag.rpartition("}")[2] == witness.DATA
                     and child.attrib.get(witness.KEY) == witness.THREADID
-                    and child.text in self.witness.threads
-                    and self.witness.threads[child.text] == data.text
                 ):
-                    del self.witness.threads[child.text]
-                    break
+                    thread_id = child.text
+                    if thread_id is None:
+                        # Handled when child is processed, so nothing to do here
+                        continue
+                    thread_id = thread_id.strip()
+                    if (
+                        thread_id in self.witness.threads
+                        and self.witness.threads[thread_id] == data.text
+                    ):
+                        del self.witness.threads[child.text]
+                        break
             self.check_functionname(data.text, data.sourceline)
         elif key == witness.THREADID:
             # Check disabled for SV-COMP'21 as questions about the specification
@@ -473,7 +511,6 @@ class WitnessLinter:
         """
         Performs checks for data elements that are direct children of a graph element.
         """
-        data.text = data.text.strip()
         if key == witness.WITNESS_TYPE:
             if data.text not in ["correctness_witness", "violation_witness"]:
                 logging.warning(
@@ -505,8 +542,10 @@ class WitnessLinter:
                 logging.warning(
                     "Found multiple definitions of producer", data.sourceline
                 )
-        elif key == "specification":
+        elif key == witness.SPECIFICATION:
             self.witness.specifications.add(data.text)
+            if self.options.svcomp and data.text not in SV_COMP_SPECIFICATIONS:
+                logging.warning("Invalid specification for SV-COMP", data.sourceline)
         elif key == witness.PROGRAMFILE:
             if self.witness.programfile is None:
                 self.witness.programfile = data.text
@@ -527,8 +566,8 @@ class WitnessLinter:
         elif key == witness.PROGRAMHASH:
             if (
                 self.program_info is not None
+                and self.options.excludeRecentChecks > 1
                 and data.text.lower() != self.program_info.get("sha256_hash")
-                and data.text.lower() != self.program_info.get("sha1_hash")
             ):
                 logging.warning(
                     "Programhash does not match the hash specified in the witness",
@@ -554,10 +593,12 @@ class WitnessLinter:
                 logging.warning(
                     "Found multiple definitions of creationtime", data.sourceline
                 )
-            elif re.match(CREATIONTIME_PATTERN, data.text):
-                self.witness.creationtime = data.text
             else:
-                logging.warning("Invalid format for creationtime", data.sourceline)
+                self.witness.creationtime = data.text
+                if self.options.excludeRecentChecks > 1 and not re.match(
+                    CREATIONTIME_PATTERN, data.text
+                ):
+                    logging.warning("Invalid format for creationtime", data.sourceline)
         elif self.witness.defined_keys.get(key) == witness.GRAPH:
             # Other, tool-specific keys are allowed as long as they have been defined
             pass
@@ -611,7 +652,6 @@ class WitnessLinter:
                 key.sourceline,
             )
         for child in key:
-            child.text = child.text.strip()
             if child.tag.rpartition("}")[2] == witness.DEFAULT:
                 if len(child.attrib) != 0:
                     logging.warning(
@@ -621,18 +661,24 @@ class WitnessLinter:
                         ),
                         key.sourceline,
                     )
-                if key_id in [
-                    witness.ENTRY,
-                    witness.SINK,
-                    witness.VIOLATION,
-                    witness.ENTERLOOPHEAD,
-                ]:
-                    if not child.text == "false":
-                        logging.warning(
-                            "Default value for {} should be 'false'".format(key_id),
-                            key.sourceline,
-                        )
-                self.key_defaults[key_id] = child.text
+                if child.text is None:
+                    logging.warning(
+                        "Paired tag 'default' used as single tag", child.sourceline
+                    )
+                else:
+                    child.text = child.text.strip()
+                    if key_id in [
+                        witness.ENTRY,
+                        witness.SINK,
+                        witness.VIOLATION,
+                        witness.ENTERLOOPHEAD,
+                    ]:
+                        if not child.text == "false":
+                            logging.warning(
+                                "Default value for {} should be 'false'".format(key_id),
+                                key.sourceline,
+                            )
+                    self.key_defaults[key_id] = child.text
             else:
                 logging.warning(
                     "Invalid child for key element: {}".format(child.tag),
@@ -643,9 +689,9 @@ class WitnessLinter:
         """
         Checks a node element for validity.
 
-        Nodes must have an unique id but should not have any other attributes.
+        Nodes must have a unique id but should not have any other attributes.
 
-        Nodes in a witness are currently not supposed have any non-data children.
+        Nodes in a witness are currently not supposed to have any non-data children.
         """
         if len(node.attrib) > 1:
             logging.warning(
@@ -710,7 +756,6 @@ class WitnessLinter:
         if self.options.strictChecking:
             enter, return_from = (None, None)
             for child in edge:
-                child.text = child.text.strip()
                 if child.tag.rpartition("}")[2] == witness.DATA:
                     self.handle_data(child, edge)
                     key = child.attrib.get(witness.KEY)
@@ -766,10 +811,10 @@ class WitnessLinter:
         elif edge_default != "directed":
             logging.warning("Edgedefault should be 'directed'", graph.sourceline)
         for child in graph:
-            if child.tag.rpartition("}")[2] == witness.DATA:
+            child_tag = child.tag.rpartition("}")[2]
+            if child_tag == witness.DATA:
                 self.handle_data(child, graph)
-            else:
-                # All other expected children have already been handled and removed
+            elif child_tag not in [witness.NODE, witness.EDGE]:
                 logging.warning(
                     "Graph element has unexpected child "
                     "of type '{}'".format(child.tag),
@@ -804,11 +849,13 @@ class WitnessLinter:
                     graphml_elem.sourceline,
                 )
         for child in graphml_elem:
-            # All expected children have already been handled and removed
-            logging.warning(
-                "Graphml element has unexpected child of type '{}'".format(child.tag),
-                graphml_elem.sourceline,
-            )
+            if child.tag.rpartition("}")[2] not in [witness.GRAPH, witness.KEY]:
+                logging.warning(
+                    "Graphml element has unexpected child of type '{}'".format(
+                        child.tag
+                    ),
+                    graphml_elem.sourceline,
+                )
 
     def final_checks(self):
         """
@@ -853,7 +900,7 @@ class WitnessLinter:
             logging.warning("Programhash has not been specified")
         if self.witness.architecture is None:
             logging.warning("Architecture has not been specified")
-        if self.witness.creationtime is None:
+        if self.witness.creationtime is None and self.options.excludeRecentChecks > 0:
             logging.warning("Creationtime has not been specified")
         if self.witness.entry_node is None and self.witness.node_ids:
             logging.warning("No entry node has been specified")
@@ -868,6 +915,7 @@ class WitnessLinter:
         if self.program_info is not None:
             for check in self.check_later:
                 check()
+        self.witness.show_witness_data()
 
     def lint(self):
         """
@@ -887,9 +935,7 @@ class WitnessLinter:
                 else:
                     element_stack.pop()
                     _, _, tag = elem.tag.rpartition("}")
-                    if element_stack:
-                        parent_elem = element_stack[-1]
-                    elif tag != witness.GRAPHML:
+                    if not element_stack and tag != witness.GRAPHML:
                         logging.error("Document root is not a GraphML element")
                     if tag == witness.DATA:
                         # Will be handled later
@@ -899,13 +945,13 @@ class WitnessLinter:
                         pass
                     elif tag == witness.KEY:
                         self.handle_key(elem)
-                        parent_elem.remove(elem)
+                        elem.clear()
                     elif tag == witness.NODE:
                         self.handle_node(elem)
-                        parent_elem.remove(elem)
+                        elem.clear()
                     elif tag == witness.EDGE:
                         self.handle_edge(elem)
-                        parent_elem.remove(elem)
+                        elem.clear()
                     elif tag == witness.GRAPH:
                         if saw_graph:
                             logging.warning(
@@ -914,7 +960,7 @@ class WitnessLinter:
                         else:
                             saw_graph = True
                             self.handle_graph(elem)
-                            parent_elem.remove(elem)
+                            elem.clear()
                     elif tag == witness.GRAPHML:
                         if saw_graphml:
                             logging.warning(
@@ -945,6 +991,7 @@ def _exit(exit_code=None):
 def main():
     try:
         linter = create_linter(sys.argv[1:])
+        print("Running witnesslint version {}\n".format(__version__))
         linter.lint()
         _exit()
     except Exception as e:

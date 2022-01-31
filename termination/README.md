@@ -1,17 +1,17 @@
-## Violation Witnesses for Termination
+# Violation Witnesses for Termination
 
 A violation witness for termination describes an infinite execution path of the program. However, it needs not be precise and may represent more paths than the single infinite execution path. A violation witness consists of two connected parts: the *stem* and the *loop*. The stem outlines how to reach the loop. The loop characterizes which program statements are executed infinitely often. Note that the loop need not, but of course may, correspond to a loop in the program. The simplest form of the loop is a lasso, a sequence of program statements executed repeatedly infinitely often. More complex loop descriptions may also contain branching structures or nested loops. To substantiate the infiniteness of the loop, the witness contains a description of a *recurrent set* for the loop's entry point (visited infinitely often). The recurrent set should ensure that when an execution reaches the loop entry point being in a state of the recurrent set than every future visit of the loop entry point of that execution also belongs to the recurrent set.
 
-### Exchange Format
+## Exchange Format
 The witness exchange format is similar to the [standard violation witness format](../README.md). In the following, we explain the differences and give some examples.
 
-#### Graph Data and Edge Data for Witness Automata
+### Graph Data and Edge Data for Witness Automata
 
 The graph and edge data is the same as in the [standard violation witness format](../README.md). The typical value for the specification key is ``CHECK( init(main()), LTL(F end) )``. Furthermore, note that assumptions on loop edges are only allowed to restrict non-determinism---currently in case of a variable declaration ``var`` without initialization or when assigning the result of a call to an external function to variable ``var``---and the assumption must be a single, valid C expression of the form ``var==expr``.  However, our witness parser does not enforce this restriction. Instead, the validator will fail to confirm such witnesses.
 
-#### Node Data for Witness Automata
+### Node Data for Witness Automata
 
-Next to the node data in the [standard violation witness format](../README.md), termination violation witnesses require additional node data. First, the node separating stem and loop must be marked in the witness by the ``cyclehead`` key. Second, we allow invariants, which are not allowed for standard violation witnesses. The most use case for invariants is the description of the recurrent set. Thus, a node for which the cyclehead key is set, must also contain an invariant description.
+Next to the node data in the [standard violation witness format](../README.md), termination violation witnesses require additional node data. First, the node separating stem and loop must be marked in the witness by the ``cyclehead`` key. Second, we allow invariants, which are not allowed for standard violation witnesses. The most use case for invariants is the description of the recurrent set. Thus, a node for which the ``cyclehead`` key is set, must also contain an invariant description.
 
 "Description of additional node data"
 
@@ -20,9 +20,9 @@ Next to the node data in the [standard violation witness format](../README.md), 
 | cyclehead | *Valid values*: ``false`` (default) or ``true``</br> This state connects stem and loop, i.e., the key marks the separation of stem and loop. It should be reachable from every non-sink node in the loop. Only exactly one such state is allowed.| 
 | invariant | *Valid values*: as in the standard format </br> The recurrent set is described an invariant. Additionally, it may be used in the loop part of the witness to provide invariants for program loops. Invariants provided for the stem are likely ignored. |
 
-For the description of the remaining node data, we refer to the [standard violation witness format](../README.md).
+For the description of the remaining node data, we refer to the [standard violation witness format](../README-GraphML.md).
 
-#### Example 1
+### Example 1
 We start with a simple example, the program ``Ex02_false-termination_true-no-overflow.c`` shown below.
 
 ```C
@@ -45,7 +45,7 @@ int main()
 }
 ```
 
-The following witness ``Ex02_false-termination_true-no-overflow.c_witness.graphml`` is created manually and demonstrates the mandatory concepts of a termination violation witness. It starts with the witness metadata (the graph data of the exchange format). The stem starts in the entry node A1, enters the main function, and ends at the loop head (graph node A5). To mark the end of the stem and the beginning of the loop node A5 sets the cyclehead key to true. Additionally, the invariant at node A5 describes the recurrent set. The loop part of the witness corresponds to the while loop (body). 
+The following witness ``Ex02_false-termination_true-no-overflow.c_witness.graphml`` is created manually and demonstrates the mandatory concepts of a termination violation witness. It starts with the witness metadata (the graph data of the exchange format). The stem starts in the entry node A1, enters the main function, and ends at the loop head (graph node A5). To mark the end of the stem and the beginning of the loop node A5 sets the ``cyclehead`` key to true. Additionally, the invariant at node A5 describes the recurrent set. The loop part of the witness corresponds to the while loop (body). 
 
 ```xml
 <?xml version="1.0" encoding="UTF-8" standalone="no"?>
@@ -95,7 +95,7 @@ The witness produced by CPAchecker for the same program can be found in the file
 
 
 
-#### Example 2
+### Example 2
 
 Our second example looks at the more complex program ``program10.c`` (shown below). In this example, the witness has to deal with a nested loop, non-determinism in stem and loop part, and statements which cause the program to terminate when executed.
  
@@ -235,7 +235,7 @@ The following witness, again manually written, defines the beginning of the oute
 </graphml>  
 ```
 
-### Validating Termination Violation Witnesses in CPAchecker
+## Validating Termination Violation Witnesses in CPAchecker
 
 The following command will start CPAchecker to validate the termination violation witness ``witness.graphml`` for program ``prog.c``.
 
@@ -292,7 +292,7 @@ Graphical representation included in the file "./output/Report.html".
 
 The verification result "FALSE" means that the termination violation witness was successfully inspected, i.e., the validation confirmed that there exists an execution of the program which does not terminate. Since the validator is incomplete and may fail to detect valid witnesses, verification result "UNKNOWN" is returned whenever the validation of the witness fails.
 
-### Producing Termination Violation Witnesses in CPAchecker
+## Producing Termination Violation Witnesses in CPAchecker
 To run the termination analysis in CPAchecker to (dis)prove termination of a program ``prog.c`` run the following command, optionally extended with either ``-32`` or ``-64`` to set the bit width.
 
 <pre>
@@ -324,3 +324,26 @@ More details about the verification run can be found in the directory "./output"
 </pre>
 
 The violation witness, which is produced when the termination analysis returns "FALSE" (i.e., disproves termination), can be found in ``output/witness.graphml``. Note that the violation witness produced by the analysis sometimes does not contain enough information to be validated successfully by CPAchecker's validator. For example, it does not restrict non-determinism.
+
+## Validating and Producing Termination Violation or Correctness Witnesses with Ultimate Automizer
+Ultimate Automizer can be used to validate or produce termination witnesses in the same way as for [reachability witnesses](../README-GraphML.md).
+
+A typical validation run for, e.g., [Ex02_false-termination_true-no-overflow.c](Ex02_false-termination_true-no-overflow.c), the corresponding [termination violation witness](Ex02_false-termination_true-no-overflow.c_witness.ultimateautomizer.graphml), and the [termination property](Termination.prp) looks as follows.
+<pre>
+$ ./Ultimate.py --architecture 32bit --spec Termination.prp --file Ex02_false-termination_true-no-overflow.c --validate Ex02_false-termination_true-no-overflow.c_witness.ultimateautomizer.graphml
+Checking for termination
+Using default analysis
+Version 8c2bbc92
+Calling Ultimate with: /usr/bin/java [...]
+....[...]
+Execution finished normally
+Writing output log to file Ultimate.log
+Writing human readable error path to file UltimateCounterExample.errorpath
+Result:
+FALSE(TERM)
+</pre>
+As usual, you can use a different architecture (``--architecture 64bit``), request the full Ultimate log output (``--full-output``), or show additional options (``--help``).
+
+The call to and the output of Ultimate Automizer do not differ between termination violation or correctness witnesses (of course, the result should be TRUE(TERM) for valid correctness witnesses).
+If you want to produce witnesses, just omit the ``--validate`` argument. 
+
