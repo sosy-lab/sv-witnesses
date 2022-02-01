@@ -11,7 +11,7 @@ with the GraphML-based witness format [1].
 [1]: github.com/sosy-lab/sv-witnesses/blob/main/README-GraphML.md
 """
 
-__version__ = "1.2-dev"
+__version__ = "1.3-dev"
 
 import argparse
 import collections
