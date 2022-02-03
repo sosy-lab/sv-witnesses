@@ -988,9 +988,11 @@ def _exit(exit_code=None):
     sys.exit(exit_code)
 
 
-def main():
+def main(argv=None):
+    if argv is None:
+        argv = sys.argv[1:]
     try:
-        linter = create_linter(sys.argv[1:])
+        linter = create_linter(argv)
         print("Running witnesslint version {}\n".format(__version__))
         linter.lint()
         _exit()
