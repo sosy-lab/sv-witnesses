@@ -1,5 +1,14 @@
 # Witnesslint Development Instructions
 
+## Installation for Development
+
+0. You will need a python version >=3.5.
+
+1. Witnesslint uses `poetry` for dependency management and packaging.
+Install poetry with `pip install poetry`.
+
+2. Install project dependencies with `poetry install`.
+
 ## Releasing a new version
 
 1. Bump version number in `witnesslint/__init__.py` and `pyproject.toml` to next release version.
