@@ -18,7 +18,7 @@ classifiers = [
     "Environment :: Console"
     ]
 license = "Apache-2.0"
-include = ["LICENSE", "README.md"]
+include = ["LICENSE", "README.md", "doc/Changelog.md"]
 
 [tool.poetry.dependencies]
 python = "^3.5"
