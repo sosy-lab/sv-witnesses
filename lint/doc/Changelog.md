@@ -1,3 +1,11 @@
+<!--
+This file is part of sv-witnesses repository: https://github.com/sosy-lab/sv-witnesses
+
+SPDX-FileCopyrightText: 2022 Dirk Beyer <https://www.sosy-lab.org>
+
+SPDX-License-Identifier: Apache-2.0
+-->
+
 # Witnesslint Changelog
 
 ## Version 1.4
