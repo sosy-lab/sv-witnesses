@@ -154,28 +154,32 @@
   },
   "type": "array",
   "items": {
-    "title": "Loop Invariant Entry",
-    "description": "An loop invariant entry",
-    "type": "object",
-    "required": [
-      "entry_type",
-      "metadata",
-      "location",
-      "loop_invariant"
-    ],
-    "properties": {
-      "entry_type": {
-        "const": "loop_invariant"
-      },
-      "metadata": {
-        "$ref": "#/$defs/metadata"
-      },
-      "location": {
-        "$ref": "#/$defs/location"
-      },
-      "loop_invariant": {
-        "$ref": "#/$defs/invariant"
+    "oneOf": [
+      {
+        "title": "Loop Invariant Entry",
+        "description": "An loop invariant entry",
+        "type": "object",
+        "required": [
+          "entry_type",
+          "metadata",
+          "location",
+          "loop_invariant"
+        ],
+        "properties": {
+          "entry_type": {
+            "const": "loop_invariant"
+          },
+          "metadata": {
+            "$ref": "#/$defs/metadata"
+          },
+          "location": {
+            "$ref": "#/$defs/location"
+          },
+          "loop_invariant": {
+            "$ref": "#/$defs/invariant"
+          }
+        }
       }
-    }
+    ]
   }
 }
