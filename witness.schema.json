@@ -114,6 +114,35 @@
         }
       }
     },
+    "metadata-certificate": {
+      "type": "object",
+      "required": [
+        "format_version",
+        "uuid",
+        "creation_time",
+        "producer"
+      ],
+      "properties": {
+        "format_version": {
+          "type": "string",
+          "description": "Version of the verification-entries format that the entry is formatted in."
+        },
+        "uuid": {
+          "type": "string",
+          "description": "Unique identifier of the entry ([RFC4122](https://www.ietf.org/rfc/rfc4122.txt) defines the UUID format).",
+          "format": "uuid"
+        },
+        "creation_time": {
+          "type": "string",
+          "description": "Date and time when the entry (not the file) was created.",
+          "format": "date-time"
+        },
+        "producer": {
+          "description": "Tool that produced the entry.",
+          "$ref": "#/$defs/producer"
+        }
+      }
+    },
     "location": {
       "type": "object",
       "required": [
@@ -173,6 +202,55 @@
           ]
         }
       }
+    },
+    "target": {
+      "type": "object",
+      "required": [
+        "uuid",
+        "type",
+        "file_hash"
+      ],
+      "properties": {
+        "uuid": {
+          "type": "string",
+          "description": "Unique identifier of the entry ([RFC4122](https://www.ietf.org/rfc/rfc4122.txt) defines the UUID format).",
+          "format": "uuid"
+        },
+        "type": {
+          "type": "string",
+          "description": "TODO"
+        },
+        "file_hash": {
+          "type": "string",
+          "description": "TODO"
+        }
+      }
+    },
+    "certification": {
+      "type": "object",
+      "required": [
+        "string",
+        "type",
+        "format"
+      ],
+      "properties": {
+        "string": {
+          "type": "string",
+          "description": "TODO"
+        },
+        "type": {
+          "description": "TODO",
+          "enum": [
+            "verdict"
+          ]
+        },
+        "format": {
+          "description": "TODO",
+          "enum": [
+            "confirmed | rejected"
+          ]
+        }
+      }
     }
   },
   "type": "array",
@@ -200,6 +278,31 @@
           },
           "loop_invariant": {
             "$ref": "#/$defs/invariant"
+          }
+        }
+      },
+      {
+        "title": "Loop Invariant Certificate Entry",
+        "description": "An loop invariant certificate entry",
+        "type": "object",
+        "required": [
+          "entry_type",
+          "metadata",
+          "target",
+          "certification"
+        ],
+        "properties": {
+          "entry_type": {
+            "const": "loop_invariant_certificate"
+          },
+          "metadata": {
+            "$ref": "#/$defs/metadata-certificate"
+          },
+          "target": {
+            "$ref": "#/$defs/target"
+          },
+          "certification": {
+            "$ref": "#/$defs/certification"
           }
         }
       }
