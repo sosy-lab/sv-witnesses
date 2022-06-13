@@ -1,5 +1,157 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$defs": {
+    "producer": {
+      "type": "object",
+      "required": [
+        "name",
+        "version"
+      ],
+      "properties": {
+        "name": {
+          "type": "string"
+        },
+        "version": {
+          "type": "string"
+        },
+        "configuration": {
+          "type": "string"
+        },
+        "description": {
+          "type": "string"
+        },
+        "command_line": {
+          "type": "string"
+        }
+      }
+    },
+    "task": {
+      "type": "object",
+      "required": [
+        "input_files",
+        "input_file_hashes",
+        "specification",
+        "data_model",
+        "language"
+      ],
+      "properties": {
+        "input_files": {
+          "anyOf": [
+            {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
+            {
+              "type": "string"
+            }
+          ]
+        },
+        "input_file_hashes": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "string"
+          }
+        },
+        "specification": {
+          "type": "string"
+        },
+        "data_model": {
+          "enum": [
+            "32bit",
+            "64bit"
+          ]
+        },
+        "language": {
+          "enum": [
+            "C"
+          ]
+        }
+      }
+    },
+    "metadata": {
+      "type": "object",
+      "required": [
+        "format_version",
+        "uuid",
+        "creation_time",
+        "producer",
+        "task"
+      ],
+      "properties": {
+        "format_version": {
+          "type": "string"
+        },
+        "uuid": {
+          "type": "string",
+          "format": "uuid"
+        },
+        "creation_time": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "producer": {
+          "$ref": "#/$defs/producer"
+        },
+        "task": {
+          "$ref": "#/$defs/task"
+        }
+      }
+    },
+    "location": {
+      "type": "object",
+      "required": [
+        "file_name",
+        "file_hash",
+        "line",
+        "column",
+        "function"
+      ],
+      "properties": {
+        "file_name": {
+          "type": "string"
+        },
+        "file_hash": {
+          "type": "string"
+        },
+        "line": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "column": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "function": {
+          "type": "string"
+        }
+      }
+    },
+    "invariant": {
+      "type": "object",
+      "required": [
+        "string",
+        "type",
+        "format"
+      ],
+      "properties": {
+        "string": {
+          "type": "string"
+        },
+        "type": {
+          "enum": [
+            "assertion"
+          ]
+        },
+        "format": {
+          "enum": [
+            "C"
+          ]
+        }
+      }
+    }
+  },
   "type": "array",
   "items": {
     "title": "Loop Invariant Entry",
@@ -16,148 +168,13 @@
         "const": "loop_invariant"
       },
       "metadata": {
-        "type": "object",
-        "required": [
-          "format_version",
-          "uuid",
-          "creation_time",
-          "producer",
-          "task"
-        ],
-        "properties": {
-          "format_version": {
-            "type": "string"
-          },
-          "uuid": {
-            "type": "string",
-            "format": "uuid"
-          },
-          "creation_time": {
-            "type": "string",
-            "format": "date-time"
-          },
-          "producer": {
-            "type": "object",
-            "required": [
-              "name",
-              "version"
-            ],
-            "properties": {
-              "name": {
-                "type": "string"
-              },
-              "version": {
-                "type": "string"
-              },
-              "configuration": {
-                "type": "string"
-              },
-              "description": {
-                "type": "string"
-              },
-              "command_line": {
-                "type": "string"
-              }
-            }
-          },
-          "task": {
-            "type": "object",
-            "required": [
-              "input_files",
-              "input_file_hashes",
-              "specification",
-              "data_model",
-              "language"
-            ],
-            "properties": {
-              "input_files": {
-                "anyOf": [
-                  {
-                    "type": "array",
-                    "items": {
-                      "type": "string"
-                    }
-                  },
-                  {
-                    "type": "string"
-                  }
-                ]
-              },
-              "input_file_hashes": {
-                "type": "object",
-                "additionalProperties": {
-                  "type": "string"
-                }
-              },
-              "specification": {
-                "type": "string"
-              },
-              "data_model": {
-                "enum": [
-                  "32bit",
-                  "64bit"
-                ]
-              },
-              "language": {
-                "enum": [
-                  "C"
-                ]
-              }
-            }
-          }
-        }
+        "$ref": "#/$defs/metadata"
       },
       "location": {
-        "type": "object",
-        "required": [
-          "file_name",
-          "file_hash",
-          "line",
-          "column",
-          "function"
-        ],
-        "properties": {
-          "file_name": {
-            "type": "string"
-          },
-          "file_hash": {
-            "type": "string"
-          },
-          "line": {
-            "type": "integer",
-            "minimum": 0
-          },
-          "column": {
-            "type": "integer",
-            "minimum": 0
-          },
-          "function": {
-            "type": "string"
-          }
-        }
+        "$ref": "#/$defs/location"
       },
       "loop_invariant": {
-        "type": "object",
-        "required": [
-          "string",
-          "type",
-          "format"
-        ],
-        "properties": {
-          "string": {
-            "type": "string"
-          },
-          "type": {
-            "enum": [
-              "assertion"
-            ]
-          },
-          "format": {
-            "enum": [
-              "C"
-            ]
-          }
-        }
+        "$ref": "#/$defs/invariant"
       }
     }
   }
