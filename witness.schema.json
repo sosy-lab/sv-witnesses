@@ -9,19 +9,24 @@
       ],
       "properties": {
         "name": {
-          "type": "string"
+          "type": "string",
+          "description": "Name of the tool that produced the invariant."
         },
         "version": {
-          "type": "string"
+          "type": "string",
+          "description": "Version of the tool."
         },
         "configuration": {
-          "type": "string"
+          "type": "string",
+          "description": "Configuration in which the tool ran. Consider using this property if there are substantially different configurations of the tool."
         },
         "description": {
-          "type": "string"
+          "type": "string",
+          "description": "Additional description. Use this property for any information that does not fit into any of the above properties."
         },
         "command_line": {
-          "type": "string"
+          "type": "string",
+          "description": "Command line with which the tool ran. Specifying the exact command possibly increases reproducibility."
         }
       }
     },
@@ -36,6 +41,7 @@
       ],
       "properties": {
         "input_files": {
+          "description": "File(s) that were given as input to the verfier. Each file pattern must represent exactly one input file.",
           "anyOf": [
             {
               "type": "array",
@@ -50,20 +56,24 @@
         },
         "input_file_hashes": {
           "type": "object",
+          "description": "Mapping of each input file to its SHA-256 hash. Every file-name pattern listed in `input_files` must appear in this property.",
           "additionalProperties": {
             "type": "string"
           }
         },
         "specification": {
-          "type": "string"
+          "type": "string",
+          "description": "Specification against which the program was analyzed for producing the entry."
         },
         "data_model": {
+          "description": "Data model that was assumed for the input program.",
           "enum": [
             "32bit",
             "64bit"
           ]
         },
         "language": {
+          "description": "Source language of the input files.",
           "enum": [
             "C"
           ]
@@ -81,20 +91,25 @@
       ],
       "properties": {
         "format_version": {
-          "type": "string"
+          "type": "string",
+          "description": "Version of the verification-entries format that the entry is formatted in."
         },
         "uuid": {
           "type": "string",
+          "description": "Unique identifier of the entry ([RFC4122](https://www.ietf.org/rfc/rfc4122.txt) defines the UUID format).",
           "format": "uuid"
         },
         "creation_time": {
           "type": "string",
+          "description": "Date and time when the entry (not the file) was created.",
           "format": "date-time"
         },
         "producer": {
+          "description": "Tool that produced the entry.",
           "$ref": "#/$defs/producer"
         },
         "task": {
+          "description": "Verification task during which the entry was produced.",
           "$ref": "#/$defs/task"
         }
       }
@@ -110,21 +125,26 @@
       ],
       "properties": {
         "file_name": {
-          "type": "string"
+          "type": "string",
+          "description": "Name of the file containing the loop where the invariant holds. Must be present in `task.input_files`."
         },
         "file_hash": {
-          "type": "string"
+          "type": "string",
+          "description": "Hash of the file containing the loop where the invariant holds."
         },
         "line": {
           "type": "integer",
+          "description": "Line where the invariant holds (starting with 1).",
           "minimum": 0
         },
         "column": {
           "type": "integer",
+          "description": "Column where the invariant holds in that line (starting with 0). For example, if `column` has value `0` then the invariant holds _before_ the first source-code token of the line.",
           "minimum": 0
         },
         "function": {
-          "type": "string"
+          "type": "string",
+          "description": "Name of the function in which the invariant holds."
         }
       }
     },
@@ -137,14 +157,17 @@
       ],
       "properties": {
         "string": {
-          "type": "string"
+          "type": "string",
+          "description": "The actual invariant formula."
         },
         "type": {
+          "description": "How to interpret `string`. The following values are supported:\n\n* _assertion_: Has the C semantics of `assert(<string>)` inserted at the specified `location`.",
           "enum": [
             "assertion"
           ]
         },
         "format": {
+          "description": "Format of the string. The following values are supported:\n\n* _C_: Expression in C language.",
           "enum": [
             "C"
           ]
