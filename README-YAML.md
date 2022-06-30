@@ -27,21 +27,16 @@ Files of verification entries are UTF-8 encoded.
 
 Each file of verification entries contains an array of entries.
 The format of an entry depends on its entry type.
-Currently, we have the following entry types:
-- `loop_invariant`
-- `loop-invariant_certificate`
-
 Entry types are use-case specific and independent.
 Each producer and consumer of entries can filter those entry types that it supports.
 
-The following sections describe the format of a verification entry for each entry-type.
+### Schema
 
+All entry types and their formats are specified using
+a [json-schema](http://json-schema.org/):
+[witness.schema.json](witness.schema.json).
 
-#### Schema
-
-A [json-schema](http://json-schema.org/) of the format can be found in file
-[loop-invariant-schema.json](loop-invariant-schema.json).
-This schema can be used for validation and for code generation.
+This schema can be used for documentation generation, validation and code generation.
 
 
 ## Examples
