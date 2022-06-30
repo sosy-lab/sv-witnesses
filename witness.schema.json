@@ -44,19 +44,21 @@
           "description": "File(s) that were given as input to the verfier. Each file pattern must represent exactly one input file.",
           "type": "array",
           "items": {
-            "type": "string"
+            "type": "string",
+            "description": " Bash-compliant file-name pattern"
           }
         },
         "input_file_hashes": {
           "type": "object",
           "description": "Mapping of each input file to its SHA-256 hash. Every file-name pattern listed in `input_files` must appear in this property.",
           "additionalProperties": {
-            "type": "string"
+            "type": "string",
+            "pattern": "[0-9a-fA-F]{64}"
           }
         },
         "specification": {
           "type": "string",
-          "description": "Specification against which the program was analyzed for producing the entry."
+          "description": "Specification in [SV-COMP format](https://sv-comp.sosy-lab.org/2021/rules.php) against which the program was analyzed for producing the entry."
         },
         "data_model": {
           "description": "Data model that was assumed for the input program.",
@@ -152,7 +154,8 @@
         },
         "file_hash": {
           "type": "string",
-          "description": "Hash of the file containing the loop where the invariant holds."
+          "description": "SHA-256 hash of the file containing the loop where the invariant holds.",
+          "pattern": "[0-9a-fA-F]{64}"
         },
         "line": {
           "type": "integer",
@@ -211,11 +214,12 @@
         },
         "type": {
           "type": "string",
-          "description": "TODO"
+          "description": "`entry_type` of the targeted entry."
         },
         "file_hash": {
           "type": "string",
-          "description": "TODO"
+          "description": "SHA-256 hash of the file containing the loop where the invariant holds.",
+          "pattern": "[0-9a-fA-F]{64}"
         }
       }
     },
@@ -229,16 +233,16 @@
       "properties": {
         "string": {
           "type": "string",
-          "description": "TODO"
+          "description": "The actual certification result."
         },
         "type": {
-          "description": "TODO",
+          "description": "How to interpret `string`. The following values are supported:\n\n* _verdict_: whether the targeted entry was confirmed or rejected.",
           "enum": [
             "verdict"
           ]
         },
         "format": {
-          "description": "TODO",
+          "description": "Format of the string. The following values are supported:\n\n* _confirmed | rejected_: either \"confirmed\" or \"rejected\".",
           "enum": [
             "confirmed | rejected"
           ]
@@ -261,16 +265,20 @@
         ],
         "properties": {
           "entry_type": {
-            "const": "loop_invariant"
+            "const": "loop_invariant",
+            "description": "The type of this entry. The format is specific to the entry type. In this case, the entry type declares that the entry contains a loop invariant that holds at some location in a program."
           },
           "metadata": {
-            "$ref": "#/$defs/metadata"
+            "$ref": "#/$defs/metadata",
+            "description": "Additional information about the \"environment\" in which the entry was produced."
           },
           "location": {
-            "$ref": "#/$defs/location"
+            "$ref": "#/$defs/location",
+            "description": "Location in the source code to which the entry refers, i.e., at which the loop invariant holds."
           },
           "loop_invariant": {
-            "$ref": "#/$defs/invariant"
+            "$ref": "#/$defs/invariant",
+            "description": "Actual loop invariant."
           }
         }
       },
@@ -286,16 +294,20 @@
         ],
         "properties": {
           "entry_type": {
-            "const": "loop_invariant_certificate"
+            "const": "loop_invariant_certificate",
+            "description": "The type of this entry. The format is specific to the entry type. In this case, the entry type declares that the entry contains a loop invariant certificate."
           },
           "metadata": {
-            "$ref": "#/$defs/metadata-certificate"
+            "$ref": "#/$defs/metadata-certificate",
+            "description": "Additional information about the \"environment\" in which the entry was produced."
           },
           "target": {
-            "$ref": "#/$defs/target"
+            "$ref": "#/$defs/target",
+            "description": "Target entry which this entry certifies, i.e., at which the loop invariant was validated."
           },
           "certification": {
-            "$ref": "#/$defs/certification"
+            "$ref": "#/$defs/certification",
+            "description": "Actual loop invariant certificate."
           }
         }
       }
