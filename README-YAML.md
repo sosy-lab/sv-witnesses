@@ -140,7 +140,7 @@ The following tables describe the format in more detail.
 |---          | ---           | ---                               | ---          |
 | `file_name` | string        | Bash-compliant file-name pattern  | Name of the file containing the loop where the invariant holds. Must be present in `task.input_files`. |
 | `file_hash` | string        | SHA-256 hash                      | Hash of the file containing the loop where the invariant holds. |
-| `line`      | integer       | natural number > 1                | Line where the invariant holds (starting with 1). |
+| `line`      | integer       | natural number >= 1               | Line where the invariant holds (starting with 1). |
 | `column`    | integer       | natural number >= 0               | Column where the invariant holds in that line (starting with 0). For example, if `column` has value `0` then the invariant holds *before* the first source-code token of the line. |
 | `function`  | string        | func. name in the source language | Name of the function in which the invariant holds. |
 

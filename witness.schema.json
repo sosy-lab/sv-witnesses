@@ -42,17 +42,10 @@
       "properties": {
         "input_files": {
           "description": "File(s) that were given as input to the verfier. Each file pattern must represent exactly one input file.",
-          "anyOf": [
-            {
-              "type": "array",
-              "items": {
-                "type": "string"
-              }
-            },
-            {
-              "type": "string"
-            }
-          ]
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
         },
         "input_file_hashes": {
           "type": "object",
@@ -68,8 +61,8 @@
         "data_model": {
           "description": "Data model that was assumed for the input program.",
           "enum": [
-            "32bit",
-            "64bit"
+            "ILP32",
+            "LP64"
           ]
         },
         "language": {
@@ -164,7 +157,7 @@
         "line": {
           "type": "integer",
           "description": "Line where the invariant holds (starting with 1).",
-          "minimum": 0
+          "minimum": 1
         },
         "column": {
           "type": "integer",
