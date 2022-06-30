@@ -1,7 +1,12 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$defs": {
+    "format-version": {
+      "description": "Version of the format.",
+      "const": "0.1"
+    },
     "producer": {
+      "description": "Producer. Could be a tool, a human or something else.",
       "type": "object",
       "required": [
         "name",
@@ -10,27 +15,38 @@
       "properties": {
         "name": {
           "type": "string",
-          "description": "Name of the tool that produced the invariant."
+          "description": "Name of the producer."
         },
         "version": {
           "type": "string",
-          "description": "Version of the tool."
+          "description": "Version of the producer."
         },
         "configuration": {
           "type": "string",
-          "description": "Configuration in which the tool ran. Consider using this property if there are substantially different configurations of the tool."
+          "description": "Configuration of the producer. Should be used to distinguish different configurations of the same version of the producer."
         },
         "description": {
           "type": "string",
-          "description": "Additional description. Use this property for any information that does not fit into any of the above properties."
+          "description": "Additional description about the producer. Could be used for any information that does not fit into any of the other producer properties."
         },
         "command_line": {
           "type": "string",
-          "description": "Command line with which the tool ran. Specifying the exact command possibly increases reproducibility."
+          "description": "Command line of the execution of the tool. Should be used to improve reproducibility."
         }
       }
     },
+    "hash": {
+      "type": "string",
+      "description": "SHA-256 hash.",
+      "pattern": "[0-9a-fA-F]{64}"
+    },
+    "entry-uuid": {
+      "type": "string",
+      "description": "Unique identifier of the entry ([RFC4122](https://www.ietf.org/rfc/rfc4122.txt) defines the UUID format).",
+      "format": "uuid"
+    },
     "task": {
+      "description": "Verification task.",
       "type": "object",
       "required": [
         "input_files",
@@ -41,27 +57,26 @@
       ],
       "properties": {
         "input_files": {
-          "description": "File(s) that were given as input to the verfier. Each file pattern must represent exactly one input file.",
+          "description": "Files belonging to the verification task that were given as input to the producer.",
           "type": "array",
           "items": {
             "type": "string",
-            "description": " Bash-compliant file-name pattern"
+            "description": "Bash-compliant file name pattern, which must represent _exactly one_ file."
           }
         },
         "input_file_hashes": {
           "type": "object",
-          "description": "Mapping of each input file to its SHA-256 hash. Every file-name pattern listed in `input_files` must appear in this property.",
+          "description": "SHA-256 hashes of each file in `input_files`. Every file name pattern listed in `input_files` must appear as a key.",
           "additionalProperties": {
-            "type": "string",
-            "pattern": "[0-9a-fA-F]{64}"
+            "$ref": "#/$defs/hash"
           }
         },
         "specification": {
           "type": "string",
-          "description": "Specification in [SV-COMP format](https://sv-comp.sosy-lab.org/2021/rules.php) against which the program was analyzed for producing the entry."
+          "description": "Specification in [SV-COMP format](https://sv-comp.sosy-lab.org/2022/rules.php) against which the verification is done."
         },
         "data_model": {
-          "description": "Data model that was assumed for the input program.",
+          "description": "Data model to be assumed for the task.",
           "enum": [
             "ILP32",
             "LP64"
@@ -76,6 +91,7 @@
       }
     },
     "metadata": {
+      "description": "Information that identifies the entry and describes the context of its production.",
       "type": "object",
       "required": [
         "format_version",
@@ -86,30 +102,29 @@
       ],
       "properties": {
         "format_version": {
-          "type": "string",
-          "description": "Version of the verification-entries format that the entry is formatted in."
+          "$ref": "#/$defs/format-version",
+          "description": "Version of the format of the entry."
         },
         "uuid": {
-          "type": "string",
-          "description": "Unique identifier of the entry ([RFC4122](https://www.ietf.org/rfc/rfc4122.txt) defines the UUID format).",
-          "format": "uuid"
+          "$ref": "#/$defs/entry-uuid"
         },
         "creation_time": {
           "type": "string",
-          "description": "Date and time when the entry (not the file) was created.",
+          "description": "Date and time in ISO8601 format when the entry (not the file) was created.",
           "format": "date-time"
         },
         "producer": {
-          "description": "Tool that produced the entry.",
-          "$ref": "#/$defs/producer"
+          "$ref": "#/$defs/producer",
+          "description": "Producer of the entry."
         },
         "task": {
-          "description": "Verification task during which the entry was produced.",
-          "$ref": "#/$defs/task"
+          "$ref": "#/$defs/task",
+          "description": "Verification task for which the entry was produced."
         }
       }
     },
     "metadata-certificate": {
+      "description": "Information that identifies the certificate entry and describes the context of its production.",
       "type": "object",
       "required": [
         "format_version",
@@ -119,26 +134,25 @@
       ],
       "properties": {
         "format_version": {
-          "type": "string",
-          "description": "Version of the verification-entries format that the entry is formatted in."
+          "$ref": "#/$defs/format-version",
+          "description": "Version of the format of the certificate entry."
         },
         "uuid": {
-          "type": "string",
-          "description": "Unique identifier of the entry ([RFC4122](https://www.ietf.org/rfc/rfc4122.txt) defines the UUID format).",
-          "format": "uuid"
+          "$ref": "#/$defs/entry-uuid"
         },
         "creation_time": {
           "type": "string",
-          "description": "Date and time when the entry (not the file) was created.",
+          "description": "Date and time in ISO8601 format when the certificate entry (not the file or target entry) was created.",
           "format": "date-time"
         },
         "producer": {
-          "description": "Tool that produced the entry.",
-          "$ref": "#/$defs/producer"
+          "$ref": "#/$defs/producer",
+          "description": "Producer of the certificate entry."
         }
       }
     },
     "location": {
+      "description": "Location in the source code.",
       "type": "object",
       "required": [
         "file_name",
@@ -150,30 +164,30 @@
       "properties": {
         "file_name": {
           "type": "string",
-          "description": "Name of the file containing the loop where the invariant holds. Must be present in `task.input_files`."
+          "description": "Name of the file. Must be present in `task.input_files`."
         },
         "file_hash": {
-          "type": "string",
-          "description": "SHA-256 hash of the file containing the loop where the invariant holds.",
-          "pattern": "[0-9a-fA-F]{64}"
+          "$ref": "#/$defs/hash",
+          "description": "SHA-256 hash of the file."
         },
         "line": {
           "type": "integer",
-          "description": "Line where the invariant holds (starting with 1).",
+          "description": "Line in the file (starting with 1).",
           "minimum": 1
         },
         "column": {
           "type": "integer",
-          "description": "Column where the invariant holds in that line (starting with 0). For example, if `column` has value `0` then the invariant holds _before_ the first source-code token of the line.",
+          "description": "Column in the file (starting with 0). Column 0 refers to the very beginning of the line (before any characters).",
           "minimum": 0
         },
         "function": {
           "type": "string",
-          "description": "Name of the function in which the invariant holds."
+          "description": "Name of the surrounding function."
         }
       }
     },
     "invariant": {
+      "description": "Invariant.",
       "type": "object",
       "required": [
         "string",
@@ -183,16 +197,16 @@
       "properties": {
         "string": {
           "type": "string",
-          "description": "The actual invariant formula."
+          "description": "The invariant itself."
         },
         "type": {
-          "description": "How to interpret `string`. The following values are supported:\n\n* _assertion_: Has the C semantics of `assert(<string>)` inserted at the specified `location`.",
+          "description": "Interpretation of `string`. The following values are supported:\n\n* `assertion`: Assertion, e.g. `assert(<string>)` in C, inserted at the specified location. The insertion is hypothetical and doesn't affect other locations.",
           "enum": [
             "assertion"
           ]
         },
         "format": {
-          "description": "Format of the string. The following values are supported:\n\n* _C_: Expression in C language.",
+          "description": "Format of `string`. The following values are supported:\n\n* `C`: Expression in C language.",
           "enum": [
             "C"
           ]
@@ -200,6 +214,7 @@
       }
     },
     "target": {
+      "description": "Target entry of certification.",
       "type": "object",
       "required": [
         "uuid",
@@ -208,22 +223,21 @@
       ],
       "properties": {
         "uuid": {
-          "type": "string",
-          "description": "Unique identifier of the entry ([RFC4122](https://www.ietf.org/rfc/rfc4122.txt) defines the UUID format).",
-          "format": "uuid"
+          "$ref": "#/$defs/entry-uuid",
+          "description": "Unique identifier of the target entry."
         },
         "type": {
           "type": "string",
-          "description": "`entry_type` of the targeted entry."
+          "description": "`entry_type` of the target entry."
         },
         "file_hash": {
-          "type": "string",
-          "description": "SHA-256 hash of the file containing the loop where the invariant holds.",
-          "pattern": "[0-9a-fA-F]{64}"
+          "$ref": "#/$defs/hash",
+          "description": "SHA-256 hash of the target file."
         }
       }
     },
     "certification": {
+      "description": "Certification result.",
       "type": "object",
       "required": [
         "string",
@@ -233,16 +247,16 @@
       "properties": {
         "string": {
           "type": "string",
-          "description": "The actual certification result."
+          "description": "The certification result itself."
         },
         "type": {
-          "description": "How to interpret `string`. The following values are supported:\n\n* _verdict_: whether the targeted entry was confirmed or rejected.",
+          "description": "Interpretation of `string`. The following values are supported:\n\n* `verdict`: Verdict about the targeted entry.",
           "enum": [
             "verdict"
           ]
         },
         "format": {
-          "description": "Format of the string. The following values are supported:\n\n* _confirmed | rejected_: either \"confirmed\" or \"rejected\".",
+          "description": "Format of `string`. The following values are supported:\n\n* `confirmed | rejected`: Either \"confirmed\" or \"rejected\".",
           "enum": [
             "confirmed | rejected"
           ]
@@ -254,8 +268,8 @@
   "items": {
     "oneOf": [
       {
-        "title": "Loop Invariant Entry",
-        "description": "Loop invariants are important building blocks in software verification. There are many verification approaches that use loop invariants as lemmata to construct a proof of correctness.\n\nVerification entries of entry type loop invariant can be used as verification witness, more specifically, correctness witnesses.",
+        "title": "Loop invariant",
+        "description": "Loop invariants are important building blocks in software verification. Many verification approaches use loop invariants as lemmata to construct proofs of correctness.",
         "type": "object",
         "required": [
           "entry_type",
@@ -265,20 +279,18 @@
         ],
         "properties": {
           "entry_type": {
-            "const": "loop_invariant",
-            "description": "The type of this entry. The format is specific to the entry type. In this case, the entry type declares that the entry contains a loop invariant that holds at some location in a program."
+            "const": "loop_invariant"
           },
           "metadata": {
-            "$ref": "#/$defs/metadata",
-            "description": "Additional information about the \"environment\" in which the entry was produced."
+            "$ref": "#/$defs/metadata"
           },
           "location": {
             "$ref": "#/$defs/location",
-            "description": "Location in the source code to which the entry refers, i.e., at which the loop invariant holds."
+            "description": "Location in the source code where the loop invariant holds."
           },
           "loop_invariant": {
             "$ref": "#/$defs/invariant",
-            "description": "Actual loop invariant."
+            "description": "The loop invariant itself."
           }
         },
         "examples": [
@@ -323,8 +335,8 @@
         ]
       },
       {
-        "title": "Loop Invariant Certificate Entry",
-        "description": "Verification entries of entry type loop-invariant certificate can be used to document the outcome of validation attempts. That is, a validation of the verification result took place, in which a tool used the referenced loop invariant in its attempt to construct a proof of correctness, and its findings are documented in the entry of type loop-invariant certificate.\n\nThis entry type helps to document trust in an invariant (if an invariant has many confirmed certificates then it is likely to hold) and scoring decisions in competitions that assign scores only after confirmation from a results validation.",
+        "title": "Loop invariant certificate",
+        "description": "Loop invariant certificates document validation attempts of loop invariants, for example by trying to use the target loop invariant in a proof of correctness.\n\nCertificates document correctness and trustworthiness of invariants.",
         "type": "object",
         "required": [
           "entry_type",
@@ -334,20 +346,18 @@
         ],
         "properties": {
           "entry_type": {
-            "const": "loop_invariant_certificate",
-            "description": "The type of this entry. The format is specific to the entry type. In this case, the entry type declares that the entry contains a loop invariant certificate."
+            "const": "loop_invariant_certificate"
           },
           "metadata": {
-            "$ref": "#/$defs/metadata-certificate",
-            "description": "Additional information about the \"environment\" in which the entry was produced."
+            "$ref": "#/$defs/metadata-certificate"
           },
           "target": {
             "$ref": "#/$defs/target",
-            "description": "Target entry which this entry certifies, i.e., at which the loop invariant was validated."
+            "description": "Target entry of type `loop_invariant` which is being certified."
           },
           "certification": {
             "$ref": "#/$defs/certification",
-            "description": "Actual loop invariant certificate."
+            "description": "The loop invariant certification result itself."
           }
         },
         "examples": [
