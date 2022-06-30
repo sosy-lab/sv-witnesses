@@ -255,7 +255,7 @@
     "oneOf": [
       {
         "title": "Loop Invariant Entry",
-        "description": "An loop invariant entry",
+        "description": "Loop invariants are important building blocks in software verification. There are many verification approaches that use loop invariants as lemmata to construct a proof of correctness.\n\nVerification entries of entry type loop invariant can be used as verification witness, more specifically, correctness witnesses.",
         "type": "object",
         "required": [
           "entry_type",
@@ -324,7 +324,7 @@
       },
       {
         "title": "Loop Invariant Certificate Entry",
-        "description": "An loop invariant certificate entry",
+        "description": "Verification entries of entry type loop-invariant certificate can be used to document the outcome of validation attempts. That is, a validation of the verification result took place, in which a tool used the referenced loop invariant in its attempt to construct a proof of correctness, and its findings are documented in the entry of type loop-invariant certificate.\n\nThis entry type helps to document trust in an invariant (if an invariant has many confirmed certificates then it is likely to hold) and scoring decisions in competitions that assign scores only after confirmation from a results validation.",
         "type": "object",
         "required": [
           "entry_type",
