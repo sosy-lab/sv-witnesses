@@ -3,7 +3,7 @@ name: YAML schema
 on:
   push:
     branches:
-    - yaml-schema # TODO: change to main before merge
+    - main
 
 permissions:
   contents: read
