@@ -376,7 +376,7 @@
             "target": {
               "uuid": "91023a0f-9f45-4385-88c4-1152ade45537",
               "type": "loop-invariant",
-              "file_hash": "XXXf45a8d763ef520f6d92e4135c8572805994a66531c6216b17157d0dde2f9c"
+              "file_hash": "511f45a8d763ef520f6d92e4135c8572805994a66531c6216b17157d0dde2f9c"
             },
             "certification": {
               "string": "confirmed",
