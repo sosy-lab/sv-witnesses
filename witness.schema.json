@@ -31,7 +31,7 @@
         },
         "command_line": {
           "type": "string",
-          "description": "Command line of the execution of the tool. Should be used to improve reproducibility."
+          "description": "Bash-compliant command line used to produce the entry. Should be used to improve reproducibility."
         }
       }
     },
@@ -84,8 +84,10 @@
         },
         "language": {
           "description": "Source language of the input files.",
-          "enum": [
-            "C"
+          "type": "string",
+          "examples": [
+            "C",
+            "Java"
           ]
         }
       }
@@ -290,7 +292,7 @@
           },
           "loop_invariant": {
             "$ref": "#/$defs/invariant",
-            "description": "The loop invariant itself."
+            "description": "The loop invariant description."
           }
         },
         "examples": [
@@ -303,9 +305,7 @@
               "producer": {
                 "name": "CPAchecker",
                 "version": "2.0.1-svn",
-                "configuration": "(Optional) svcomp21--04-kInduction",
-                "description": "(Optional)",
-                "command_line": "(Optional)"
+                "configuration": "svcomp21--04-kInduction"
               },
               "task": {
                 "input_files": [
@@ -357,7 +357,7 @@
           },
           "certification": {
             "$ref": "#/$defs/certification",
-            "description": "The loop invariant certification result itself."
+            "description": "The loop invariant certification result description."
           }
         },
         "examples": [
@@ -370,9 +370,7 @@
               "producer": {
                 "name": "CPAchecker",
                 "version": "2.0.1-svn",
-                "configuration": "(Optional) svcomp21--04-kInduction",
-                "description": "(Optional)",
-                "command_line": "(Optional)"
+                "configuration": "svcomp21--04-kInduction"
               }
             },
             "target": {
