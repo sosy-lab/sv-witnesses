@@ -1,4 +1,5 @@
 expand_buttons: true
 collapse_long_descriptions: false
+collapse_long_examples: false
 link_to_reused_ref: false
 examples_as_yaml: true

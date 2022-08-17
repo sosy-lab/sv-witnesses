@@ -1,1 +1,1 @@
-json-schema-for-humans==0.41.3
+json-schema-for-humans==0.41.8
