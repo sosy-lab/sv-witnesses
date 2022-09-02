@@ -335,6 +335,70 @@
         ]
       },
       {
+        "title": "Location invariant",
+        "description": "Invariant at a program location, which does not necessarily correspond to a loop.",
+        "type": "object",
+        "required": [
+          "entry_type",
+          "metadata",
+          "location",
+          "location_invariant"
+        ],
+        "properties": {
+          "entry_type": {
+            "const": "location_invariant"
+          },
+          "metadata": {
+            "$ref": "#/$defs/metadata"
+          },
+          "location": {
+            "$ref": "#/$defs/location",
+            "description": "Location in the source code where the invariant holds."
+          },
+          "location_invariant": {
+            "$ref": "#/$defs/invariant",
+            "description": "The invariant description."
+          }
+        },
+        "examples": [
+          {
+            "entry_type": "location_invariant",
+            "metadata": {
+              "format_version": 0.1,
+              "uuid": "92c380d6-00a1-4e97-8c63-0f246206c6ab",
+              "creation_time": "2022-05-16T11:56:13.480Z",
+              "producer": {
+                "name": "A2Y",
+                "version": "1"
+              },
+              "task": {
+                "input_files": [
+                  "c/loops/trex04.c"
+                ],
+                "input_file_hashes": {
+                  "c/loops/trex04.c": "f70ffe9cd45c37f44e9e780e31340fab45b6a2fb7f7ef23a2d90faf4241229d6"
+                },
+                "specification": "CHECK( init(main()), LTL(G ! call(reach_error())) )",
+                "data_model": "ILP32",
+                "language": "C"
+              }
+            },
+            "location": {
+              "file_name": "c/loops/trex04.c",
+              "file_hash": "f70ffe9cd45c37f44e9e780e31340fab45b6a2fb7f7ef23a2d90faf4241229d6",
+              "line": 47,
+              "column": 0,
+              "function": "main"
+            },
+            "location_invariant": {
+              "string": "x <= 0",
+              "type": "assertion",
+              "format": "C"
+            }
+          }
+        ]
+      },
+      {
         "title": "Loop invariant certificate",
         "description": "Loop invariant certificates document validation attempts of loop invariants, for example by trying to use the target loop invariant in a proof of correctness.\n\nCertificates document correctness and trustworthiness of invariants.",
         "type": "object",
