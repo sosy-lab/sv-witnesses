@@ -271,7 +271,7 @@
     "oneOf": [
       {
         "title": "Loop invariant",
-        "description": "Loop invariants are important building blocks in software verification. Many verification approaches use loop invariants as lemmata to construct proofs of correctness.",
+        "description": "Loop invariants are important building blocks in software verification. Many verification approaches use loop invariants as lemmata to construct proofs of correctness.\n\nA _loop_ invariant should hold at various locations:\n1. before the loop,\n2. in the beginning of the loop body,\n3. at the end of the loop body,\n4. after the loop.",
         "type": "object",
         "required": [
           "entry_type",
@@ -288,7 +288,7 @@
           },
           "location": {
             "$ref": "#/$defs/location",
-            "description": "Location in the source code where the loop invariant holds."
+            "description": "Location in the source code where the loop invariant holds.\n\nAs the loop invariant has stronger semantics than a single location invariant, it does not correspond to an assertion at a single location. Therefore, this location should be such that a validator is able to associate it with a particular loop, for example, by placing the loop invariant immediately before the loop."
           },
           "loop_invariant": {
             "$ref": "#/$defs/invariant",
