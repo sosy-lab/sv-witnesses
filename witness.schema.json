@@ -399,8 +399,8 @@
         ]
       },
       {
-        "title": "Loop invariant certificate",
-        "description": "Loop invariant certificates document validation attempts of loop invariants, for example by trying to use the target loop invariant in a proof of correctness.\n\nCertificates document correctness and trustworthiness of invariants.",
+        "title": "Invariant certificate",
+        "description": "Invariant certificates document validation attempts of various invariants, for example by trying to use the target loop invariant in a proof of correctness.\n\nCertificates document correctness and trustworthiness of invariants.",
         "type": "object",
         "required": [
           "entry_type",
@@ -410,23 +410,23 @@
         ],
         "properties": {
           "entry_type": {
-            "const": "loop_invariant_certificate"
+            "const": "invariant_certificate"
           },
           "metadata": {
             "$ref": "#/$defs/metadata-certificate"
           },
           "target": {
             "$ref": "#/$defs/target",
-            "description": "Target entry of type `loop_invariant` which is being certified."
+            "description": "Target entry of some invariant type which is being certified."
           },
           "certification": {
             "$ref": "#/$defs/certification",
-            "description": "The loop invariant certification result description."
+            "description": "The invariant certification result description."
           }
         },
         "examples": [
           {
-            "entry_type": "loop_invariant_certificate",
+            "entry_type": "invariant_certificate",
             "metadata": {
               "format_version": 0.1,
               "uuid": "954affa9-32e4-4b35-85ae-888da3a6a53b",
