@@ -335,6 +335,28 @@
         ]
       },
       {
+        "title": "Flow-insensitive invariant",
+        "description": "Flow-insensitive invariant which holds throughout the entire program execution. This avoids the possible need to repeat such invariants at multiple points.",
+        "type": "object",
+        "required": [
+          "entry_type",
+          "metadata",
+          "flow_insensitive_invariant"
+        ],
+        "properties": {
+          "entry_type": {
+            "const": "flow_insensitive_invariant"
+          },
+          "metadata": {
+            "$ref": "#/$defs/metadata"
+          },
+          "flow_insensitive_invariant": {
+            "$ref": "#/$defs/invariant",
+            "description": "The flow-insensitive invariant description."
+          }
+        }
+      },
+      {
         "title": "Loop invariant certificate",
         "description": "Loop invariant certificates document validation attempts of loop invariants, for example by trying to use the target loop invariant in a proof of correctness.\n\nCertificates document correctness and trustworthiness of invariants.",
         "type": "object",
