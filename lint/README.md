@@ -6,7 +6,7 @@ SPDX-FileCopyrightText: 2020 Dirk Beyer <https://www.sosy-lab.org>
 SPDX-License-Identifier: Apache-2.0
 -->
 
-## WitnessLint: Linter for checking witnesses
+## WitnessLint: A Linter for Checking the Syntax of Verification Witnesses
 
 The witness linter can be used to make sure that a given witness conforms to the exchange format.
 
