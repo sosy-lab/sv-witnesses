@@ -1,0 +1,391 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$defs": {
+    "format-version": {
+      "description": "Version of the format.",
+      "const": "0.1"
+    },
+    "producer": {
+      "description": "Producer. Could be a tool, a human or something else.",
+      "type": "object",
+      "required": [
+        "name",
+        "version"
+      ],
+      "properties": {
+        "name": {
+          "type": "string",
+          "description": "Name of the producer."
+        },
+        "version": {
+          "type": "string",
+          "description": "Version of the producer."
+        },
+        "configuration": {
+          "type": "string",
+          "description": "Configuration of the producer. Should be used to distinguish different configurations of the same version of the producer."
+        },
+        "description": {
+          "type": "string",
+          "description": "Additional description about the producer. Could be used for any information that does not fit into any of the other producer properties."
+        },
+        "command_line": {
+          "type": "string",
+          "description": "Bash-compliant command line used to produce the entry. Should be used to improve reproducibility."
+        }
+      }
+    },
+    "hash": {
+      "type": "string",
+      "description": "SHA-256 hash.",
+      "pattern": "[0-9a-fA-F]{64}"
+    },
+    "entry-uuid": {
+      "type": "string",
+      "description": "Unique identifier of the entry ([RFC4122](https://www.ietf.org/rfc/rfc4122.txt) defines the UUID format).",
+      "format": "uuid"
+    },
+    "task": {
+      "description": "Verification task.",
+      "type": "object",
+      "required": [
+        "input_files",
+        "input_file_hashes",
+        "specification",
+        "data_model",
+        "language"
+      ],
+      "properties": {
+        "input_files": {
+          "description": "Files belonging to the verification task that were given as input to the producer.",
+          "type": "array",
+          "items": {
+            "type": "string",
+            "description": "Bash-compliant file name pattern, which must represent _exactly one_ file."
+          }
+        },
+        "input_file_hashes": {
+          "type": "object",
+          "description": "SHA-256 hashes of each file in `input_files`. Every file name pattern listed in `input_files` must appear as a key.",
+          "additionalProperties": {
+            "$ref": "#/$defs/hash"
+          }
+        },
+        "specification": {
+          "type": "string",
+          "description": "Specification in [SV-COMP format](https://sv-comp.sosy-lab.org/2022/rules.php) against which the verification is done."
+        },
+        "data_model": {
+          "description": "Data model to be assumed for the task.",
+          "enum": [
+            "ILP32",
+            "LP64"
+          ]
+        },
+        "language": {
+          "description": "Source language of the input files.",
+          "type": "string",
+          "examples": [
+            "C",
+            "Java"
+          ]
+        }
+      }
+    },
+    "metadata": {
+      "description": "Information that identifies the entry and describes the context of its production.",
+      "type": "object",
+      "required": [
+        "format_version",
+        "uuid",
+        "creation_time",
+        "producer",
+        "task"
+      ],
+      "properties": {
+        "format_version": {
+          "$ref": "#/$defs/format-version",
+          "description": "Version of the format of the entry."
+        },
+        "uuid": {
+          "$ref": "#/$defs/entry-uuid"
+        },
+        "creation_time": {
+          "type": "string",
+          "description": "Date and time in ISO8601 format when the entry (not the file) was created.",
+          "format": "date-time"
+        },
+        "producer": {
+          "$ref": "#/$defs/producer",
+          "description": "Producer of the entry."
+        },
+        "task": {
+          "$ref": "#/$defs/task",
+          "description": "Verification task for which the entry was produced."
+        }
+      }
+    },
+    "metadata-certificate": {
+      "description": "Information that identifies the certificate entry and describes the context of its production.",
+      "type": "object",
+      "required": [
+        "format_version",
+        "uuid",
+        "creation_time",
+        "producer"
+      ],
+      "properties": {
+        "format_version": {
+          "$ref": "#/$defs/format-version",
+          "description": "Version of the format of the certificate entry."
+        },
+        "uuid": {
+          "$ref": "#/$defs/entry-uuid"
+        },
+        "creation_time": {
+          "type": "string",
+          "description": "Date and time in ISO8601 format when the certificate entry (not the file or target entry) was created.",
+          "format": "date-time"
+        },
+        "producer": {
+          "$ref": "#/$defs/producer",
+          "description": "Producer of the certificate entry."
+        }
+      }
+    },
+    "location": {
+      "description": "Location in the source code.",
+      "type": "object",
+      "required": [
+        "file_name",
+        "file_hash",
+        "line",
+        "column",
+        "function"
+      ],
+      "properties": {
+        "file_name": {
+          "type": "string",
+          "description": "Name of the file. Must be present in `task.input_files`."
+        },
+        "file_hash": {
+          "$ref": "#/$defs/hash",
+          "description": "SHA-256 hash of the file."
+        },
+        "line": {
+          "type": "integer",
+          "description": "Line in the file (starting with 1).",
+          "minimum": 1
+        },
+        "column": {
+          "type": "integer",
+          "description": "Column in the file (starting with 0). Column 0 refers to the very beginning of the line (before any characters).",
+          "minimum": 0
+        },
+        "function": {
+          "type": "string",
+          "description": "Name of the surrounding function."
+        }
+      }
+    },
+    "invariant": {
+      "description": "Invariant.",
+      "type": "object",
+      "required": [
+        "string",
+        "type",
+        "format"
+      ],
+      "properties": {
+        "string": {
+          "type": "string",
+          "description": "The invariant itself."
+        },
+        "type": {
+          "description": "Interpretation of `string`. The following values are supported:\n\n* `assertion`: Assertion, e.g. `assert(<string>)` in C, inserted at the specified location. The insertion is hypothetical and doesn't affect other locations.",
+          "enum": [
+            "assertion"
+          ]
+        },
+        "format": {
+          "description": "Format of `string`. The following values are supported:\n\n* `C`: Expression in C language.",
+          "enum": [
+            "C"
+          ]
+        }
+      }
+    },
+    "target": {
+      "description": "Target entry of certification.",
+      "type": "object",
+      "required": [
+        "uuid",
+        "type",
+        "file_hash"
+      ],
+      "properties": {
+        "uuid": {
+          "$ref": "#/$defs/entry-uuid",
+          "description": "Unique identifier of the target entry."
+        },
+        "type": {
+          "type": "string",
+          "description": "`entry_type` of the target entry."
+        },
+        "file_hash": {
+          "$ref": "#/$defs/hash",
+          "description": "SHA-256 hash of the target file."
+        }
+      }
+    },
+    "certification": {
+      "description": "Certification result.",
+      "type": "object",
+      "required": [
+        "string",
+        "type",
+        "format"
+      ],
+      "properties": {
+        "string": {
+          "type": "string",
+          "description": "The certification result itself."
+        },
+        "type": {
+          "description": "Interpretation of `string`. The following values are supported:\n\n* `verdict`: Verdict about the targeted entry.",
+          "enum": [
+            "verdict"
+          ]
+        },
+        "format": {
+          "description": "Format of `string`. The following values are supported:\n\n* `confirmed | rejected`: Either \"confirmed\" or \"rejected\".",
+          "enum": [
+            "confirmed | rejected"
+          ]
+        }
+      }
+    }
+  },
+  "type": "array",
+  "items": {
+    "oneOf": [
+      {
+        "title": "Loop invariant",
+        "description": "Loop invariants are important building blocks in software verification. Many verification approaches use loop invariants as lemmata to construct proofs of correctness.",
+        "type": "object",
+        "required": [
+          "entry_type",
+          "metadata",
+          "location",
+          "loop_invariant"
+        ],
+        "properties": {
+          "entry_type": {
+            "const": "loop_invariant"
+          },
+          "metadata": {
+            "$ref": "#/$defs/metadata"
+          },
+          "location": {
+            "$ref": "#/$defs/location",
+            "description": "Location in the source code where the loop invariant holds."
+          },
+          "loop_invariant": {
+            "$ref": "#/$defs/invariant",
+            "description": "The loop invariant description."
+          }
+        },
+        "examples": [
+          {
+            "entry_type": "loop_invariant",
+            "metadata": {
+              "format_version": 0.1,
+              "uuid": "91023a0f-9f45-4385-88c4-1152ade45537",
+              "creation_time": "2021-05-05T13:18:43.000Z",
+              "producer": {
+                "name": "CPAchecker",
+                "version": "2.0.1-svn",
+                "configuration": "svcomp21--04-kInduction"
+              },
+              "task": {
+                "input_files": [
+                  "multivar_1-1.c"
+                ],
+                "input_file_hashes": {
+                  "multivar_1-1.c": "511f45a8d763ef520f6d92e4135c8572805994a66531c6216b17157d0dde2f9c"
+                },
+                "specification": "CHECK( init(main()), LTL(G ! call(reach_error())) )",
+                "data_model": "ILP32",
+                "language": "C"
+              }
+            },
+            "location": {
+              "file_name": "multivar_1-1.c",
+              "file_hash": "511f45a8d763ef520f6d92e4135c8572805994a66531c6216b17157d0dde2f9c",
+              "line": 22,
+              "column": 0,
+              "function": "main"
+            },
+            "loop_invariant": {
+              "string": "(x >= 1024U) && (x <= 4294967295U) && (y == x)",
+              "type": "assertion",
+              "format": "C"
+            }
+          }
+        ]
+      },
+      {
+        "title": "Loop invariant certificate",
+        "description": "Loop invariant certificates document validation attempts of loop invariants, for example by trying to use the target loop invariant in a proof of correctness.\n\nCertificates document correctness and trustworthiness of invariants.",
+        "type": "object",
+        "required": [
+          "entry_type",
+          "metadata",
+          "target",
+          "certification"
+        ],
+        "properties": {
+          "entry_type": {
+            "const": "loop_invariant_certificate"
+          },
+          "metadata": {
+            "$ref": "#/$defs/metadata-certificate"
+          },
+          "target": {
+            "$ref": "#/$defs/target",
+            "description": "Target entry of type `loop_invariant` which is being certified."
+          },
+          "certification": {
+            "$ref": "#/$defs/certification",
+            "description": "The loop invariant certification result description."
+          }
+        },
+        "examples": [
+          {
+            "entry_type": "loop_invariant_certificate",
+            "metadata": {
+              "format_version": 0.1,
+              "uuid": "954affa9-32e4-4b35-85ae-888da3a6a53b",
+              "creation_time": "2021-05-05T13:18:43.000Z",
+              "producer": {
+                "name": "CPAchecker",
+                "version": "2.0.1-svn",
+                "configuration": "svcomp21--04-kInduction"
+              }
+            },
+            "target": {
+              "uuid": "91023a0f-9f45-4385-88c4-1152ade45537",
+              "type": "loop-invariant",
+              "file_hash": "511f45a8d763ef520f6d92e4135c8572805994a66531c6216b17157d0dde2f9c"
+            },
+            "certification": {
+              "string": "confirmed",
+              "type": "verdict",
+              "format": "confirmed | rejected"
+            }
+          }
+        ]
+      }
+    ]
+  }
+}
