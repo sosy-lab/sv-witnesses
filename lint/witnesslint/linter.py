@@ -11,8 +11,6 @@ with the GraphML-based witness format [1].
 [1]: github.com/sosy-lab/sv-witnesses/blob/main/README-GraphML.md
 """
 
-__version__ = "1.3-dev"
-
 import argparse
 import collections
 import hashlib
@@ -21,8 +19,7 @@ import sys
 
 from lxml import etree  # noqa: S410 does not matter
 
-from . import logger as logging
-from . import witness
+from . import witness, __version__, logger as logging
 
 CREATIONTIME_PATTERN = r"^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(Z|[+-]\d{2}:\d{2})$"
 
@@ -991,9 +988,11 @@ def _exit(exit_code=None):
     sys.exit(exit_code)
 
 
-def main(argv):
+def main(argv=None):
+    if argv is None:
+        argv = sys.argv[1:]
     try:
-        linter = create_linter(argv[1:])
+        linter = create_linter(argv)
         print("Running witnesslint version {}\n".format(__version__))
         linter.lint()
         _exit()

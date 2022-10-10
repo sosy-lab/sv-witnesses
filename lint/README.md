@@ -14,8 +14,7 @@ The witness linter can be used to make sure that a given witness conforms to the
 
 The following modules are necessary to use the witness linter:
 
-- lxml
-- zlib
+- lxml >= 4.6.3
 
 ### Usage
 

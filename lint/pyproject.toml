@@ -1,0 +1,32 @@
+# This file is part of sv-witnesses repository: https://github.com/sosy-lab/sv-witnesses
+#
+# SPDX-FileCopyrightText: 2021 Dirk Beyer <https://www.sosy-lab.org>
+#
+# SPDX-License-Identifier: Apache-2.0
+
+[tool.poetry]
+name = "witnesslint"
+version = "1.4"
+authors = ["Dirk Beyer"]
+description = "A linter for the sv-witness format"
+readme = "README.md"
+repository = "https://github.com/sosy-lab/sv-witnesses/tree/main/lint"
+classifiers = [
+    "Programming Language :: Python :: 3",
+    "License :: OSI Approved :: Apache Software License",
+    "Intended Audience :: Science/Research",
+    "Environment :: Console"
+    ]
+license = "Apache-2.0"
+include = ["LICENSE", "README.md", "doc/Changelog.md"]
+
+[tool.poetry.dependencies]
+python = "^3.5"
+lxml = "^4.6.3"
+
+[tool.poetry.scripts]
+witnesslint = "witnesslint.linter:main"
+
+[build-system]
+requires = ["poetry-core>=1.0.0"]
+build-backend = "poetry.core.masonry.api"
